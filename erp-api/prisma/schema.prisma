@@ -1,0 +1,330 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  fullName  String
+  role      Role
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id           String             @id @default(uuid())
+  name         String
+  tin          String?            @unique
+  address      String?
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  notes        String?
+  createdAt    DateTime           @default(now())
+  bankAccount  String?
+  bankName     String?
+  director     String?
+  isActive     Boolean            @default(true)
+  legalName    String?
+  mfo          String?
+  oked         String?
+  documents    CustomerDocument[]
+  reports      CustomerReport[]
+  orders       WHOrder[]
+
+  @@index([name])
+  @@index([tin])
+}
+
+model CustomerReport {
+  id          String   @id @default(uuid())
+  customerId  String
+  title       String
+  description String?
+  reportData  Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  customer    Customer @relation(fields: [customerId], references: [id])
+}
+
+model CustomerDocument {
+  id         String   @id @default(uuid())
+  customerId String
+  title      String
+  fileName   String
+  fileUrl    String
+  fileType   String
+  fileSize   Int
+  uploadedAt DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id])
+}
+
+model Marka {
+  id          String          @id @default(uuid())
+  number      Int
+  productType ProductType
+  selection   String?
+  ptm         String?
+  status      MarkaStatus     @default(DRAFT)
+  showOnScale Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  capacity    Int             @default(220)
+  createdBy   String?
+  department  MarkaDepartment
+  notes       String?
+  pickingType String?
+  used        Int             @default(0)
+  sex         SexType?
+  toys        Toy[]
+
+  @@unique([number, department])
+  @@index([status])
+  @@index([productType])
+  @@index([showOnScale])
+}
+
+model Toy {
+  id                String      @id @default(uuid())
+  qrUid             String      @unique
+  markaId           String
+  productType       ProductType
+  orderNo           Int
+  brutto            Decimal
+  tara              Decimal
+  netto             Decimal
+  printed           Boolean     @default(false)
+  labStatus         LabStatus   @default(PENDING)
+  readyForWarehouse Boolean     @default(false)
+  status            ToyStatus   @default(IN_STOCK)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  labResult         LabResult?
+  marka             Marka       @relation(fields: [markaId], references: [id])
+
+  @@unique([markaId, orderNo])
+  @@index([status])
+  @@index([labStatus])
+  @@index([readyForWarehouse])
+}
+
+model LabResult {
+  id              String    @id @default(uuid())
+  toyId           String    @unique
+  moisture        Decimal
+  trash           Decimal
+  navi            Int
+  grade           LabGrade
+  strength        Decimal
+  lengthMm        Decimal
+  comment         String?
+  status          LabStatus @default(PENDING)
+  showToWarehouse Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  toy             Toy       @relation(fields: [toyId], references: [id])
+}
+
+model WHOrder {
+  id           String       @id @default(uuid())
+  number       String       @unique
+  status       WHStatus     @default(QORALAMA)
+  customerId   String?
+  customerName String?
+  createdBy    String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  notes        String?
+  shipment     Shipment?
+  checklist    WHChecklist?
+  items        WHItem[]
+  customer     Customer?    @relation(fields: [customerId], references: [id])
+}
+
+model WHItem {
+  id          String      @id @default(uuid())
+  orderId     String
+  toyId       String
+  markaId     String
+  productType ProductType
+  orderNo     Int
+  netto       Decimal
+  createdAt   DateTime    @default(now())
+  labData     Json?
+  order       WHOrder     @relation(fields: [orderId], references: [id])
+
+  @@unique([orderId, toyId])
+}
+
+model WHChecklist {
+  id        String            @id @default(uuid())
+  orderId   String            @unique
+  code      String            @unique
+  status    ChecklistStatus   @default(DRAFT)
+  createdAt DateTime          @default(now())
+  order     WHOrder           @relation(fields: [orderId], references: [id])
+  items     WHChecklistItem[]
+}
+
+model WHChecklistItem {
+  id          String      @id @default(uuid())
+  checklistId String
+  toyId       String
+  scanned     Boolean     @default(false)
+  scannedAt   DateTime?
+  checklist   WHChecklist @relation(fields: [checklistId], references: [id])
+
+  @@unique([checklistId, toyId])
+}
+
+model Shipment {
+  id                 String    @id @default(uuid())
+  orderId            String    @unique
+  vehicleNo          String?
+  driverName         String?
+  forwarder          String?
+  destinationAddress String?
+  plannedDate        DateTime?
+  loadedAt           DateTime?
+  approvedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  documents          Json?
+  driverLicense      String?
+  driverPhone        String?
+  trackingNumber     String?   @unique
+  vehicleType        String?
+  order              WHOrder   @relation(fields: [orderId], references: [id])
+}
+
+model ScaleConfig {
+  id               String          @id @default(uuid())
+  name             String
+  department       MarkaDepartment
+  comPort          String?
+  isActive         Boolean         @default(false)
+  tolerance        Decimal         @default(0.1)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  connectionStatus String?         @default("disconnected")
+  lastHeartbeat    DateTime?
+  settings         Json?
+  readings         ScaleReading[]
+
+  @@unique([name, department])
+}
+
+model ScaleReading {
+  id        String      @id @default(uuid())
+  scaleId   String
+  value     Decimal
+  timestamp DateTime    @default(now())
+  isStable  Boolean     @default(true)
+  toyId     String?
+  createdAt DateTime    @default(now())
+  scale     ScaleConfig @relation(fields: [scaleId], references: [id])
+}
+
+model ActivityLog {
+  id        BigInt   @id @default(autoincrement())
+  actorId   String?
+  actorRole String?
+  action    String
+  entity    String
+  entityId  String?
+  diff      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+enum Role {
+  ADMIN
+  SCALE
+  LAB
+  WAREHOUSE
+  SALES
+  ACCOUNTANT
+  SUPERVISOR
+  OPERATOR
+  LAB_ANALYST
+  WAREHOUSE_MANAGER
+  PRODUCTION_MANAGER
+  CUSTOMER_MANAGER
+  SALES_MANAGER
+}
+
+enum MarkaStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum SexType {
+  ARRALI
+  VALIKLI
+  UNIVERSAL
+}
+
+enum MarkaDepartment {
+  ARRALI_SEX
+  VALIKLI_SEX
+  UNIVERSAL
+}
+
+enum ProductType {
+  TOLA
+  LINT
+  SIKLON
+  ULUK
+}
+
+enum ToyStatus {
+  IN_STOCK
+  RESERVED
+  SHIPPED
+  RETURNED
+  WASTE
+}
+
+enum LabGrade {
+  OLIY
+  YAXSHI
+  ORTA
+  ODDIY
+  IFLOS
+}
+
+enum LabStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum WHStatus {
+  QORALAMA
+  MIJOZ_TANLANGAN
+  TARKIB_TANLANGAN
+  TSD_CHECKLIST
+  YUKLASH_TAYYOR
+  YUKLANDI
+}
+
+enum ChecklistStatus {
+  DRAFT
+  READY
+  SCANNED
+  APPROVED
+}

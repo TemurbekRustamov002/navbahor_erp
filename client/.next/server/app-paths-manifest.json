@@ -1,0 +1,10 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
+  "/dashboard/labaratoriya/page": "app/dashboard/labaratoriya/page.js",
+  "/dashboard/labaratoriya/natijalar/page": "app/dashboard/labaratoriya/natijalar/page.js",
+  "/dashboard/ombor/page": "app/dashboard/ombor/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/mijozlar/[id]/page": "app/dashboard/mijozlar/[id]/page.js",
+  "/dashboard/mijozlar/page": "app/dashboard/mijozlar/page.js"
+}

@@ -1,0 +1,1 @@
+SELECT id, orderNo, netto, readyForWarehouse FROM "Toy" WHERE readyForWarehouse = true LIMIT 10;

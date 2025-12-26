@@ -1,0 +1,265 @@
+// Backend-integrated Lab Store with Caching
+"use client";
+import { create } from "zustand";
+import { persist } from 'zustand/middleware';
+import { labService } from '@/lib/services';
+import type { LabSample, LabStatus, LabGradeUz } from "@/types/lab";
+
+const CACHE_DURATION = 30000; // 30 seconds - same as marka store
+
+type LabState = {
+  samples: LabSample[];
+  isLoading: boolean;
+  error: string | null;
+  lastFetched: number | null;
+  stats: any | null;
+  
+  // Backend methods (matching marka store pattern)
+  fetchSamples: (query?: { status?: LabStatus; markaId?: string }, force?: boolean) => Promise<void>;
+  fetchStats: () => Promise<void>;
+  createSample: (sampleData: {
+    toyId: string;
+    moisture: number;
+    trash: number;
+    navi: number;
+    grade: LabGradeUz;
+    strength: number;
+    lengthMm: number;
+    comment?: string;
+  }) => Promise<{ success: boolean; message: string }>;
+  approveSample: (toyId: string) => Promise<{ success: boolean; message: string }>;
+  rejectSample: (toyId: string, reason?: string) => Promise<{ success: boolean; message: string }>;
+  toggleWarehouse: (toyId: string) => Promise<{ success: boolean; message: string }>;
+  
+  // Local methods for demo/offline mode
+  addSampleLocal: (sample: LabSample) => void;
+  upsertByToy: (s: LabSample) => void;
+  updateSampleLocal: (id: string, patch: Partial<LabSample>) => void;
+  updateStatus: (id: string, status: LabStatus, approver?: string) => void;
+  toggleShowToSales: (id: string) => void;
+  removeSample: (id: string) => void;
+  
+  // Utility methods
+  findByToyId: (toyId: string) => LabSample | undefined;
+  getSamplesByMarka: (markaId: string) => LabSample[];
+  getSamplesByStatus: (status: LabStatus) => LabSample[];
+  getPendingSamples: () => LabSample[];
+};
+
+export const useBackendLabStore = create<LabState>()(
+  persist(
+    (set, get) => ({
+      samples: [],
+      isLoading: false,
+      error: null,
+      lastFetched: null,
+      stats: null,
+
+      // Backend methods
+      fetchSamples: async (query = {}, force = false) => {
+        const { lastFetched, isLoading } = get();
+        
+        // Check cache validity - skip if data is fresh unless forced
+        if (!force && lastFetched && (Date.now() - lastFetched < CACHE_DURATION)) {
+          console.log('🚀 Using cached lab samples data');
+          return;
+        }
+        
+        // Check if same call is already in progress
+        if (isLoading) {
+          console.log('⏭️ Lab samples fetch already in progress, skipping...');
+          return;
+        }
+
+        console.log('🔄 Fetching lab samples from backend API...', query);
+        set({ isLoading: true, error: null });
+        try {
+          const response = await labService.getAllSamples(query);
+          console.log('✅ Lab samples loaded from backend:', response.items?.length || 0);
+          
+          // Handle different response formats with null checks
+          let samples: any[] = [];
+          if (response && typeof response === 'object') {
+            const responseAny = response as any; // Type cast to handle different formats
+            if (Array.isArray(response)) {
+              samples = response;
+            } else if (responseAny.items && Array.isArray(responseAny.items)) {
+              samples = responseAny.items;
+            } else if (responseAny.data && Array.isArray(responseAny.data)) {
+              samples = responseAny.data;
+            } else {
+              console.warn('Unexpected lab response format:', response);
+              samples = [];
+            }
+          } else {
+            console.warn('Invalid lab response:', response);
+            samples = [];
+          }
+          
+          // Ensure samples is always an array
+          if (!Array.isArray(samples)) {
+            console.warn('Lab samples data is not an array, converting to empty array');
+            samples = [];
+          }
+          
+          console.log('✅ Lab samples loaded from backend:', samples.length);
+          set({ samples, isLoading: false, error: null });
+        } catch (error: any) {
+          console.warn('❌ Failed to fetch lab samples from backend:', error.message);
+          set((state) => ({ 
+            error: `Backend error: ${error.message}`, 
+            isLoading: false,
+            samples: state.samples || []
+          }));
+        }
+      },
+
+      createSample: async (sampleData) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { analyst, ...cleanSampleData } = sampleData;
+          const newSample = await labService.createSample({
+            ...cleanSampleData,
+            analyst: analyst || undefined
+          });
+          set((state) => ({
+            samples: [newSample, ...state.samples],
+            isLoading: false,
+          }));
+          return true;
+        } catch (error) {
+          console.log('Backend not available, creating locally');
+          const newSample: LabSample = {
+            id: `local-${Date.now()}`,
+            ...sampleData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          get().addSampleLocal(newSample);
+          set({ isLoading: false, error: null });
+          return true;
+        }
+      },
+
+      updateSample: async (id, updates) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { approver, analyst, ...cleanUpdates } = updates;
+          const updated = await labService.updateSample(id, {
+            ...cleanUpdates,
+            approver: approver || undefined,
+            analyst: analyst || undefined
+          });
+          set((state) => ({
+            samples: state.samples.map((s) =>
+              s.id === id ? updated : s
+            ),
+            isLoading: false,
+          }));
+          return true;
+        } catch (error) {
+          console.log('Backend not available, updating locally');
+          get().updateSampleLocal(id, updates);
+          set({ isLoading: false, error: null });
+          return true;
+        }
+      },
+
+      updateSampleStatus: async (id, status, approver) => {
+        set({ isLoading: true, error: null });
+        try {
+          const updated = await labService.updateSampleStatus(id, status, approver);
+          set((state) => ({
+            samples: state.samples.map((s) =>
+              s.id === id ? updated : s
+            ),
+            isLoading: false,
+          }));
+          return true;
+        } catch (error) {
+          console.log('Backend not available, updating status locally');
+          get().updateStatus(id, status, approver);
+          set({ isLoading: false, error: null });
+          return true;
+        }
+      },
+
+      deleteSample: async (id) => {
+        set({ isLoading: true, error: null });
+        try {
+          await labService.deleteSample(id);
+          set((state) => ({
+            samples: state.samples.filter((s) => s.id !== id),
+            isLoading: false,
+          }));
+          return true;
+        } catch (error) {
+          console.log('Backend not available, deleting locally');
+          get().removeSample(id);
+          set({ isLoading: false, error: null });
+          return true;
+        }
+      },
+
+      // Local methods
+      addSampleLocal: (sample) =>
+        set((state) => ({ samples: [sample, ...state.samples] })),
+
+      upsertByToy: (s) =>
+        set((st) => {
+          const i = st.samples.findIndex(x => x.sourceId === s.sourceId);
+          if (i >= 0) {
+            const arr = [...st.samples];
+            arr[i] = { ...arr[i], ...s, id: arr[i].id, createdAt: arr[i].createdAt, updatedAt: new Date().toISOString() };
+            return { samples: arr };
+          }
+          return { samples: [s, ...st.samples] };
+        }),
+
+      updateSampleLocal: (id, patch) =>
+        set((st) => ({ 
+          samples: st.samples.map(x => 
+            x.id === id ? { ...x, ...patch, updatedAt: new Date().toISOString() } : x
+          ) 
+        })),
+
+      updateStatus: (id, status, approver) =>
+        set((st) => ({ 
+          samples: st.samples.map(x => 
+            x.id === id ? { 
+              ...x, 
+              status, 
+              approver: approver ?? x.approver, 
+              updatedAt: new Date().toISOString() 
+            } : x
+          ) 
+        })),
+
+      toggleShowToSales: (id) =>
+        set((st) => ({ 
+          samples: st.samples.map(x => 
+            x.id === id ? { ...x, showToSales: !x.showToSales, updatedAt: new Date().toISOString() } : x
+          ) 
+        })),
+
+      removeSample: (id) => 
+        set((st) => ({ samples: st.samples.filter(x => x.id !== id) })),
+
+      // Utility methods
+      findByToyId: (toyId) => 
+        get().samples.find(s => s.sourceId === toyId),
+
+      getSamplesByMarka: (markaId) => 
+        get().samples.filter(s => s.markaId === markaId),
+
+      getSamplesByStatus: (status) => 
+        get().samples.filter(s => s.status === status),
+
+      getPendingSamples: () => 
+        get().samples.filter(s => s.status === 'pending'),
+    }),
+    {
+      name: "navbahor-backend-lab-storage",
+    }
+  )
+);

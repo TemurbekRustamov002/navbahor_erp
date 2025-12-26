@@ -1,0 +1,1 @@
+UPDATE "Marka" SET "showOnScale" = true WHERE "status" = 'ACTIVE';

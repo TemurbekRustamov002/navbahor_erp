@@ -1,0 +1,15 @@
+{
+  "name": "paxta-sanoati-erp",
+  "version": "1.0.0",
+  "description": "Cotton Industry ERP - Root Workspace Management",
+  "scripts": {
+    "dev": "concurrently -n \"API,APP\" -c \"magenta,cyan\" \"npm run start:dev --prefix erp-api\" \"npm run dev --prefix erp-client-nextjs\"",
+    "install:all": "npm install && npm install --prefix erp-api && npm install --prefix erp-client-nextjs",
+    "db:migrate": "npm run db:migrate --prefix erp-api",
+    "db:seed": "npm run db:seed --prefix erp-api",
+    "db:gen": "npm run prisma:gen --prefix erp-api"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Navbahor Primary: #0bae4a -> 143 88% 36% */
+    --primary: 143 88% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Navbahor Background: #f0fdf4 -> 138 76% 97% */
+    --background: 138 76% 97%;
+
+    /* Navbahor Foreground: #111827 -> 220 39% 11% */
+    --foreground: 220 39% 11%;
+
+    /* Navbahor Secondary: #ecfdf5 -> 150 78% 96% */
+    --secondary: 150 78% 96%;
+    /* Navbahor Secondary Text/Hover: #047857 -> 163 94% 24% */
+    --secondary-foreground: 163 94% 24%;
+
+    /* Navbahor Card: #ffffff -> 0 0% 100% */
+    --card: 0 0% 100%;
+    --card-foreground: 220 39% 11%;
+
+    /* Navbahor Border: #e5e7eb -> 220 13% 91% */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+
+    /* Standard Overrides */
+    --ring: 143 88% 36%;
+    --radius: 1rem;
+    /* 16px */
+
+    --muted: 220 13% 91%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 39% 11%;
+    --accent: 150 78% 96%;
+    --accent-foreground: 163 94% 24%;
+  }
+
+  .dark {
+    /* Dark mode mappings (Automatic Inversion for safety) */
+    --background: 220 39% 11%;
+    --foreground: 138 76% 97%;
+    --card: 217 33% 13%;
+    --card-foreground: 138 76% 97%;
+    --popover: 217 33% 13%;
+    --popover-foreground: 138 76% 97%;
+    --primary: 143 88% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 143 88% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+
+  /* GLASSMORPHISM - Industrial/Agricultural Style */
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    /* ring-black/5 equivalent approach */
+  }
+
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
+
+  /* Table Style */
+  .table-row-hover {
+    @apply transition-colors hover:bg-primary/[0.02];
+  }
+
+  /* Buttons */
+  .btn-premium {
+    @apply relative overflow-hidden h-10 px-5 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-green-700 shadow-lg shadow-primary/30;
+  }
+
+  /* Inputs */
+  .input-premium {
+    @apply h-12 px-4 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all;
+  }
+
+  /* Components using old classes */
+  .card-premium {
+    @apply glass-card rounded-2xl transition-all duration-300 hover:shadow-lg;
+  }
+
+  /* Typography Utilities */
+  .text-h1-premium {
+    @apply text-2xl font-bold tracking-tight text-foreground;
+  }
+
+  .text-small-premium {
+    @apply text-sm text-foreground;
+  }
+
+  .text-label-premium {
+    @apply text-[10px] uppercase font-bold tracking-widest text-muted-foreground;
+  }
+
+  .font-mono-premium {
+    @apply font-mono font-medium;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+}

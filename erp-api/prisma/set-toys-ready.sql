@@ -1,0 +1,1 @@
+UPDATE "Toy" SET readyForWarehouse = true WHERE id IN (SELECT id FROM "Toy" LIMIT 15);
