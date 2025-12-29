@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
-import { formatWeight } from "@/lib/utils/number";
+import { formatWeight, safeNumber } from "@/lib/utils/number";
 import { printToyLabelVerbose } from "@/lib/utils/print";
 import {
   Tag,
@@ -50,6 +50,7 @@ export function ToyForm({
   const { toast } = useToast();
 
   const [selectedMarkaId, setSelectedMarkaId] = useState("");
+  const [selectedBrigade, setSelectedBrigade] = useState("1-Brigada");
   const [brutto, setBrutto] = useState<number | "">("");
   const [tara, setTara] = useState<number | "">("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,23 +124,30 @@ export function ToyForm({
         brutto: Number(brutto),
         tara: Number(tara),
         netto: netto,
+        brigade: selectedBrigade,
         productType: (selectedMarka?.productType as any) || 'TOLA'
       });
 
-      toast.success(`Toy #${newToy.orderNo} saqlandi`);
+      // Robust extraction of toy data from backend response
+      const toy = (newToy as any).item || (newToy as any).data || (newToy as any).toy || newToy;
+      const tOrderNo = toy.orderNo || (toy as any).order_no || (newToy as any).orderNo || (newToy as any).order_no || 0;
+      const tId = toy.id || (newToy as any).id || '';
+
+      toast.success(`Toy #${tOrderNo} saqlandi`);
       setBrutto("");
 
       await printToyLabelVerbose({
-        id: newToy.id,
-        orderNo: newToy.orderNo.toString(),
+        id: tId,
+        orderNo: tOrderNo.toString(),
         markaNumber: selectedMarka?.number.toString() || '???',
-        productType: newToy.productType,
-        netto: newToy.netto,
-        brutto: newToy.brutto,
-        tara: newToy.tara,
-        createdAt: new Date().toISOString(),
+        productType: toy.productType || (toy as any).product_type || (newToy as any).productType || 'TOLA',
+        netto: safeNumber(toy.netto) || safeNumber((toy as any).netto_weight) || safeNumber((newToy as any).netto) || 0,
+        brutto: safeNumber(toy.brutto) || safeNumber((toy as any).brutto_weight) || safeNumber((newToy as any).brutto) || 0,
+        tara: safeNumber(toy.tara) || safeNumber((toy as any).tara_weight) || safeNumber((newToy as any).tara) || 0,
+        createdAt: toy.createdAt || (toy as any).created_at || new Date().toISOString(),
         ptm: selectedMarka?.ptm,
-        selection: selectedMarka?.selection
+        selection: selectedMarka?.selection,
+        brigade: selectedBrigade
       }, { method: 'browser' });
     } catch (err: any) {
       setError(err.message || "Xato");
@@ -149,15 +157,15 @@ export function ToyForm({
   };
 
   return (
-    <Card className={cn("bg-white/80 backdrop-blur-lg border border-white/50 rounded-[2.5rem] shadow-xl shadow-black/5 flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500", className)}>
-      <div className="p-3 lg:p-4 border-b border-white/40 bg-white/20 flex items-center justify-between">
+    <Card className={cn("bg-white/80 dark:bg-slate-900/60 backdrop-blur-lg border border-white/50 dark:border-white/10 rounded-[2.5rem] shadow-xl shadow-black/5 flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500", className)}>
+      <div className="p-3 lg:p-4 border-b border-white/40 dark:border-white/5 bg-white/20 dark:bg-black/20 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 dark:bg-white/5 text-primary flex items-center justify-center">
             <Plus size={16} strokeWidth={2.5} />
           </div>
           <div>
-            <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-tight leading-none">Registratsiya</h2>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Yangi Toy</p>
+            <h2 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none">Registratsiya</h2>
+            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">Yangi Toy</p>
           </div>
         </div>
         <Target size={16} strokeWidth={2} className="text-primary/20" />
@@ -169,7 +177,7 @@ export function ToyForm({
           {/* Marka Selection Hub */}
           <div className="space-y-2" ref={dropdownRef}>
             <div className="flex items-center justify-between px-1">
-              <Label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Marka Identifikatori</Label>
+              <Label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Marka Identifikatori</Label>
               {selectedMarka && (
                 <span className="text-[8px] font-bold text-primary bg-primary/5 px-1.5 py-0.5 rounded-md uppercase tracking-widest animate-in slide-in-from-right-2">TANLANDI</span>
               )}
@@ -179,15 +187,15 @@ export function ToyForm({
                 type="button"
                 onClick={() => setShowMarkaDropdown(!showMarkaDropdown)}
                 className={cn(
-                  "w-full h-11 px-4 flex items-center justify-between rounded-xl border border-white/60 transition-all active:scale-[0.98]",
-                  showMarkaDropdown ? "bg-white border-primary shadow-lg ring-4 ring-primary/5" : "bg-slate-50/50 border-transparent hover:bg-slate-50 hover:border-border"
+                  "w-full h-11 px-4 flex items-center justify-between rounded-xl border border-white/60 dark:border-white/10 transition-all active:scale-[0.98]",
+                  showMarkaDropdown ? "bg-white dark:bg-slate-800 border-primary shadow-lg ring-4 ring-primary/5" : "bg-slate-50/50 dark:bg-white/5 border-transparent hover:bg-slate-50 dark:hover:bg-white/10 hover:border-border"
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-all", selectedMarka ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-white text-slate-300 shadow-sm")}>
+                  <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-all", selectedMarka ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-white dark:bg-white/5 text-slate-300 dark:text-slate-600 shadow-sm")}>
                     <Tag size={14} strokeWidth={2} />
                   </div>
-                  <span className={cn("text-[11px] font-bold uppercase tracking-tight truncate max-w-[180px]", selectedMarka ? "text-slate-900" : "text-slate-400")}>
+                  <span className={cn("text-[11px] font-bold uppercase tracking-tight truncate max-w-[180px]", selectedMarka ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500")}>
                     {selectedMarka ? `#${selectedMarka.number} — ${selectedMarka.productType}` : "Markani Tanlang..."}
                   </span>
                 </div>
@@ -195,14 +203,14 @@ export function ToyForm({
               </button>
 
               {showMarkaDropdown && (
-                <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute z-50 w-full mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-border dark:border-white/10 rounded-2xl shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-200">
                   <div className="relative mb-3">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
                     <Input
                       placeholder="Qidiruv..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 py-2 px-3 h-9 bg-slate-50 border-border rounded-lg text-[10px] font-bold text-slate-900 focus:ring-primary/20 transition-all font-mono"
+                      className="pl-9 py-2 px-3 h-9 bg-slate-50 dark:bg-white/5 border-border dark:border-white/10 rounded-lg text-[10px] font-bold text-slate-900 dark:text-white focus:ring-primary/20 transition-all font-mono"
                     />
                   </div>
                   <div className="max-h-40 overflow-y-auto scrollbar-none space-y-1 p-0.5">
@@ -220,12 +228,12 @@ export function ToyForm({
                           "w-full p-2.5 flex items-center justify-between rounded-lg transition-all border",
                           selectedMarkaId === marka.id
                             ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                            : "bg-white border-transparent text-slate-600 hover:bg-slate-50 hover:border-border"
+                            : "bg-white dark:bg-white/5 border-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:border-border dark:hover:border-white/10"
                         )}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-xs font-bold font-mono">#{marka.number}</span>
-                          <span className={cn("text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md", selectedMarkaId === marka.id ? "bg-white/20" : "bg-slate-100")}>
+                          <span className={cn("text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md", selectedMarkaId === marka.id ? "bg-white/20" : "bg-slate-100 dark:bg-white/10")}>
                             {marka.productType}
                           </span>
                         </div>
@@ -242,10 +250,32 @@ export function ToyForm({
             </div>
           </div>
 
+          {/* Brigade Selection - NEW */}
+          <div className="space-y-2">
+            <Label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Mas'ul Brigada</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {["1", "2", "3", "4"].map((b) => (
+                <button
+                  key={b}
+                  type="button"
+                  onClick={() => setSelectedBrigade(`${b}-Brigada`)}
+                  className={cn(
+                    "h-10 rounded-xl text-[10px] font-black transition-all border",
+                    selectedBrigade === `${b}-Brigada`
+                      ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                      : "bg-slate-50/50 dark:bg-white/5 border-transparent text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10"
+                  )}
+                >
+                  {b}-B
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Mass Parameter Matrix */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Brutto</Label>
+              <Label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Brutto</Label>
               <div className="relative group">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/40">
                   <Scale size={14} strokeWidth={2} />
@@ -256,8 +286,8 @@ export function ToyForm({
                   readOnly={isConnected && hardwareConnectedCount > 0}
                   onChange={(e) => setBrutto(e.target.value ? Number(e.target.value) : "")}
                   className={cn(
-                    "h-11 pl-9 pr-3 bg-slate-50/50 border-none rounded-xl font-mono text-sm font-bold text-slate-900 focus:ring-primary/20 transition-all",
-                    (isConnected && hardwareConnectedCount > 0) && "text-primary cursor-not-allowed opacity-80"
+                    "h-11 pl-9 pr-3 bg-slate-50/50 dark:bg-white/5 border-none rounded-xl font-mono text-sm font-bold text-slate-900 dark:text-white focus:ring-primary/20 transition-all",
+                    (isConnected && hardwareConnectedCount > 0) && "text-primary dark:text-emerald-400 cursor-not-allowed opacity-80"
                   )}
                   placeholder="0.00"
                 />
@@ -266,11 +296,11 @@ export function ToyForm({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between px-1">
-                <Label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Tara</Label>
+                <Label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tara</Label>
                 <button
                   type="button"
                   onClick={() => setIsTaraLocked(!isTaraLocked)}
-                  className={cn("w-6 h-6 rounded-lg flex items-center justify-center transition-all", isTaraLocked ? "text-slate-300" : "bg-primary/10 text-primary shadow-sm")}
+                  className={cn("w-6 h-6 rounded-lg flex items-center justify-center transition-all", isTaraLocked ? "text-slate-300 dark:text-slate-600" : "bg-primary/10 text-primary shadow-sm")}
                 >
                   {isTaraLocked ? <Lock size={12} strokeWidth={2} /> : <Unlock size={12} strokeWidth={2} />}
                 </button>
@@ -285,8 +315,8 @@ export function ToyForm({
                   readOnly={isTaraLocked}
                   onChange={(e) => setTara(e.target.value ? Number(e.target.value) : "")}
                   className={cn(
-                    "h-11 pl-9 pr-3 bg-slate-50/50 border-none rounded-xl font-mono text-sm font-bold text-slate-900 focus:ring-primary/20 transition-all",
-                    isTaraLocked && "text-slate-400 cursor-not-allowed opacity-60"
+                    "h-11 pl-9 pr-3 bg-slate-50/50 dark:bg-white/5 border-none rounded-xl font-mono text-sm font-bold text-slate-900 dark:text-white focus:ring-primary/20 transition-all",
+                    isTaraLocked && "text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60"
                   )}
                   placeholder="0.00"
                 />
@@ -295,19 +325,19 @@ export function ToyForm({
           </div>
 
           {/* Results Engine */}
-          <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center bg-primary/5 rounded-2xl border border-primary/10 p-4 relative overflow-hidden group">
+          <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/10 p-4 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-2 opacity-5">
               <Target size={40} strokeWidth={1} />
             </div>
-            <p className="text-[8px] font-bold text-primary/60 uppercase tracking-[0.4em] mb-2">Netto Vazni</p>
+            <p className="text-[8px] font-bold text-primary/60 dark:text-primary/40 uppercase tracking-[0.4em] mb-2">Netto Vazni</p>
             <div className="flex items-baseline gap-2 relative z-10 transition-transform duration-500 group-hover:scale-105">
               <span className={cn(
                 "text-4xl font-bold tabular-nums tracking-tighter transition-all duration-700 font-mono",
-                netto > 0 ? "text-slate-900" : "text-slate-200"
+                netto > 0 ? "text-slate-900 dark:text-white" : "text-slate-200 dark:text-white/10"
               )}>
                 {formatWeight(netto, 'kg', 2)}
               </span>
-              <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">kg</span>
+              <span className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">kg</span>
             </div>
           </div>
 
@@ -326,8 +356,8 @@ export function ToyForm({
               className={cn(
                 "w-full h-12 rounded-xl font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2.5",
                 isConnected && hardwareConnectedCount > 0 && !isStable
-                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : "bg-primary text-white hover:bg-green-700 shadow-primary/20"
+                  ? "bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                  : "bg-primary text-white hover:bg-green-700 shadow-primary/20 dark:hover:bg-green-600"
               )}
             >
               {isSubmitting ? (
@@ -349,7 +379,7 @@ export function ToyForm({
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </CardContent >
+    </Card >
   );
 }

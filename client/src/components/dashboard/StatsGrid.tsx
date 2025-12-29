@@ -32,7 +32,9 @@ interface StatItem {
 
 export function StatsGrid() {
   const { user } = useAuthStore()
-  const { stats, fetchDashboardData, isLoading } = useDashboardStore()
+  const stats = useDashboardStore(state => state.stats)
+  const fetchDashboardData = useDashboardStore(state => state.fetchDashboardData)
+  const isLoading = useDashboardStore(state => state.isLoading)
 
   useEffect(() => {
     fetchDashboardData()

@@ -56,8 +56,10 @@ class MarkasService {
       if (query.status) params.append('status', query.status);
       if (query.showOnScale !== undefined) params.append('showOnScale', query.showOnScale.toString());
       if (query.withUntestedToys) params.append('withUntestedToys', query.withUntestedToys.toString());
-      if (query.page) params.append('page', query.page.toString());
-      if (query.limit) params.append('limit', query.limit.toString());
+      const page = query.page || 1;
+      const limit = query.limit || 100;
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
 
       let response;
       try {
@@ -160,14 +162,6 @@ class MarkasService {
     }
   }
 
-  // Export functions
-  private getHeaders() {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    return {
-      'Authorization': token ? `Bearer ${token}` : '',
-    };
-  }
-
   async exportMarkasToExcel(query?: MarkaQuery): Promise<Blob> {
     try {
       const params = new URLSearchParams();
@@ -175,13 +169,9 @@ class MarkasService {
       if (query?.status) params.append('status', query.status);
       if (query?.withUntestedToys) params.append('withUntestedToys', query.withUntestedToys.toString());
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/markas/export/excel?${params.toString()}`, {
-        method: 'GET',
-        headers: this.getHeaders(),
+      return await apiClient.get<Blob>(`/markas/export/excel?${params.toString()}`, {
+        responseType: 'blob',
       });
-
-      if (!response.ok) throw new Error('Excel eksport xatosi');
-      return await response.blob();
     } catch (error: any) {
       throw new Error(error.message || 'Excel eksport qilishda xatolik');
     }
@@ -189,17 +179,9 @@ class MarkasService {
 
   async exportSelectedMarkasToExcel(markaIds: string[]): Promise<Blob> {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/markas/export/excel/selected`, {
-        method: 'POST',
-        headers: {
-          ...this.getHeaders(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ markaIds }),
+      return await apiClient.post<Blob>('/markas/export/excel/selected', { markaIds }, {
+        responseType: 'blob',
       });
-
-      if (!response.ok) throw new Error('Tanlanganlarni eksport qilishda xatolik');
-      return await response.blob();
     } catch (error: any) {
       throw new Error(error.message || 'Tanlangan markalarni eksport qilishda xatolik');
     }
@@ -207,13 +189,9 @@ class MarkasService {
 
   async exportMarkaPassportPDF(markaId: string): Promise<Blob> {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/markas/${markaId}/export/pdf`, {
-        method: 'GET',
-        headers: this.getHeaders(),
+      return await apiClient.get<Blob>(`/markas/${markaId}/export/pdf`, {
+        responseType: 'blob',
       });
-
-      if (!response.ok) throw new Error('PDF passport xatosi');
-      return await response.blob();
     } catch (error: any) {
       throw new Error(error.message || 'PDF passport yaratishda xatolik');
     }
@@ -230,18 +208,9 @@ class MarkasService {
 
   async downloadMarkaLabel(markaId: string): Promise<Blob> {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/markas/${markaId}/label`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'text/plain',
-        },
+      return await apiClient.get<Blob>(`/markas/${markaId}/label`, {
+        responseType: 'blob',
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to download marka label');
-      }
-
-      return await response.blob();
     } catch (error: any) {
       throw new Error(error.message || 'Failed to download marka label');
     }

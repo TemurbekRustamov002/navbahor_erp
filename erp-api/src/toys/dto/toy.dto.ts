@@ -38,9 +38,13 @@ export class CreateToyDto {
   orderNo?: number;
 
   @ApiPropertyOptional({ description: 'Operator ID' })
-  @IsOptional()
   @IsString()
   operatorId?: string;
+
+  @ApiPropertyOptional({ description: 'Production brigade/shift' })
+  @IsOptional()
+  @IsString()
+  brigade?: string;
 }
 
 export class UpdateToyDto {
@@ -65,6 +69,11 @@ export class UpdateToyDto {
   @ApiPropertyOptional({ description: 'Printed status' })
   @IsOptional()
   printed?: boolean;
+
+  @ApiPropertyOptional({ description: 'Production brigade/shift' })
+  @IsOptional()
+  @IsString()
+  brigade?: string;
 }
 
 export class ToyQueryDto {
@@ -81,6 +90,11 @@ export class ToyQueryDto {
   @IsOptional()
   @IsString()
   labStatus?: string;
+
+  @ApiPropertyOptional({ description: 'Production brigade/shift' })
+  @IsOptional()
+  @IsString()
+  brigade?: string;
 
   @ApiPropertyOptional({ description: 'Page number', default: 1 })
   @IsOptional()

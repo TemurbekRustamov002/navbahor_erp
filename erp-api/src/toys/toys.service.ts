@@ -7,7 +7,7 @@ import * as QRCode from 'qrcode';
 export class ToysService {
   constructor(private prisma: PrismaService) { }
 
-  async createToy(dto: { markaId: string; productType: ProductType; orderNo?: number; brutto: number; tara: number; netto: number }) {
+  async createToy(dto: { markaId: string; productType: ProductType; orderNo?: number; brutto: number; tara: number; netto: number; brigade?: string }) {
     // Professional: Use transaction with isolation level to prevent race conditions
     return this.prisma.$transaction(async (tx) => {
       const marka = await tx.marka.findUnique({
@@ -54,6 +54,7 @@ export class ToysService {
           brutto: dto.brutto,
           tara: dto.tara,
           netto,
+          brigade: dto.brigade,
         },
         include: {
           marka: true
@@ -70,7 +71,8 @@ export class ToysService {
           diff: {
             markaNumber: toy.marka.number,
             orderNo: toy.orderNo,
-            netto: toy.netto
+            netto: toy.netto,
+            brigade: toy.brigade
           } as any
         }
       });
@@ -96,16 +98,18 @@ export class ToysService {
     productType?: ProductType;
     labStatus?: string;
     withoutLabResult?: boolean;
+    brigade?: string;
     page: number;
     limit: number;
   }) {
-    const { markaId, productType, labStatus, withoutLabResult, page, limit } = query;
+    const { markaId, productType, labStatus, withoutLabResult, brigade, page, limit } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {};
     if (markaId) where.markaId = markaId;
     if (productType) where.productType = productType;
     if (labStatus) where.labStatus = labStatus;
+    if (brigade) where.brigade = brigade;
 
     if (withoutLabResult) {
       where.labResult = null;

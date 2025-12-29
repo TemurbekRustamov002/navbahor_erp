@@ -17,7 +17,7 @@ type ToyState = {
 
   // Backend methods
   fetchToys: (query?: { markaId?: string; productType?: ProductType; page?: number; limit?: number }) => Promise<void>;
-  createToy: (toyData: { markaId: string; productType: ProductType; brutto: number; tara: number; netto: number; orderNo?: number }) => Promise<Toy>;
+  createToy: (toyData: { markaId: string; productType: ProductType; brutto: number; tara: number; netto: number; orderNo?: number; brigade?: string }) => Promise<Toy>;
   updateToy: (id: string, updates: Partial<Toy>) => Promise<Toy>;
   deleteToy: (id: string) => Promise<void>;
   fetchScaleAvailable: () => Promise<void>;

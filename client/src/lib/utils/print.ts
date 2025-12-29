@@ -12,6 +12,7 @@ interface ToyPrintData {
   createdAt: string;
   ptm?: string;
   selection?: string;
+  brigade?: string;
 }
 
 interface PrintOptions {
@@ -60,6 +61,9 @@ export function generateTSPLCommands(toy: ToyPrintData, qrCodeData: string): str
   commands.push(`TEXT 40,220,"3",0,1,1,"Netto: ${formatKg(toy.netto)} kg"`);
   commands.push(`TEXT 40,280,"2",0,1,1,"Brutto: ${formatKg(toy.brutto)} kg"`);
   commands.push(`TEXT 40,320,"2",0,1,1,"Tur: ${toy.productType}"`);
+  if (toy.brigade) {
+    commands.push(`TEXT 40,360,"2",0,1,1,"Brigada: ${toy.brigade}"`);
+  }
 
   // Footer Date
   const dateStr = new Date(toy.createdAt).toLocaleDateString('uz-UZ', {
@@ -194,7 +198,7 @@ async function showPrintPreview(toy: ToyPrintData) {
           .sub-data {
             font-size: 11pt;
             font-weight: 700;
-            color: #333;
+            color: black;
             line-height: 1.2;
           }
 
@@ -219,7 +223,7 @@ async function showPrintPreview(toy: ToyPrintData) {
           }
           
           .data-table td {
-            border: 1px solid #ddd;
+            border: 1px solid black;
             padding: 1.5mm 2mm;
             font-size: 10pt;
           }
@@ -251,7 +255,7 @@ async function showPrintPreview(toy: ToyPrintData) {
             margin-top: 2mm;
             font-size: 10pt;
             font-weight: 700;
-            border-top: 1px solid #eee;
+            border-top: 1px solid black;
             padding-top: 2mm;
           }
 
@@ -261,7 +265,7 @@ async function showPrintPreview(toy: ToyPrintData) {
             padding-top: 2mm;
             font-size: 10pt;
             font-weight: 800;
-            border-top: 1px dashed #ccc;
+            border-top: 1px dashed black;
           }
         </style>
       </head>
@@ -273,11 +277,12 @@ async function showPrintPreview(toy: ToyPrintData) {
 
           <div class="main-content">
             <div class="info-block">
-              <h2 class="toy-id">TOY: #${toy.orderNo}</h2>
-              <div class="sub-data">Marka: ${toy.markaNumber}</div>
-              <div class="sub-data">Tur: ${toy.productType}</div>
+              <h2 class="toy-id">TOY: #${toy.orderNo || '---'}</h2>
+              <div class="sub-data">Marka: ${toy.markaNumber || '---'}</div>
+              <div class="sub-data">Tur: ${toy.productType || 'TOLA'}</div>
               ${toy.ptm ? `<div class="sub-data">PTM: ${toy.ptm}</div>` : ''}
               ${toy.selection ? `<div class="sub-data">Nav: ${toy.selection}</div>` : ''}
+              ${toy.brigade ? `<div class="sub-data">Brigada: ${toy.brigade}</div>` : ''}
             </div>
             <div class="qr-block">
               <img src="${qrDataURL}" />
@@ -343,6 +348,7 @@ export async function printChecklistLabels(toys: ToyPrintData[]) {
                 <div class="sub-data">Tur: ${toy.productType}</div>
                 ${toy.ptm ? `<div class="sub-data">PTM: ${toy.ptm}</div>` : ''}
                 ${toy.selection ? `<div class="sub-data">Nav: ${toy.selection}</div>` : ''}
+                ${toy.brigade ? `<div class="sub-data">Brigada: ${toy.brigade}</div>` : ''}
               </div>
               <div class="qr-block">
                 <img src="${qrDataURL}" />
@@ -441,7 +447,7 @@ export async function printChecklistLabels(toys: ToyPrintData[]) {
           .sub-data {
             font-size: 11pt;
             font-weight: 700;
-            color: #333;
+            color: black;
             line-height: 1.2;
           }
 
@@ -485,7 +491,7 @@ export async function printChecklistLabels(toys: ToyPrintData[]) {
             margin-top: 2mm;
             font-size: 10pt;
             font-weight: 700;
-            border-top: 1px solid #eee;
+            border-top: 1px solid black;
             padding-top: 2mm;
           }
 
@@ -495,7 +501,7 @@ export async function printChecklistLabels(toys: ToyPrintData[]) {
             padding-top: 2mm;
             font-size: 10pt;
             font-weight: 800;
-            border-top: 1px dashed #ccc;
+            border-top: 1px dashed black;
           }
         </style>
       </head>

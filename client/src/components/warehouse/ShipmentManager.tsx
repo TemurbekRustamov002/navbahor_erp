@@ -1,7 +1,8 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { formatWeight, safeNumber } from '@/lib/utils/number';
 import { useWarehouseBackendStore } from "@/stores/warehouseBackendStore";
+import { apiClient } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -21,20 +22,51 @@ import { Modal } from "@/components/ui/Modal";
 import { PrintableWaybill } from "./PrintableWaybill";
 
 export function ShipmentManager() {
+  const fetchOrders = useWarehouseBackendStore(state => state.fetchOrders);
+  const { toast } = useToast();
+
   const currentChecklist = useWarehouseBackendStore(state => state.currentChecklist);
   const currentOrder = useWarehouseBackendStore(state => state.currentOrder);
   const finalizeShipment = useWarehouseBackendStore(state => state.finalizeShipment);
   const loading = useWarehouseBackendStore(state => state.loading);
-  const { toast } = useToast();
+
+  // Stable setter to update the store without triggering infinite loop
+  const updateChecklist = (checklist: any) => useWarehouseBackendStore.setState({ currentChecklist: checklist });
 
   const [driverName, setDriverName] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [showWaybill, setShowWaybill] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Auto-refresh checklist data once to ensure all weights and relations are loaded
+  useEffect(() => {
+    if (currentChecklist?.id && !isSyncing) {
+      setIsSyncing(true);
+      apiClient.get(`/warehouse/checklists/${currentChecklist.id}`)
+        .then(res => {
+          const checklist = res.data || res;
+          if (checklist && checklist.items) {
+            updateChecklist(checklist);
+          }
+        })
+        .catch(err => console.error('Failed to sync checklist:', err))
+        .finally(() => setIsSyncing(false));
+    }
+  }, [currentChecklist?.id]); // Only dependency is ID
 
   const summary = useMemo(() => {
     const items = currentChecklist?.items || [];
-    const totalWeight = items.reduce((sum, item) => sum + (safeNumber(item.netto)), 0);
+    const totalWeight = items.reduce((sum, item) => {
+      // Robust weight detection: item.netto or item.toy.netto or snake_case variants
+      const w = safeNumber(item.netto) ||
+        safeNumber(item.toy?.netto) ||
+        safeNumber((item as any).netto_weight) ||
+        safeNumber((item as any).toy?.netto_weight) ||
+        safeNumber((item as any).weight) || 0;
+      return sum + w;
+    }, 0);
+
     return {
       count: items.length,
       weight: totalWeight,
@@ -101,14 +133,14 @@ export function ShipmentManager() {
       <div className="max-w-7xl mx-auto w-full space-y-8 pb-20">
         {/* Navbahor Premium Header */}
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-white shadow-xl flex items-center justify-center border border-slate-50 transition-all hover:scale-105 duration-500">
+          <div className="w-12 h-12 rounded-2xl bg-white dark:bg-white/5 shadow-xl flex items-center justify-center border border-slate-50 dark:border-white/10 transition-all hover:scale-105 duration-500">
             <Truck className="h-6 w-6 text-primary" strokeWidth={2.5} />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-none uppercase">Yukni <span className="text-primary italic">Rasmiylashtirish</span></h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">Yukni <span className="text-primary italic">Rasmiylashtirish</span></h2>
             <div className="flex items-center gap-2 mt-2">
               <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Logistika va Yakuniy Sifat Nazorati</p>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Logistika va Yakuniy Sifat Nazorati</p>
             </div>
           </div>
         </div>
@@ -151,8 +183,8 @@ export function ShipmentManager() {
                 <div className="pt-10 border-t border-white/5 relative">
                   <p className="text-white/30 text-[9px] font-bold uppercase tracking-widest leading-none mb-4">Umumiy Og&apos;irlik (Netto)</p>
                   <div className="flex items-center gap-5">
-                    <p className="text-6xl font-bold text-white font-mono tracking-tighter tabular-nums leading-none">
-                      {formatWeight(summary.weight, 'kg', 1).split(' ')[0]}
+                    <p className="text-5xl font-bold font-mono tracking-tighter text-white tabular-nums leading-none">
+                      {formatWeight(summary.weight, 'kg', 1).replace(/ [a-zA-Z]+$/, '')}
                     </p>
                     <div className="px-4 py-2 rounded-xl bg-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20 leading-none">
                       KILOGRAMM
@@ -175,7 +207,7 @@ export function ShipmentManager() {
             <Button
               variant="ghost"
               onClick={() => setShowWaybill(true)}
-              className="w-full h-14 rounded-2xl bg-white border border-slate-100 shadow-sm font-bold uppercase tracking-widest text-[9px] text-slate-500 hover:text-primary hover:border-primary/20 transition-all flex items-center justify-center gap-3"
+              className="w-full h-14 rounded-2xl bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 shadow-sm font-bold uppercase tracking-widest text-[9px] text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary hover:border-primary/20 dark:hover:border-primary/30 transition-all flex items-center justify-center gap-3"
             >
               <FileText className="h-4 w-4" strokeWidth={3} />
               Yuk Xatini Preview / Chop Etish
@@ -184,11 +216,11 @@ export function ShipmentManager() {
 
           {/* Logistics Info Form - Navbahor Soft UI */}
           <div className="xl:col-span-7 space-y-10">
-            <Card className="border-slate-100 shadow-xl rounded-3xl bg-white p-8 lg:p-10 relative overflow-hidden transition-all duration-500">
+            <Card className="border-slate-100 dark:border-white/5 shadow-xl rounded-3xl bg-white dark:bg-slate-900/60 p-8 lg:p-10 relative overflow-hidden transition-all duration-500">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-bl-full pointer-events-none" />
 
-              <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-[0.25em] mb-10 flex items-center gap-4">
-                <div className="w-9 h-9 rounded-xl bg-primary/5 flex items-center justify-center">
+              <h3 className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-[0.25em] mb-10 flex items-center gap-4">
+                <div className="w-9 h-9 rounded-xl bg-primary/5 dark:bg-primary/20 flex items-center justify-center">
                   <Truck size={16} className="text-primary" strokeWidth={3} />
                 </div>
                 Transport va Ekspeditor Ma&apos;lumotlari
@@ -197,7 +229,7 @@ export function ShipmentManager() {
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
                       Haydovchi <span className="text-primary italic">F.I.SH</span>
                     </label>
                     <div className="relative group">
@@ -206,13 +238,13 @@ export function ShipmentManager() {
                         value={driverName}
                         onChange={(e) => setDriverName(e.target.value)}
                         placeholder="Azizov Anvar..."
-                        className="h-14 pl-12 pr-6 rounded-2xl bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all font-bold text-sm uppercase placeholder:normal-case placeholder:font-medium placeholder:text-slate-300"
+                        className="h-14 pl-12 pr-6 rounded-2xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-100 dark:border-white/10 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/5 transition-all font-bold text-sm uppercase placeholder:normal-case placeholder:font-medium placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-white"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
                       Davlat <span className="text-primary italic">Raqami</span>
                     </label>
                     <div className="relative group">
@@ -221,21 +253,21 @@ export function ShipmentManager() {
                         value={vehicleNumber}
                         onChange={(e) => setVehicleNumber(e.target.value)}
                         placeholder="01 777 ABC"
-                        className="h-14 pl-12 pr-6 rounded-2xl bg-slate-50/50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all font-bold text-sm uppercase font-mono placeholder:normal-case placeholder:font-medium placeholder:text-slate-300"
+                        className="h-14 pl-12 pr-6 rounded-2xl bg-slate-50/50 dark:bg-slate-950/50 border-slate-100 dark:border-white/10 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/5 transition-all font-bold text-sm uppercase font-mono placeholder:normal-case placeholder:font-medium placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-white"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
                     Qo&apos;shimcha <span className="text-primary italic">Izohlar</span>
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Marshrut yoki maxsus ko'rsatmalar..."
-                    className="w-full h-32 p-6 rounded-2xl bg-slate-50/50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all font-medium text-sm outline-none resize-none placeholder:text-slate-300 shadow-inner"
+                    className="w-full h-32 p-6 rounded-2xl bg-slate-50/50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/5 transition-all font-medium text-sm outline-none resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-inner dark:text-white"
                   />
                 </div>
               </div>
@@ -264,7 +296,7 @@ export function ShipmentManager() {
           size="xl"
           title="Yuk Xati (Waybill) Preview"
         >
-          <div className="p-8">
+          <div className="p-8 bg-white dark:bg-slate-950">
             <div className="mb-8 flex justify-end gap-3 no-print">
               <Button variant="ghost" className="h-11 px-6 rounded-xl font-bold uppercase text-[9px] tracking-widest text-slate-400 hover:text-slate-600" onClick={() => setShowWaybill(false)}>
                 Bekor Qilish
@@ -273,7 +305,7 @@ export function ShipmentManager() {
                 <Printer className="w-4 h-4 mr-3" strokeWidth={3} /> Chop Etish
               </Button>
             </div>
-            <div className="border border-slate-100 rounded-3xl shadow-inner bg-white p-10 min-h-[800px] overflow-hidden">
+            <div className="border border-slate-100 dark:border-white/5 rounded-3xl shadow-inner bg-white dark:bg-white p-10 min-h-[800px] overflow-hidden text-slate-900">
               {currentChecklist && (
                 <PrintableWaybill
                   data={{

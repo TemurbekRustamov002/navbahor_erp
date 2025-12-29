@@ -12,12 +12,12 @@ interface ScaleDisplayProps {
   className?: string;
 }
 
-export function ScaleDisplay({ 
-  weight, 
-  isStable, 
-  isConnected, 
-  unit = "kg", 
-  className 
+export function ScaleDisplay({
+  weight,
+  isStable,
+  isConnected,
+  unit = "kg",
+  className
 }: ScaleDisplayProps) {
   return (
     <Card className={cn("w-full h-auto", className)}>
@@ -37,8 +37,8 @@ export function ScaleDisplay({
             )}
             <span className={cn(
               "text-xs font-medium",
-              isConnected 
-                ? "text-green-600 dark:text-green-400" 
+              isConnected
+                ? "text-green-600 dark:text-green-400"
                 : "text-red-500 dark:text-red-400"
             )}>
               {isConnected ? "Ulangan" : "Uzilgan"}
@@ -52,15 +52,15 @@ export function ScaleDisplay({
         <div className="text-center mb-4">
           <div className={cn(
             "text-3xl font-bold mb-1 transition-all duration-300",
-            isConnected && isStable 
-              ? "text-green-600 dark:text-green-400" 
+            isConnected && isStable
+              ? "text-green-600 dark:text-green-400"
               : isConnected
-              ? "text-orange-500 dark:text-orange-400"
-              : "text-gray-400 dark:text-gray-500"
+                ? "text-orange-500 dark:text-orange-400"
+                : "text-gray-400 dark:text-gray-500"
           )}>
             {weight.toFixed(1)} {unit}
           </div>
-          
+
           <div className="flex items-center justify-center gap-1 text-xs">
             {isConnected ? (
               isStable ? (
@@ -74,8 +74,8 @@ export function ScaleDisplay({
             <span className={cn(
               "font-medium",
               isConnected ? (
-                isStable 
-                  ? "text-green-600 dark:text-green-400" 
+                isStable
+                  ? "text-green-600 dark:text-green-400"
                   : "text-orange-500 dark:text-orange-400"
               ) : "text-gray-400 dark:text-gray-500"
             )}>
@@ -92,13 +92,13 @@ export function ScaleDisplay({
               CAS CI-200A
             </span>
           </div>
-          
+
           <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border">
             <span className="text-slate-600 dark:text-slate-400">Holat:</span>
             <span className={cn(
               "font-medium px-2 py-1 rounded-full text-xs",
-              isConnected 
-                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" 
+              isConnected
+                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
                 : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
             )}>
               {isConnected ? "Faol" : "Nofaol"}

@@ -14,6 +14,8 @@ export class LabService {
     grade: LabGrade;
     strength: number;
     lengthMm: number;
+    micronaire?: number;
+    operatorName?: string;
     comment?: string;
   }) {
     const toy = await this.prisma.toy.findUnique({ where: { id: dto.toyId } });
@@ -29,6 +31,8 @@ export class LabService {
         grade: dto.grade,
         strength: dto.strength,
         lengthMm: dto.lengthMm,
+        micronaire: dto.micronaire,
+        operatorName: dto.operatorName,
         comment: dto.comment,
         status: LabStatus.PENDING,
       },
@@ -39,6 +43,8 @@ export class LabService {
         grade: dto.grade,
         strength: dto.strength,
         lengthMm: dto.lengthMm,
+        micronaire: dto.micronaire,
+        operatorName: dto.operatorName,
         comment: dto.comment,
         status: LabStatus.PENDING,
       },
@@ -53,6 +59,8 @@ export class LabService {
     grade: LabGrade;
     strength: number;
     lengthMm: number;
+    micronaire?: number;
+    operatorName?: string;
     comment?: string;
   }) {
     const { toyIds, ...data } = dto;

@@ -16,6 +16,7 @@ export interface Toy {
   labStatus: "PENDING" | "APPROVED" | "REJECTED";
   readyForWarehouse: boolean;
   status: "IN_STOCK" | "RESERVED" | "SHIPPED" | "RETURNED" | "WASTE";
+  brigade?: string;
 
   // Backend relations
   marka?: {

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { cn } from "@/lib/utils";
+import { safeNumber } from "@/lib/utils/number";
 import { Package, Calendar, User, Scale, Trash2, Clock, Target, History } from "lucide-react";
 
 interface RecentToysProps {
@@ -93,7 +94,11 @@ export function RecentToys({ limit = 10, className, selectedMarkaId }: RecentToy
       <CardContent className="p-8">
         <div className="space-y-4">
           {sortedToys.map((toy) => {
-            const marka = markas.find(m => m.id === toy.markaId);
+            const marka = toy.marka || markas.find(m => m.id === toy.markaId);
+            const netto = safeNumber(toy.netto);
+            const brutto = safeNumber(toy.brutto);
+            const tara = safeNumber(toy.tara);
+
             return (
               <div
                 key={toy.id}
@@ -106,13 +111,18 @@ export function RecentToys({ limit = 10, className, selectedMarkaId }: RecentToy
                   <div className="flex items-center gap-3 mb-2">
                     <span className="font-mono text-sm font-bold text-slate-900">#{toy.orderNo}</span>
                     <span className="w-[1px] h-3 bg-slate-200" />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Marka #{marka?.number}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Marka #{marka?.number || toy.markaId?.slice(-4)}</span>
                     <span className={cn(
                       "px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest rounded-md",
                       toy.sold ? "bg-slate-100 text-slate-500" : "bg-primary/10 text-primary"
                     )}>
                       {toy.sold ? "Sotilgan" : "Mavjud"}
                     </span>
+                    {toy.brigade && (
+                      <span className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest bg-blue-500/10 text-blue-500 rounded-md">
+                        {toy.brigade}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-4 text-slate-400">
@@ -130,10 +140,10 @@ export function RecentToys({ limit = 10, className, selectedMarkaId }: RecentToy
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-lg font-bold text-primary font-mono tracking-tighter">
-                      {toy.netto.toFixed(2)} <span className="text-[10px] text-slate-300 uppercase tracking-widest ml-1">kg</span>
+                      {netto.toFixed(2)} <span className="text-[10px] text-slate-300 uppercase tracking-widest ml-1">kg</span>
                     </div>
                     <div className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
-                      B: {toy.brutto} / T: {toy.tara}
+                      B: {brutto.toFixed(2)} / T: {tara.toFixed(2)}
                     </div>
                   </div>
 

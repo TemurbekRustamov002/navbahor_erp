@@ -26,6 +26,8 @@ interface LabState {
     grade: LabGradeUz;
     strength: number;
     lengthMm: number;
+    micronaire?: number;
+    operatorName?: string;
     comment?: string;
   }) => Promise<{ success: boolean; message: string }>;
   bulkCreateSamples: (sampleData: {
@@ -36,6 +38,8 @@ interface LabState {
     grade: LabGradeUz;
     strength: number;
     lengthMm: number;
+    micronaire?: number;
+    operatorName?: string;
     comment?: string;
   }) => Promise<{ success: boolean; message: string }>;
   updateSample: (toyId: string, updates: {
@@ -45,13 +49,15 @@ interface LabState {
     grade?: LabGradeUz;
     strength?: number;
     lengthMm?: number;
+    micronaire?: number;
+    operatorName?: string;
     comment?: string;
   }) => Promise<{ success: boolean; message: string }>;
   approveSample: (toyId: string) => Promise<{ success: boolean; message: string }>;
   rejectSample: (toyId: string, reason?: string) => Promise<{ success: boolean; message: string }>;
   toggleWarehouse: (toyId: string) => Promise<{ success: boolean; message: string }>;
-  deleteSample: (sampleId: string) => Promise<{ success: boolean; message: string }>;
-  toggleShowToSales: (sampleId: string) => Promise<{ success: boolean; message: string }>;
+  deleteSample: (identifier: string) => Promise<{ success: boolean; message: string }>;
+  toggleShowToSales: (identifier: string) => Promise<{ success: boolean; message: string }>;
   upsertByToy: (sample: LabSample) => Promise<{ success: boolean; message: string }>;
 
   // Utility methods
@@ -311,18 +317,21 @@ export const useBackendLabStore = create<LabState>()(
     },
 
     // Delete sample
-    deleteSample: async (sampleId: string) => {
+    deleteSample: async (identifier: string) => {
       set({ isLoading: true, error: null });
       try {
-        console.log('🗑️ Deleting lab sample:', sampleId);
+        console.log('🗑️ Deleting lab sample:', identifier);
 
-        // Use the correct endpoint format from backend
-        await labService.deleteSample(sampleId);
+        // Resolve toyId (backend expects toyId)
+        const sample = get().samples.find(s => s.id === identifier || s.toyId === identifier);
+        const toyId = sample?.toyId || identifier;
+
+        await labService.deleteSample(toyId);
         console.log('✅ Sample deleted successfully');
 
-        // Remove from local state
+        // Remove from local state using both identifiers to be safe
         set((state) => ({
-          samples: state.samples.filter(s => s.id !== sampleId),
+          samples: state.samples.filter(s => s.id !== identifier && s.toyId !== identifier),
           isLoading: false,
           error: null
         }));
@@ -341,12 +350,12 @@ export const useBackendLabStore = create<LabState>()(
     },
 
     // Toggle sales visibility
-    toggleShowToSales: async (sampleId: string) => {
+    toggleShowToSales: async (identifier: string) => {
       set({ isLoading: true, error: null });
       try {
-        console.log('🔄 Toggling sales visibility:', sampleId);
+        console.log('🔄 Toggling sales visibility:', identifier);
 
-        const sample = get().samples.find(s => s.id === sampleId);
+        const sample = get().samples.find(s => s.id === identifier || s.toyId === identifier);
         if (!sample) {
           throw new Error('Sample not found');
         }
@@ -362,7 +371,7 @@ export const useBackendLabStore = create<LabState>()(
         // Update local state
         set((state) => ({
           samples: state.samples.map(s =>
-            s.id === sampleId ? {
+            (s.id === identifier || s.toyId === identifier) ? {
               ...s,
               showToWarehouse: response.showToWarehouse,
               showToSales: response.showToWarehouse // Legacy compatibility
@@ -392,6 +401,8 @@ export const useBackendLabStore = create<LabState>()(
         grade: sample.grade,
         strength: sample.strength,
         lengthMm: sample.lengthMm,
+        micronaire: sample.micronaire,
+        operatorName: sample.operatorName,
         comment: sample.comment,
       };
 

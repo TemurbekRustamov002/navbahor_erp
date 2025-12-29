@@ -104,6 +104,7 @@ model Toy {
   labStatus         LabStatus   @default(PENDING)
   readyForWarehouse Boolean     @default(false)
   status            ToyStatus   @default(IN_STOCK)
+  brigade           String?   
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   labResult         LabResult?
@@ -124,6 +125,8 @@ model LabResult {
   grade           LabGrade
   strength        Decimal
   lengthMm        Decimal
+  micronaire      Decimal?
+  operatorName    String?
   comment         String?
   status          LabStatus @default(PENDING)
   showToWarehouse Boolean   @default(false)

@@ -80,6 +80,7 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
       const data = filteredToys.map(t => ({
         'Toy ID': t.id,
         'Raqam': t.orderNo,
+        'Brigada': t.brigade || '-',
         'Brutto (kg)': t.brutto,
         'Netto (kg)': t.netto,
         'Lab Holati': t.labStatus,
@@ -122,10 +123,10 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
     <Modal
       isOpen={!!markaId}
       onClose={onClose}
-      className="w-full max-w-6xl md:w-[95vw] lg:w-[90vw] p-0 overflow-hidden rounded-[2rem] md:rounded-[3rem] border-white/50 bg-white/95 backdrop-blur-3xl shadow-2xl h-[92vh] flex flex-col transition-all duration-300"
+      className="w-full max-w-6xl md:w-[95vw] lg:w-[90vw] p-0 overflow-hidden rounded-[2rem] md:rounded-[3rem] border border-white/60 dark:border-white/10 bg-white/40 dark:bg-[#0a120b]/80 backdrop-blur-2xl shadow-2xl h-[92vh] flex flex-col transition-all duration-300"
     >
       {/* Fixed Header Section */}
-      <div className="flex-shrink-0 p-6 md:p-8 border-b border-slate-100 bg-white/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="flex-shrink-0 p-6 md:p-8 border-b border-slate-100 dark:border-white/5 bg-white/50 dark:bg-black/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <div className="w-12 h-12 md:w-16 md:h-16 bg-primary text-white rounded-[1.25rem] flex items-center justify-center shadow-2xl shadow-primary/30 shrink-0 transform hover:rotate-3 transition-transform">
             <TableIcon size={32} strokeWidth={2} />
@@ -135,13 +136,13 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
               Marka <span className="text-primary italic">Reestri</span>
             </h2>
             <div className="flex items-center gap-3 mt-1.5">
-              <div className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-mono font-bold tracking-widest shadow-lg shadow-black/10">
+              <div className="px-3 py-1 bg-slate-900 dark:bg-white dark:text-black text-white rounded-lg text-[10px] font-mono font-bold tracking-widest shadow-lg shadow-black/10">
                 #{markaName}
               </div>
-              <div className="w-[1px] h-3 bg-slate-300" />
+              <div className="w-[1px] h-3 bg-slate-200 dark:bg-white/10" />
               <div className={cn(
                 "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5",
-                isClosed ? "bg-slate-100 text-slate-500 border border-slate-200" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                isClosed ? "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10" : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30"
               )}>
                 <span className={cn("w-2 h-2 rounded-full", isClosed ? "bg-slate-400" : "bg-emerald-500 animate-pulse")} />
                 {isClosed ? 'YOPILGAN' : 'FAOL'}
@@ -159,7 +160,7 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
                 "h-14 px-8 rounded-2xl transition-all duration-300 text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2.5 shadow-xl",
                 isMarkaFull
                   ? "bg-red-500 text-white hover:bg-red-600 shadow-red-500/20 active:scale-95"
-                  : "bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200 shadow-amber-500/10 active:scale-95"
+                  : "bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-900/30 shadow-amber-500/10 active:scale-95"
               )}
             >
               {isClosing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock size={18} strokeWidth={2.5} />}
@@ -169,7 +170,7 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
 
           <button
             onClick={onClose}
-            className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 active:scale-90 transition-all shrink-0 group ml-2"
+            className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-100 dark:hover:border-red-500/20 active:scale-90 transition-all shrink-0 group ml-2"
           >
             <X size={24} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform" />
           </button>
@@ -177,26 +178,26 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
       </div>
 
       {/* Scrollable Content Section */}
-      <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-10 bg-gradient-to-b from-slate-50/50 to-white scroll-smooth scrollbar-thin scrollbar-thumb-slate-200">
+      <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-10 bg-gradient-to-b from-slate-50/50 dark:from-black/40 to-white dark:to-transparent scroll-smooth scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-white/10">
 
         {/* Search and Filters Hub */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
           <div className="lg:col-span-6 space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Qidiruv Tizimi</label>
+            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Qidiruv Tizimi</label>
             <div className="relative group">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} strokeWidth={2.5} />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600 group-focus-within:text-primary transition-colors" size={20} strokeWidth={2.5} />
               <Input
                 placeholder="Toy raqami, laboratoriya holati orqali qidirish..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-16 pl-14 pr-6 bg-white border-2 border-slate-100 focus:border-primary/30 rounded-2xl text-[13px] font-bold shadow-sm focus:ring-8 focus:ring-primary/5 transition-all"
+                className="h-16 pl-14 pr-6 bg-white dark:bg-black/40 border-2 border-slate-100 dark:border-white/10 focus:border-primary/30 rounded-2xl text-[13px] font-bold dark:text-white shadow-sm focus:ring-8 focus:ring-primary/5 transition-all"
               />
             </div>
           </div>
 
           <div className="lg:col-span-3 space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Statik Holat Filteri</label>
-            <div className="flex p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200 shadow-inner h-16">
+            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Statik Holat Filteri</label>
+            <div className="flex p-1.5 bg-slate-100/80 dark:bg-black/40 rounded-2xl border border-slate-200 dark:border-white/10 shadow-inner h-16">
               {[
                 { label: 'Barchasi', value: 'ALL' },
                 { label: 'Omborda', value: 'AVAILABLE' },
@@ -208,8 +209,8 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
                   className={cn(
                     "flex-1 h-full rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                     statusFilter === opt.value
-                      ? "bg-white text-primary shadow-lg shadow-black/5 border border-slate-100"
-                      : "text-slate-400 hover:text-slate-600 hover:bg-white/40"
+                      ? "bg-white dark:bg-white/10 text-primary dark:text-white shadow-lg shadow-black/5 border border-slate-100 dark:border-white/10"
+                      : "text-slate-400 dark:text-slate-600 dark:hover:text-slate-400 hover:bg-white/40 dark:hover:bg-white/5"
                   )}
                 >
                   {opt.label}
@@ -219,32 +220,32 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
           </div>
 
           {isMarkaFull && !isClosed && (
-            <div className="lg:col-span-3 h-16 bg-red-50 border border-red-100 rounded-2xl px-6 flex items-center gap-4 animate-in slide-in-from-right-10 shadow-lg shadow-red-500/5">
-              <AlertTriangle className="text-red-500 shrink-0" size={24} strokeWidth={2.5} />
+            <div className="lg:col-span-3 h-16 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/10 rounded-2xl px-6 flex items-center gap-4 animate-in slide-in-from-right-10 shadow-lg shadow-red-500/5">
+              <AlertTriangle className="text-red-500 dark:text-red-400 shrink-0" size={24} strokeWidth={2.5} />
               <div>
-                <p className="text-[10px] font-black text-red-700 uppercase tracking-widest">Marka Rezervi To'lgan</p>
-                <p className="text-[11px] font-bold text-red-600 leading-tight">220 ta toyga yetdi. Yopish shart!</p>
+                <p className="text-[10px] font-black text-red-700 dark:text-red-400 uppercase tracking-widest">Marka Rezervi To'lgan</p>
+                <p className="text-[11px] font-bold text-red-600 dark:text-red-300 leading-tight">220 ta toyga yetdi. Yopish shart!</p>
               </div>
             </div>
           )}
         </div>
 
         {/* Statistics Monitoring Matrix */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Jami Toylar', value: filteredToys.length, icon: Package, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
-            { label: 'Filtrlangan Vazn', value: `${formatWeight(totalWeight)} kg`, icon: Weight, color: 'text-primary', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-            { label: 'Mavjud Zaxira', value: availableToysCount, icon: CheckCircle2, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
-            { label: 'Sifat Tekshiruvi', value: filteredToys.filter(t => t.labStatus === 'APPROVED').length, icon: FlaskConical, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100' }
+            { label: 'Jami Toylar', value: filteredToys.length, icon: Package, color: 'text-primary dark:text-emerald-400', bg: 'bg-primary/10 dark:bg-white/5', border: 'border-primary/10 dark:border-white/10' },
+            { label: 'Filtrlangan Vazn', value: `${formatWeight(totalWeight)} kg`, icon: Weight, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-900/30' },
+            { label: 'Mavjud Zaxira', value: availableToysCount, icon: CheckCircle2, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/20', border: 'border-blue-100 dark:border-blue-900/30' },
+            { label: 'Sifat Tekshiruvi', value: filteredToys.filter(t => t.labStatus === 'APPROVED').length, icon: FlaskConical, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/20', border: 'border-rose-100 dark:border-rose-900/30' }
           ].map((stat, i) => (
-            <div key={i} className={cn("p-6 bg-white rounded-3xl border-2 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300", stat.border)}>
-              <div className="flex items-center gap-5">
-                <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner", stat.bg)}>
-                  <stat.icon size={26} strokeWidth={2} className={stat.color} />
+            <div key={i} className={cn("p-4 bg-white dark:bg-slate-900/60 rounded-3xl border-2 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300", stat.border)}>
+              <div className="flex items-center gap-4">
+                <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-inner", stat.bg)}>
+                  <stat.icon size={20} strokeWidth={2.5} className={stat.color} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">{stat.label}</p>
-                  <p className="text-xl font-bold text-slate-900 tracking-tighter leading-none font-mono">{stat.value}</p>
+                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white tracking-tighter leading-none font-mono">{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -252,17 +253,17 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
         </div>
 
         {/* Industrial Grade Data Matrix */}
-        <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/50">
+        <div className="bg-white dark:bg-slate-900/60 border-2 border-slate-100 dark:border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/50">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
-                <tr className="bg-slate-50 border-b-2 border-slate-100">
-                  {['Toy Raqami', 'Ombor Holati', 'Brutto Og\'irlik', 'Netto Og\'irlik', 'Lab Analizi', 'Yaratilgan Sana'].map((h, i) => (
-                    <th key={i} className="py-6 px-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">{h}</th>
+                <tr className="bg-slate-50 dark:bg-black/40 border-b-2 border-slate-100 dark:border-white/5">
+                  {['Toy Raqami', 'Brigada', 'Ombor Holati', 'Brutto Og\'irlik', 'Netto Og\'irlik', 'Lab Analizi', 'Yaratilgan Sana'].map((h, i) => (
+                    <th key={i} className="py-4 px-6 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-50 dark:divide-white/5">
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="py-32 text-center">
@@ -270,51 +271,56 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
                         <Loader2 className="h-14 w-14 text-primary animate-spin mx-auto opacity-20" />
                         <Loader2 className="h-10 w-10 text-primary animate-spin absolute inset-0 m-auto" />
                       </div>
-                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mt-8">Ma'lumotlar yuklanmoqda...</p>
+                      <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-8">Ma'lumotlar yuklanmoqda...</p>
                     </td>
                   </tr>
                 ) : filteredToys.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-32 text-center">
-                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Search className="h-8 w-8 text-slate-300" strokeWidth={1.5} />
+                      <div className="w-20 h-20 bg-slate-50 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Search className="h-8 w-8 text-slate-300 dark:text-slate-600" strokeWidth={1.5} />
                       </div>
-                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Markada toylar topilmadi</p>
-                      <p className="text-[10px] font-medium text-slate-300 mt-2 italic">Qidiruv yoki filter parametrlarini o'zgartirib ko'ring</p>
+                      <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Markada toylar topilmadi</p>
+                      <p className="text-[10px] font-medium text-slate-300 dark:text-slate-700 mt-2 italic">Qidiruv yoki filter parametrlarini o&apos;zgartirib ko&apos;ring</p>
                     </td>
                   </tr>
                 ) : (
                   filteredToys.map((toy) => (
-                    <tr key={toy.id} className="hover:bg-primary/[0.03] transition-all duration-300 group">
-                      <td className="py-6 px-8">
+                    <tr key={toy.id} className="hover:bg-primary/[0.03] dark:hover:bg-white/5 transition-all duration-300 group">
+                      <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">#</div>
-                          <span className="font-mono text-base font-black text-slate-900 leading-none">#{toy.orderNo}</span>
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-[10px] font-black text-slate-400 dark:text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">#</div>
+                          <span className="font-mono text-sm font-black text-slate-900 dark:text-white leading-none">#{toy.orderNo}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-lg border border-indigo-100/50 dark:border-indigo-900/30 w-fit">
+                          <span className="text-[9px] font-black uppercase tracking-tight font-mono italic">{toy.brigade || '-'}</span>
                         </div>
                       </td>
                       <td className="py-6 px-8">
                         <span className={cn(
                           "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-2",
                           toy.status !== 'SHIPPED'
-                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm"
-                            : "bg-slate-100 text-slate-500 border border-slate-200"
+                            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 shadow-sm"
+                            : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10"
                         )}>
                           <span className={cn("w-1.5 h-1.5 rounded-full", toy.status !== 'SHIPPED' ? "bg-emerald-500" : "bg-slate-400")} />
                           {toy.status !== 'SHIPPED' ? 'OMBORDA' : 'SOTILGAN'}
                         </span>
                       </td>
                       <td className="py-6 px-8">
-                        <span className="text-base font-bold text-slate-900 tabular-nums font-mono">{formatWeight(toy.brutto)} <span className="text-[10px] font-black text-slate-400">KG</span></span>
+                        <span className="text-base font-bold text-slate-900 dark:text-white tabular-nums font-mono">{formatWeight(toy.brutto)} <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">KG</span></span>
                       </td>
                       <td className="py-6 px-8">
-                        <span className="text-base font-bold text-slate-900 tabular-nums font-mono">{formatWeight(toy.netto)} <span className="text-[10px] font-black text-slate-400">KG</span></span>
+                        <span className="text-base font-bold text-slate-900 dark:text-white tabular-nums font-mono">{formatWeight(toy.netto)} <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">KG</span></span>
                       </td>
                       <td className="py-6 px-8">
                         <span className={cn(
                           "text-[10px] font-black px-4 py-2 rounded-xl uppercase inline-flex items-center gap-2 border shadow-sm",
-                          toy.labStatus === 'APPROVED' ? "bg-white text-emerald-600 border-emerald-100" :
-                            toy.labStatus === 'REJECTED' ? "bg-white text-red-600 border-red-100" :
-                              "bg-white text-slate-400 border-slate-100"
+                          toy.labStatus === 'APPROVED' ? "bg-white dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30" :
+                            toy.labStatus === 'REJECTED' ? "bg-white dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/30" :
+                              "bg-white dark:bg-white/5 text-slate-400 dark:text-slate-600 border-slate-100 dark:border-white/10"
                         )}>
                           {toy.labStatus === 'APPROVED' ? <FileCheck size={14} strokeWidth={2.5} /> : <FlaskConical size={14} strokeWidth={2.5} />}
                           {toy.labStatus || 'KUTILMOQDA'}
@@ -322,8 +328,8 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
                       </td>
                       <td className="py-6 px-8">
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-slate-700">{new Date(toy.createdAt).toLocaleDateString()}</span>
-                          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{new Date(toy.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-400">{new Date(toy.createdAt).toLocaleDateString()}</span>
+                          <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-widest">{new Date(toy.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       </td>
                     </tr>
@@ -336,26 +342,26 @@ export function MarkaToysModal({ markaId, markaName, onClose }: MarkaToysModalPr
       </div>
 
       {/* Persistent Action Footer HUD */}
-      <div className="flex-shrink-0 p-6 md:p-10 border-t-2 border-slate-100 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row justify-between items-center gap-8 z-10">
+      <div className="flex-shrink-0 p-6 md:p-10 border-t-2 border-slate-100 dark:border-white/5 bg-white dark:bg-black/40 shadow-[0_-10px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row justify-between items-center gap-8 z-10">
         <div className="flex flex-col items-center md:items-start">
-          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Tizim Ma'lumotlari: Navbahor Tekstil ERP</p>
-          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic flex items-center gap-2">
-            <CheckCircle2 size={12} className="text-primary" /> Barcha toy ma'lumotlari tarozi va laboratoriya orqali tasdiqlangan
+          <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mb-1">Tizim Ma&apos;lumotlari: Navbahor Tekstil ERP</p>
+          <p className="text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-widest italic flex items-center gap-2">
+            <CheckCircle2 size={12} className="text-primary dark:text-emerald-500" /> Barcha toy ma&apos;lumotlari tarozi va laboratoriya orqali tasdiqlangan
           </p>
         </div>
 
         <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="hidden lg:flex items-center gap-4 mr-6 px-6 border-r-2 border-slate-100">
+          <div className="hidden lg:flex items-center gap-4 mr-6 px-6 border-r-2 border-slate-100 dark:border-white/5">
             <div className="text-right">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Reestr Hajmi</p>
-              <p className="text-lg font-black text-slate-900 font-mono italic">{(totalWeight / 1000).toFixed(2)} TN</p>
+              <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Reestr Hajmi</p>
+              <p className="text-lg font-black text-slate-900 dark:text-white font-mono italic">{(totalWeight / 1000).toFixed(2)} TN</p>
             </div>
           </div>
 
           <Button
             onClick={handleExport}
             disabled={exporting || filteredToys.length === 0}
-            className="w-full md:w-auto h-16 px-10 rounded-[1.5rem] bg-slate-900 text-white hover:bg-black shadow-2xl shadow-slate-900/40 active:scale-95 transition-all text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4"
+            className="w-full md:w-auto h-16 px-10 rounded-[1.5rem] bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-black dark:hover:bg-slate-200 shadow-2xl shadow-slate-900/40 dark:shadow-white/10 active:scale-95 transition-all text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4"
           >
             {exporting ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileSpreadsheet size={22} strokeWidth={2.5} />}
             Eksport Qilish (.xlsx)

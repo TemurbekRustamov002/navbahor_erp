@@ -48,6 +48,7 @@ export function SmartLabForm() {
   const [grade, setGrade] = useState<LabGradeUz>("YAXSHI");
   const [strength, setStrength] = useState<number | "">(28.5);
   const [lengthMm, setLengthMm] = useState<number | "">(28);
+  const [micronaire, setMicronaire] = useState<number | "">(4.2);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,9 +79,21 @@ export function SmartLabForm() {
   }, [toys, selectedMarkaId, toySearch]);
 
   const availableMarkas = useMemo(() => {
-    return markas.filter(m => m.status === "ACTIVE")
+    // Create a Set of toy IDs that already have a lab sample
+    const sampledToyIds = new Set(samples.map(s => s.toyId || s.sourceId).filter(Boolean));
+
+    // Identify Marka IDs that have at least one applicable toy (unsold and not sampled)
+    const markasWithUnsampledToys = new Set<string>();
+    for (const toy of toys) {
+      if (!toy.sold && !sampledToyIds.has(toy.id)) {
+        markasWithUnsampledToys.add(toy.markaId);
+      }
+    }
+
+    return markas
+      .filter(m => m.status === "ACTIVE" && markasWithUnsampledToys.has(m.id))
       .sort((a, b) => a.number - b.number);
-  }, [markas]);
+  }, [markas, toys, samples]);
 
   const selectedMarka = markas.find(m => m.id === selectedMarkaId);
 
@@ -131,6 +144,8 @@ export function SmartLabForm() {
         grade,
         strength: Number(strength),
         lengthMm: Number(lengthMm),
+        micronaire: Number(micronaire),
+        operatorName: user?.fullName || user?.username || "LAB-EXPERT",
         comment: comment.trim() || undefined,
       };
 
@@ -148,9 +163,9 @@ export function SmartLabForm() {
   };
 
   return (
-    <Card className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur-md border border-white/60 shadow-xl shadow-primary/5 flex flex-col h-full min-h-[900px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <Card className="relative overflow-hidden rounded-3xl bg-white/85 dark:bg-slate-900/60 dark:backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-xl shadow-primary/5 flex flex-col h-full min-h-[900px] animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Navbahor Brand Header - Glassmorphism */}
-      <div className="relative p-6 lg:p-8 border-b border-slate-100 bg-white/40">
+      <div className="relative p-6 lg:p-8 border-b border-slate-100 dark:border-white/5 bg-white/40 dark:bg-black/20">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none opacity-50" />
 
         <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-6">
@@ -159,7 +174,7 @@ export function SmartLabForm() {
               <FlaskConical size={28} strokeWidth={2} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-none uppercase">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-none uppercase">
                 Yangi <span className="text-primary italic">Tahlil</span>
               </h1>
               <div className="flex items-center gap-2 mt-2">
@@ -170,10 +185,10 @@ export function SmartLabForm() {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-0.5">Tahlilchi</p>
+              <p className="text-[10px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-500 mb-0.5">Tahlilchi</p>
               <div className="flex items-center gap-3 justify-end">
-                <p className="text-sm font-bold text-slate-900 uppercase tracking-tight">{user?.username || "LAB-EXPERT"}</p>
-                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+                <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">{user?.username || "LAB-EXPERT"}</p>
+                <div className="w-9 h-9 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center border border-primary/20 dark:border-primary/40">
                   <Users size={16} strokeWidth={2} />
                 </div>
               </div>
@@ -182,7 +197,7 @@ export function SmartLabForm() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-8 lg:p-10 bg-[#f0fdf4]/30">
+      <div className="flex-1 overflow-y-auto p-8 lg:p-10 bg-[#f0fdf4]/30 dark:bg-black/10">
         <form id="smart-lab-form" onSubmit={handleSubmit} className="max-w-6xl mx-auto space-y-12">
           {/* Section 01: Marka Selection Engine */}
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
@@ -190,8 +205,8 @@ export function SmartLabForm() {
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 flex items-center justify-center bg-primary/10 text-primary rounded-2xl text-lg font-bold shadow-sm border border-primary/5">01</div>
                 <div>
-                  <h3 className="text-[10px] uppercase font-bold tracking-widest text-slate-400 leading-none mb-1.5">Hazirlik Bosqichi</h3>
-                  <p className="text-xl font-bold text-slate-900 uppercase tracking-tight leading-none">Marka Tanlash</p>
+                  <h3 className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1.5">Hazirlik Bosqichi</h3>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">Marka Tanlash</p>
                 </div>
               </div>
               <p className="text-[11px] font-bold text-slate-400 leading-relaxed uppercase tracking-tighter border-l-2 border-primary/20 pl-4 py-1">
@@ -207,11 +222,11 @@ export function SmartLabForm() {
                 <select
                   value={selectedMarkaId}
                   onChange={(e) => setSelectedMarkaId(e.target.value)}
-                  className="w-full h-12 pl-12 pr-10 rounded-xl bg-white border border-slate-200 text-slate-900 font-bold text-sm uppercase tracking-tight focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none outline-none shadow-sm"
+                  className="w-full h-12 pl-12 pr-10 rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold text-sm uppercase tracking-tight focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none outline-none shadow-sm"
                 >
-                  <option value="">-- MARKA REESTRINI TANLANG --</option>
+                  <option value="" className="dark:bg-[#111912]">-- MARKA REESTRINI TANLANG --</option>
                   {availableMarkas.map((m) => (
-                    <option key={m.id} value={m.id}>
+                    <option key={m.id} value={m.id} className="dark:bg-[#111912]">
                       Marka #{m.number} — {m.ptm}
                     </option>
                   ))}
@@ -223,7 +238,7 @@ export function SmartLabForm() {
 
               {selectedMarka && (
                 <div className="animate-in fade-in slide-in-from-left-4 duration-500">
-                  <div className="relative bg-white/85 backdrop-blur-md border border-white/60 shadow-lg shadow-primary/5 rounded-2xl p-5 flex items-center gap-5 overflow-hidden">
+                  <div className="relative bg-white/85 dark:bg-white/5 dark:backdrop-blur-md border border-white/60 dark:border-white/10 shadow-lg shadow-primary/5 rounded-2xl p-5 flex items-center gap-5 overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-5">
                       <Target size={48} strokeWidth={1} className="text-primary" />
                     </div>
@@ -231,9 +246,9 @@ export function SmartLabForm() {
                       <Target size={22} strokeWidth={2} />
                     </div>
                     <div className="relative space-y-0.5">
-                      <p className="text-[10px] uppercase font-bold tracking-widest text-slate-500">Tanlangan Batch</p>
-                      <h4 className="text-lg font-bold text-slate-900 tracking-tight uppercase">
-                        #{selectedMarka.number} <span className="text-slate-300 mx-2">•</span> {selectedMarka.ptm}
+                      <p className="text-[10px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-400">Tanlangan Batch</p>
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight uppercase">
+                        #{selectedMarka.number} <span className="text-slate-300 dark:text-slate-700 mx-2">•</span> {selectedMarka.ptm}
                       </h4>
                     </div>
                   </div>
@@ -242,7 +257,7 @@ export function SmartLabForm() {
             </div>
           </div>
 
-          <div className="h-px bg-slate-100" />
+          <div className="h-px bg-slate-100 dark:bg-white/5" />
 
           {/* Section 02: Toy Architecture Grid */}
           {selectedMarkaId && (
@@ -251,27 +266,27 @@ export function SmartLabForm() {
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 flex items-center justify-center bg-primary/10 text-primary rounded-2xl text-lg font-bold shadow-sm border border-primary/5">02</div>
                   <div>
-                    <h3 className="text-[10px] uppercase font-bold tracking-widest text-slate-400 leading-none mb-1.5">Birliklar Tanlovi</h3>
-                    <p className="text-xl font-bold text-slate-900 uppercase tracking-tight leading-none">Toylar Reestri</p>
+                    <h3 className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1.5">Birliklar Tanlovi</h3>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">Toylar Reestri</p>
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-100 rounded-3xl p-5 space-y-4 shadow-xl shadow-slate-200/50">
+                <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-3xl p-5 space-y-4 shadow-xl shadow-slate-200/50 dark:shadow-none">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <p className="text-[9px] uppercase font-bold tracking-widest text-slate-400">Aniqlangan</p>
-                      <p className="text-lg font-bold text-slate-900 font-mono tracking-tighter tabular-nums leading-none">{filteredToys.length}</p>
+                      <p className="text-[9px] uppercase font-bold tracking-widest text-slate-400 dark:text-slate-500">Aniqlangan</p>
+                      <p className="text-lg font-bold text-slate-900 dark:text-white font-mono tracking-tighter tabular-nums leading-none">{filteredToys.length}</p>
                     </div>
-                    <div className="flex items-center justify-between border-t border-slate-50 pt-4">
+                    <div className="flex items-center justify-between border-t border-slate-50 dark:border-white/5 pt-4">
                       <p className="text-[9px] uppercase font-bold tracking-widest text-primary">Tanlangan</p>
-                      <p className="text-lg font-bold text-primary font-mono tracking-tighter tabular-nums leading-none">{selectedToyIds.length}</p>
+                      <p className="text-lg font-bold text-primary dark:text-emerald-400 font-mono tracking-tighter tabular-nums leading-none">{selectedToyIds.length}</p>
                     </div>
                   </div>
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={handleSelectAll}
-                    className="w-full h-11 rounded-xl border border-primary/10 font-bold text-[9px] uppercase tracking-[0.2em] bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all active:scale-95 shadow-sm"
+                    className="w-full h-11 rounded-xl border border-primary/10 dark:border-white/10 font-bold text-[9px] uppercase tracking-[0.2em] bg-primary/5 dark:bg-white/5 text-primary dark:text-white hover:bg-primary hover:text-white transition-all active:scale-95 shadow-sm"
                   >
                     {selectedToyIds.length === filteredToys.length ? "Bekor Qilish" : "Barchasini Tanlash"}
                   </Button>
@@ -283,7 +298,7 @@ export function SmartLabForm() {
                   <Input
                     value={toySearch}
                     onChange={(e) => setToySearch(e.target.value)}
-                    className="h-12 pl-12 rounded-xl bg-white border border-slate-100 text-slate-900 font-bold text-sm shadow-sm focus:ring-4 focus:ring-primary/5 transition-all placeholder:text-slate-300 placeholder:normal-case placeholder:font-medium"
+                    className="h-12 pl-12 rounded-xl bg-white dark:bg-black/40 border border-slate-100 dark:border-white/10 text-slate-900 dark:text-white font-bold text-sm shadow-sm focus:ring-4 focus:ring-primary/5 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700 placeholder:normal-case placeholder:font-medium"
                     placeholder="Toy kodini qidiring..."
                   />
                   <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" strokeWidth={2.5} />
@@ -301,13 +316,13 @@ export function SmartLabForm() {
                           "group relative h-20 flex flex-col items-center justify-center rounded-xl transition-all border duration-300 active:scale-95",
                           isSelected
                             ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105 z-10"
-                            : "bg-white border-slate-100 text-slate-900 hover:border-primary/40 hover:bg-primary/[0.02]"
+                            : "bg-white dark:bg-white/5 border-slate-100 dark:border-white/10 text-slate-900 dark:text-white hover:border-primary/40 dark:hover:border-primary/40 hover:bg-primary/[0.02] dark:hover:bg-white/10"
                         )}
                       >
-                        <span className={cn("text-lg font-bold font-mono tracking-tighter leading-none mb-0.5", isSelected ? "" : "group-hover:text-primary")}>
+                        <span className={cn("text-lg font-bold font-mono tracking-tighter leading-none mb-0.5", isSelected ? "" : "group-hover:text-primary dark:group-hover:text-white")}>
                           #{toy.orderNo}
                         </span>
-                        <span className={cn("text-[8px] font-bold uppercase tracking-widest opacity-60", isSelected ? "text-white/70" : "text-slate-400")}>
+                        <span className={cn("text-[8px] font-bold uppercase tracking-widest opacity-60", isSelected ? "text-white/70" : "text-slate-400 dark:text-slate-500")}>
                           {Number(toy.netto).toFixed(1)} <span className="lowercase">kg</span>
                         </span>
                         {isSelected && (
@@ -330,11 +345,11 @@ export function SmartLabForm() {
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 flex items-center justify-center bg-primary/10 text-primary rounded-2xl text-lg font-bold shadow-sm border border-primary/5">03</div>
                   <div>
-                    <h3 className="text-[10px] uppercase font-bold tracking-widest text-slate-400 leading-none mb-1.5">Tahlil Parametrlari</h3>
-                    <p className="text-xl font-bold text-slate-900 uppercase tracking-tight leading-none">O'lchovlar</p>
+                    <h3 className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1.5">Tahlil Parametrlari</h3>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">O'lchovlar</p>
                   </div>
                 </div>
-                <div className="relative p-5 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                <div className="relative p-5 bg-white dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase tracking-widest">
                     O'lchov asboblaridan olingan aniq ko'rsatkichlarni kiriting.
                   </p>
@@ -346,6 +361,7 @@ export function SmartLabForm() {
                   {[
                     { id: "moisture", label: "Namlik (%)", value: moisture, setter: setMoisture, icon: Clock, color: "text-blue-500" },
                     { id: "trash", label: "Ifloslik (%)", value: trash, setter: setTrash, icon: FlaskConical, color: "text-rose-500" },
+                    { id: "micronaire", label: "Mikroneyr", value: micronaire, setter: setMicronaire, icon: Target, color: "text-amber-500" },
                     { id: "strength", label: "Pishiqlik", value: strength, setter: setStrength, icon: Target, color: "text-emerald-500" },
                     { id: "length", label: "Uzunlik (MM)", value: lengthMm, setter: setLengthMm, icon: Package, color: "text-primary" }
                   ].map((input) => (
@@ -359,7 +375,7 @@ export function SmartLabForm() {
                         step="0.1"
                         value={input.value}
                         onChange={(e) => input.setter(e.target.value ? Number(e.target.value) : "")}
-                        className="h-12 py-3 px-4 rounded-xl font-mono font-bold text-sm bg-white border border-slate-100 focus:ring-8 focus:ring-primary/5 transition-all shadow-sm"
+                        className="h-12 py-3 px-4 rounded-xl font-mono font-bold text-sm bg-white dark:bg-black/40 border border-slate-100 dark:border-white/10 text-slate-900 dark:text-white focus:ring-8 focus:ring-primary/5 transition-all shadow-sm"
                       />
                     </div>
                   ))}
@@ -378,7 +394,7 @@ export function SmartLabForm() {
                             "flex-1 h-12 rounded-xl text-lg font-bold transition-all border outline-none active:scale-90",
                             navi === n
                               ? "bg-primary text-white border-primary shadow-lg shadow-primary/30"
-                              : "bg-white border-slate-200 text-slate-400 hover:border-primary/40"
+                              : "bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 dark:text-slate-500 hover:border-primary/40 dark:hover:border-primary/40"
                           )}
                         >
                           {n}
@@ -398,8 +414,8 @@ export function SmartLabForm() {
                           className={cn(
                             "h-12 rounded-xl text-[9px] font-bold tracking-widest transition-all uppercase border outline-none active:scale-95",
                             grade === g
-                              ? "bg-slate-900 text-white border-slate-900 shadow-xl"
-                              : "bg-white border-slate-200 text-slate-400 hover:border-slate-300"
+                              ? "bg-slate-900 dark:bg-white dark:text-black text-white border-slate-900 dark:border-white shadow-xl"
+                              : "bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 dark:text-slate-500 hover:border-slate-300 dark:hover:border-white/20"
                           )}
                         >
                           {g}
@@ -418,7 +434,7 @@ export function SmartLabForm() {
                     <textarea
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      className="w-full min-h-[100px] py-3 px-4 rounded-xl bg-white border border-slate-200 font-medium text-sm text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all resize-none shadow-sm outline-none"
+                      className="w-full min-h-[100px] py-3 px-4 rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 font-medium text-sm text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all resize-none shadow-sm outline-none"
                       placeholder="Qo'shimcha tahlil ma'lumotlari..."
                     />
                     <div className="absolute bottom-3 right-4 flex items-center gap-2 text-slate-200 group-focus-within:text-primary/20 transition-colors">
@@ -442,7 +458,7 @@ export function SmartLabForm() {
         </form>
       </div>
 
-      <div className="flex-shrink-0 p-6 lg:p-8 border-t border-slate-100 bg-white/40">
+      <div className="flex-shrink-0 p-6 lg:p-8 border-t border-slate-100 dark:border-white/5 bg-white/40 dark:bg-black/20">
         <Button
           form="smart-lab-form"
           type="submit"

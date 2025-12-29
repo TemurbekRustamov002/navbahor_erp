@@ -10,7 +10,7 @@ import { ProductType } from '@prisma/client';
 @UseGuards(JwtGuard)
 @Controller('toys')
 export class ToysController {
-  constructor(private svc: ToysService) {}
+  constructor(private svc: ToysService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all toys with filtering' })
@@ -18,11 +18,13 @@ export class ToysController {
   @ApiQuery({ name: 'productType', required: false })
   @ApiQuery({ name: 'labStatus', required: false })
   @ApiQuery({ name: 'withoutLabResult', required: false, type: 'boolean' })
+  @ApiQuery({ name: 'brigade', required: false })
   list(
     @Query('markaId') markaId?: string,
     @Query('productType') productType?: ProductType,
     @Query('labStatus') labStatus?: string,
     @Query('withoutLabResult') withoutLabResult?: string,
+    @Query('brigade') brigade?: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
@@ -31,6 +33,7 @@ export class ToysController {
       productType,
       labStatus,
       withoutLabResult: withoutLabResult === 'true',
+      brigade,
       page: page || 1,
       limit: limit || 50,
     });

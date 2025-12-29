@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { formatWeight } from '@/lib/utils/number';
+import { formatWeight, safeNumber } from '@/lib/utils/number';
 import { FileText } from 'lucide-react';
 
 interface WaybillProps {
@@ -89,22 +89,36 @@ export function PrintableWaybill({ data }: WaybillProps) {
                             <th className="p-4 text-[11px] font-black uppercase tracking-widest text-left border-r border-white/10">Marka</th>
                             <th className="p-4 text-[11px] font-black uppercase tracking-widest text-left border-r border-white/10">Toy Identifikatori</th>
                             <th className="p-4 text-[11px] font-black uppercase tracking-widest text-left border-r border-white/10">Mahsulot Klasifikatsiyasi</th>
+                            <th className="p-4 text-[11px] font-black uppercase tracking-widest text-right border-r border-white/10">Brutto Vazn</th>
                             <th className="p-4 text-[11px] font-black uppercase tracking-widest text-right">Sof Vazn (Netto)</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {data.items.map((item, idx) => (
-                            <tr key={item.id} className="border-b border-slate-200 transition-colors hover:bg-slate-50/50">
-                                <td className="p-4 text-center text-[11px] font-black border-r border-slate-200 tabular-nums text-slate-400">{idx + 1}</td>
-                                <td className="p-4 text-[11px] font-black border-r border-slate-200 uppercase tracking-tight">M#{item.marka?.number || item.markaNo || '---'}</td>
-                                <td className="p-4 text-[11px] font-black border-r border-slate-200 tabular-nums">#{item.toy?.orderNo || item.orderNo || '---'}</td>
-                                <td className="p-4 text-[11px] font-bold border-r border-slate-200 uppercase text-slate-500">{item.productType}</td>
-                                <td className="p-4 text-[13px] font-black border-r-0 text-right tabular-nums text-slate-900">{formatWeight(item.netto, 'kg', 2)}</td>
-                            </tr>
-                        ))}
+                        {data.items.map((item, idx) => {
+                            const nettoWeight = safeNumber(item.netto) || safeNumber(item.toy?.netto) || safeNumber((item as any).netto_weight) || safeNumber(item.toy?.netto_weight) || 0;
+                            const bruttoWeight = safeNumber(item.toy?.brutto) || safeNumber(item.brutto) || safeNumber((item as any).brutto_weight) || safeNumber(item.toy?.brutto_weight) || 0;
+                            const orderNo = item.toy?.orderNo || item.orderNo || (item.toy as any)?.order_no || (item as any).order_no || '---';
+                            const markaNo = item.marka?.number || item.markaNo || (item.marka as any)?.number || (item as any).marka_no || '---';
+
+                            return (
+                                <tr key={item.id || idx} className="border-b border-slate-200 transition-colors hover:bg-slate-50/50">
+                                    <td className="p-4 text-center text-[11px] font-black border-r border-slate-200 tabular-nums text-slate-400">{idx + 1}</td>
+                                    <td className="p-4 text-[11px] font-black border-r border-slate-200 uppercase tracking-tight">M#{markaNo}</td>
+                                    <td className="p-4 text-[11px] font-black border-r border-slate-200 tabular-nums">#{orderNo}</td>
+                                    <td className="p-4 text-[11px] font-bold border-r border-slate-200 uppercase text-slate-500">{item.productType || item.marka?.productType || '---'}</td>
+                                    <td className="p-4 text-[13px] font-black border-r border-slate-200 text-right tabular-nums text-slate-500">{formatWeight(bruttoWeight, 'kg', 2)}</td>
+                                    <td className="p-4 text-[13px] font-black border-r-0 text-right tabular-nums text-slate-900">{formatWeight(nettoWeight, 'kg', 2)}</td>
+                                </tr>
+                            );
+                        })}
                         <tr className="bg-slate-50/80">
-                            <td colSpan={4} className="p-5 text-right text-[11px] font-black uppercase tracking-[0.3em] border-t-2 border-slate-900 text-slate-500">JAMI UMUMIY VAZN:</td>
-                            <td className="p-5 text-xl font-black text-right border-t-2 border-slate-900 tabular-nums text-slate-900">{formatWeight(data.totalWeight, 'kg', 2)} KG</td>
+                            <td colSpan={4} className="p-5 text-right text-[11px] font-black uppercase tracking-[0.3em] border-t-2 border-slate-900 text-slate-500">JAMI VAZN:</td>
+                            <td className="p-5 text-xl font-bold text-right border-t-2 border-slate-900 tabular-nums text-slate-500 border-r border-slate-200">
+                                {formatWeight(data.items.reduce((sum: number, item: any) => sum + (safeNumber(item.toy?.brutto) || safeNumber(item.brutto) || 0), 0), 'kg', 2)}
+                            </td>
+                            <td className="p-5 text-xl font-black text-right border-t-2 border-slate-900 tabular-nums text-slate-900">
+                                {formatWeight(data.totalWeight, 'kg', 2)}
+                            </td>
                         </tr>
                     </tbody>
                 </table>

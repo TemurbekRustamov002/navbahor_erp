@@ -3,12 +3,12 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ChecklistsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async createFromOrder(orderId: string) {
     const order = await this.prisma.wHOrder.findUnique({
       where: { id: orderId },
-      include: { 
+      include: {
         items: true
       }
     });
@@ -27,7 +27,7 @@ export class ChecklistsService {
 
     // Generate unique checklist code
     const checklistCode = `CL-${order.number}-${Date.now()}`;
-    
+
     // Create checklist
     const checklist = await this.prisma.wHChecklist.create({
       data: {
@@ -39,7 +39,7 @@ export class ChecklistsService {
 
     // Create checklist items
     await this.prisma.$transaction(
-      order.items.map(item => 
+      order.items.map(item =>
         this.prisma.wHChecklistItem.create({
           data: {
             checklistId: checklist.id,
@@ -74,12 +74,43 @@ export class ChecklistsService {
       throw new NotFoundException('Checklist not found');
     }
 
-    return checklist;
+    // Manual join because relations are missing or incomplete in the current schema
+    const toyIds = checklist.items.map(i => i.toyId);
+    const toys = await this.prisma.toy.findMany({
+      where: { id: { in: toyIds } },
+      include: { marka: true }
+    });
+
+    const enrichedItems = checklist.items.map(item => {
+      const toy = toys.find(t => t.id === item.toyId);
+      const whItem = checklist.order.items.find(oi => oi.toyId === item.toyId);
+
+      return {
+        ...item,
+        toy: toy ? {
+          ...toy,
+          brutto: toy.brutto.toNumber ? toy.brutto.toNumber() : toy.brutto,
+          netto: toy.netto.toNumber ? toy.netto.toNumber() : toy.netto,
+          tara: toy.tara.toNumber ? toy.tara.toNumber() : toy.tara,
+          marka: toy.marka
+        } : null,
+        // Carry over snapshot data from whItem for robustness
+        netto: whItem?.netto || toy?.netto,
+        orderNo: whItem?.orderNo || toy?.orderNo,
+        productType: whItem?.productType || toy?.productType,
+        marka: toy?.marka || { number: '?' }
+      };
+    });
+
+    return {
+      ...checklist,
+      items: enrichedItems
+    };
   }
 
   async scanToy(checklistId: string, toyId: string, qrCode: string) {
     const checklist = await this.findOne(checklistId);
-    
+
     if (checklist.status !== 'READY' && checklist.status !== 'SCANNED') {
       throw new BadRequestException('Checklist is not ready for scanning');
     }
@@ -105,7 +136,7 @@ export class ChecklistsService {
     // Check if all items are scanned
     const totalItems = checklist.items.length;
     const scannedCount = checklist.items.filter(i => i.scanned).length + 1;
-    
+
     // Update checklist status if all scanned
     if (scannedCount === totalItems) {
       await this.prisma.wHChecklist.update({
@@ -119,7 +150,7 @@ export class ChecklistsService {
 
   async complete(id: string) {
     const checklist = await this.findOne(id);
-    
+
     if (checklist.status !== 'SCANNED') {
       throw new BadRequestException('Checklist must be fully scanned first');
     }

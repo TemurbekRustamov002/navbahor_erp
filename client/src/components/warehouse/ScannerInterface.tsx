@@ -4,6 +4,7 @@ import { useWarehouseBackendStore } from "@/stores/warehouseBackendStore";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
+import { safeNumber } from '@/lib/utils/number';
 import { printChecklistLabels } from "@/lib/utils/print";
 import {
   Scan,
@@ -134,19 +135,25 @@ export function ScannerInterface() {
     // Convert ChecklistItems to ToyPrintData format
     // identifying missing info from currentOrder if needed
     const printData = currentChecklist.items.map(item => {
-      // Find full details from order items if needed, or use checklist item data
-      // ChecklistItem has basics.
+      // Robust extraction: prefer toy relation, fallback to direct properties
+      const netto = safeNumber(item.netto) || safeNumber(item.toy?.netto) || 0;
+      const brutto = safeNumber(item.toy?.brutto) || safeNumber(item.brutto) || 0;
+      const tara = safeNumber(item.toy?.tara) || safeNumber(item.tara) || 0;
+      const orderNo = item.toy?.orderNo || item.orderNo || (item as any).order_no || '0';
+      const markaNo = item.marka?.number || item.markaNo || (item as any).marka_no || '?';
+
       return {
         id: item.toyId,
-        orderNo: item.orderNo?.toString() || '0',
-        markaNumber: item.marka?.number?.toString() || '?',
-        productType: item.marka?.productType || 'TOLA',
-        netto: item.netto, // assuming netto is on item
-        brutto: item.toy?.brutto || 0,
-        tara: item.toy?.tara || 0,
-        createdAt: new Date().toISOString(), // Use actual if available
+        orderNo: orderNo.toString(),
+        markaNumber: markaNo.toString(),
+        productType: item.productType || item.marka?.productType || 'TOLA',
+        netto,
+        brutto,
+        tara,
+        createdAt: item.toy?.createdAt || new Date().toISOString(),
         ptm: item.marka?.ptm || '',
-        selection: item.marka?.selection || ''
+        selection: item.marka?.selection || '',
+        brigade: item.toy?.brigade || (item as any).brigade || ''
       };
     });
 
@@ -175,29 +182,29 @@ export function ScannerInterface() {
       />
 
       {/* Main Scanner Hub (Scales for Desktop / Mobile) */}
-      <div className="flex-1 flex flex-col p-4 md:p-8 lg:p-10 relative overflow-hidden bg-slate-50/20">
+      <div className="flex-1 flex flex-col p-4 md:p-8 lg:p-10 relative overflow-hidden bg-slate-50/20 dark:bg-black/20">
 
         {/* Mobile/Urovo Header */}
         <div className="flex flex-col gap-4 mb-6 md:mb-12 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 shadow-sm border border-slate-100 dark:border-white/10 flex items-center justify-center">
                 <Smartphone className="h-5 w-5 text-primary" strokeWidth={2.5} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-none uppercase">Urovo <span className="text-primary italic">Scan</span></h2>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                  {currentChecklist?.items[0]?.marka?.number ? `Marka #${currentChecklist.items[0].marka.number}` : 'Tayyor'}
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">Urovo <span className="text-primary italic">Scan</span></h2>
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
+                  {currentChecklist?.items?.[0]?.marka?.number ? `Marka #${currentChecklist.items[0].marka.number}` : 'Tayyor'}
                 </p>
               </div>
             </div>
 
             <div className={cn(
               "px-4 py-2 rounded-xl border backdrop-blur-md transition-all duration-700 shadow-sm flex items-center gap-2",
-              isConnected ? "border-primary/10 bg-white" : "border-red-200 bg-red-50"
+              isConnected ? "border-primary/10 bg-white dark:bg-white/5 dark:border-primary/20" : "border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900/20"
             )}>
               <div className={cn("w-2 h-2 rounded-full", isConnected ? "bg-primary animate-pulse" : "bg-red-500")} />
-              <span className={cn("text-[8px] font-bold uppercase tracking-widest leading-none", isConnected ? "text-slate-900" : "text-red-600")}>
+              <span className={cn("text-[8px] font-bold uppercase tracking-widest leading-none", isConnected ? "text-slate-900 dark:text-white" : "text-red-600 dark:text-red-400")}>
                 {isConnected ? "ONLINE" : "OFFLINE"}
               </span>
             </div>
@@ -207,7 +214,7 @@ export function ScannerInterface() {
             <Button
               variant={showManualList ? "secondary" : "outline"}
               onClick={() => setShowManualList(!showManualList)}
-              className="flex-1 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2"
+              className="flex-1 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5"
             >
               <List className="h-4 w-4" />
               Ro&apos;yxat ({status.total - status.scanned})
@@ -218,7 +225,7 @@ export function ScannerInterface() {
               className="h-12 w-12 px-0 rounded-xl"
               title="QR Kodlarni Yuklab Olish"
             >
-              <Printer className="h-5 w-5 text-slate-500" />
+              <Printer className="h-5 w-5 text-slate-500 dark:text-slate-400" />
             </Button>
           </div>
         </div>
@@ -226,35 +233,35 @@ export function ScannerInterface() {
         {/* Dynamic Content Area */}
         <div className="flex-1 flex flex-col relative z-10">
           {showManualList ? (
-            <div className="flex-1 bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm">
-              <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Kutilayotgan Toylar</h3>
-                <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">{status.total - status.scanned} ta</span>
+            <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden flex flex-col shadow-sm">
+              <div className="p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 flex justify-between items-center">
+                <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Kutilayotgan Toylar</h3>
+                <span className="bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-[10px] font-bold">{status.total - status.scanned} ta</span>
               </div>
               <div className="flex-1 overflow-y-auto p-2 space-y-2">
                 {currentChecklist?.items?.filter(i => !i.scanned).map((item, idx) => (
-                  <div key={item.toyId} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
+                  <div key={item.toyId} className="flex items-center justify-between p-3 bg-white dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 rounded-xl shadow-sm">
                     <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 flex items-center justify-center bg-slate-100 rounded text-[10px] font-bold text-slate-500">
+                      <span className="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-white/10 rounded text-[10px] font-bold text-slate-500 dark:text-slate-400">
                         {item.orderNo}
                       </span>
                       <div>
-                        <p className="font-bold text-slate-900 text-sm">Toy #{item.orderNo}</p>
-                        <p className="text-[10px] text-slate-400 font-mono">{item.toyId.substring(0, 8)}...</p>
+                        <p className="font-bold text-slate-900 dark:text-white text-sm">Toy #{item.orderNo}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{item.toyId?.substring(0, 8)}...</p>
                       </div>
                     </div>
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => handleScan(item.toyId)}
-                      className="h-8 text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/5 hover:bg-primary/10"
+                      className="h-8 text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/5 dark:bg-primary/20 hover:bg-primary/10"
                     >
                       Manual
                     </Button>
                   </div>
                 ))}
                 {currentChecklist?.items?.filter(i => !i.scanned).length === 0 && (
-                  <div className="flex flex-col items-center justify-center h-40 text-slate-400">
+                  <div className="flex flex-col items-center justify-center h-40 text-slate-400 dark:text-slate-500">
                     <CheckCircle className="h-8 w-8 mb-2 opacity-20" />
                     <span className="text-xs font-bold uppercase tracking-widest">Barchasi Skanerlandi</span>
                   </div>
@@ -264,10 +271,10 @@ export function ScannerInterface() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
               {/* Hero Scan Indicator - Optimized for Urovo Screen */}
-              <div className="relative w-full max-w-xs aspect-square bg-white rounded-[2.5rem] shadow-2xl border-4 border-slate-50 flex flex-col items-center justify-center group overflow-hidden">
+              <div className="relative w-full max-w-xs aspect-square bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border-4 border-slate-50 dark:border-white/5 flex flex-col items-center justify-center group overflow-hidden">
                 <div className={cn(
                   "absolute inset-0 opacity-10 transition-colors duration-500",
-                  scanHistory[0]?.success ? "bg-primary" : "bg-slate-100"
+                  scanHistory[0]?.success ? "bg-primary" : "bg-slate-100 dark:bg-white/10"
                 )} />
 
                 <div className="relative z-10 text-center space-y-2">
@@ -280,7 +287,7 @@ export function ScannerInterface() {
                       <p className="text-5xl font-black text-slate-900 font-mono tracking-tighter">
                         #{scanHistory[0].orderNo}
                       </p>
-                      <p className="text-[10px] font-bold text-slate-300 font-mono">
+                      <p className="text-[10px] font-bold text-slate-300 dark:text-slate-600 font-mono">
                         {new Date(scanHistory[0].timestamp).toLocaleTimeString()}
                       </p>
                     </>
@@ -299,14 +306,14 @@ export function ScannerInterface() {
               {/* Progress Bar */}
               <div className="w-full max-w-xs space-y-3">
                 <div className="flex justify-between items-end px-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Jarayon</span>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Jarayon</span>
                   <span className="text-xl font-black text-primary font-mono">{progress.toFixed(0)}%</span>
                 </div>
-                <div className="h-4 bg-slate-100 rounded-full overflow-hidden shadow-inner border border-slate-200">
+                <div className="h-4 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden shadow-inner border border-slate-200 dark:border-white/10">
                   <div className="h-full bg-primary transition-all duration-500 ease-out shadow-[0_0_10px_rgba(11,174,74,0.4)]" style={{ width: `${progress}%` }} />
                 </div>
                 <div className="text-center">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                     {status.scanned} / {status.total} Dona
                   </span>
                 </div>
@@ -333,18 +340,18 @@ export function ScannerInterface() {
       </div>
 
       {/* History Sidebar (Hidden on small screens/Urovo, visible on desktop) */}
-      <div className="hidden xl:flex w-[400px] bg-white border-l border-slate-100 p-8 flex-col">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+      <div className="hidden xl:flex w-[400px] bg-white dark:bg-slate-900 border-l border-slate-100 dark:border-white/10 p-8 flex-col">
+        <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
           <Clock className="h-4 w-4" /> Oxirgi Harakatlar
         </h3>
         <div className="flex-1 overflow-y-auto space-y-3 pr-2">
           {scanHistory.map((scan, i) => (
             <div key={i} className={cn(
               "p-4 rounded-2xl border flex items-center justify-between",
-              scan.success ? "bg-slate-50 border-slate-100" : "bg-red-50 border-red-100"
+              scan.success ? "bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/10" : "bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/20"
             )}>
               <div>
-                <p className={cn("font-bold text-sm", scan.success ? "text-slate-900" : "text-red-600")}>
+                <p className={cn("font-bold text-sm", scan.success ? "text-slate-900 dark:text-white" : "text-red-600 dark:text-red-400")}>
                   {scan.success ? `Toy #${scan.orderNo}` : "Xato"}
                 </p>
                 <p className="text-[10px] text-slate-400 font-mono">

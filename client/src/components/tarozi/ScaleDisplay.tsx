@@ -24,25 +24,25 @@ export function ScaleDisplay({ weight, isStable, isConnected, className }: Scale
 
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-[2.5rem] bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl shadow-black/5 animate-in fade-in slide-in-from-bottom-4 duration-500",
+      "relative overflow-hidden rounded-[2.5rem] bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-xl shadow-black/5 animate-in fade-in slide-in-from-bottom-4 duration-500",
       isConnected ? "opacity-100" : "opacity-60 grayscale",
       className
     )}>
       {/* Visual Header */}
-      <div className="px-6 py-3 border-b border-white/40 flex items-center justify-between">
+      <div className="px-6 py-3 border-b border-white/40 dark:border-white/5 bg-white/20 dark:bg-black/20 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
             <Activity size={16} strokeWidth={2} />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight leading-none">Onlayn Tarozi</h3>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 leading-none">Jonli Rejim</p>
+            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">Onlayn Tarozi</h3>
+            <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 leading-none">Jonli Rejim</p>
           </div>
         </div>
 
         <div className={cn(
           "px-3 py-1 rounded-full flex items-center gap-1.5 border transition-colors",
-          isConnected ? "bg-primary/5 border-primary/20 text-primary" : "bg-slate-100 border-slate-200 text-slate-400"
+          isConnected ? "bg-primary/5 dark:bg-primary/10 border-primary/20 text-primary dark:text-primary/90" : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500"
         )}>
           {isConnected ? <Wifi size={12} strokeWidth={2} /> : <WifiOff size={12} strokeWidth={2} />}
           <span className="text-[9px] font-bold uppercase tracking-widest">{isConnected ? "ONLINE" : "OFFLINE"}</span>
@@ -51,17 +51,17 @@ export function ScaleDisplay({ weight, isStable, isConnected, className }: Scale
 
       <div className="p-2 space-y-2">
         {/* Main Digital Display */}
-        <div className="bg-primary/5 rounded-xl p-3 border border-primary/10 flex flex-col items-center justify-center relative overflow-hidden group">
+        <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 flex flex-col items-center justify-center relative overflow-hidden group">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_100%)] opacity-[0.03] pointer-events-none" />
 
           <div className="flex items-baseline gap-1.5 relative z-10">
             <span className={cn(
               "text-4xl md:text-5xl font-mono font-bold tracking-tighter tabular-nums transition-all duration-500",
-              isConnected ? (isStable ? "text-primary" : "text-amber-500 animate-pulse") : "text-slate-300"
+              isConnected ? (isStable ? "text-primary" : "text-amber-500 animate-pulse") : "text-slate-300 dark:text-slate-700"
             )}>
               {formatWeight(weight, 'kg', 2)}
             </span>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none">kg</span>
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">kg</span>
           </div>
 
           {/* Delta Indicator */}

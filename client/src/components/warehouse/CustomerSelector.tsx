@@ -127,8 +127,8 @@ export function CustomerSelector() {
         {/* Navbahor Header Section */}
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
           <div className="space-y-1.5">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 leading-none">Mijozni <span className="text-primary italic">Tanlash</span></h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">Logistika va jo&apos;natish uchun buyurtmachi</p>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">Mijozni <span className="text-primary italic">Tanlash</span></h2>
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em]">Logistika va jo&apos;natish uchun buyurtmachi</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative group min-w-[320px]">
@@ -137,7 +137,7 @@ export function CustomerSelector() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Mijozni qidirish..."
-                className="pl-12 h-12 rounded-xl bg-white/50 border-slate-100 focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all font-bold text-[11px] uppercase tracking-wider placeholder:normal-case placeholder:font-medium placeholder:text-slate-300 shadow-inner"
+                className="pl-12 h-12 rounded-xl bg-white/50 dark:bg-slate-900/50 border-slate-100 dark:border-white/10 focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all font-bold text-[11px] uppercase tracking-wider placeholder:normal-case placeholder:font-medium placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-inner dark:text-white"
               />
             </div>
             <Button
@@ -154,14 +154,14 @@ export function CustomerSelector() {
         {selectedCustomer && (
           <div className="relative group animate-in zoom-in-95 duration-500">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-emerald-400/5 blur-[40px] opacity-40 rounded-[2.5rem]"></div>
-            <div className="relative bg-white/60 backdrop-blur-md border border-white/60 p-8 flex flex-col md:flex-row items-center justify-between gap-8 rounded-[2rem] shadow-xl shadow-primary/5">
+            <div className="relative bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/60 dark:border-white/10 p-8 flex flex-col md:flex-row items-center justify-between gap-8 rounded-[2rem] shadow-xl shadow-primary/5">
               <div className="flex items-center gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-white shadow-lg border border-slate-50 text-primary flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-white dark:bg-white/10 shadow-lg border border-slate-50 dark:border-white/5 text-primary flex items-center justify-center rotate-3 group-hover:rotate-0 transition-transform">
                   <Building size={24} strokeWidth={2.5} />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">
-                    <h3 className="text-xl font-bold text-slate-900 tracking-tight uppercase leading-none">{selectedCustomer.name}</h3>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight uppercase leading-none">{selectedCustomer.name}</h3>
                     <div className="px-2 py-0.5 rounded-lg bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-widest border border-primary/20">Aktiv</div>
                   </div>
                   <p className="text-primary font-bold uppercase tracking-[0.2em] text-[10px]">{selectedCustomer.legalName}</p>
@@ -170,7 +170,7 @@ export function CustomerSelector() {
               <Button
                 variant="outline"
                 onClick={() => currentOrder ? setShowChangeCustomerConfirm(true) : setSelectedCustomer(null)}
-                className="h-10 px-6 rounded-xl border-slate-200 bg-white/50 font-bold uppercase tracking-widest text-[9px] text-slate-500 hover:bg-white hover:text-primary hover:border-primary/30 transition-all"
+                className="h-10 px-6 rounded-xl border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 font-bold uppercase tracking-widest text-[9px] text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/10 hover:text-primary hover:border-primary/30 transition-all"
               >
                 Mijozni O&apos;zgartirish
               </Button>
@@ -180,19 +180,19 @@ export function CustomerSelector() {
 
         {/* Add Customer Form - Modern Layout */}
         {showAddForm && (
-          <div className="bg-white/90 backdrop-blur-md border border-slate-100 rounded-[2rem] overflow-hidden shadow-2xl animate-in slide-in-from-top-6 duration-500">
-            <div className="p-8 border-b border-slate-50 bg-white/40">
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-100 dark:border-white/10 rounded-[2rem] overflow-hidden shadow-2xl animate-in slide-in-from-top-6 duration-500">
+            <div className="p-8 border-b border-slate-50 dark:border-white/5 bg-white/40 dark:bg-white/5">
               <div className="flex items-center gap-4">
-                <div className="w-11 h-11 bg-primary/5 rounded-xl flex items-center justify-center">
+                <div className="w-11 h-11 bg-primary/5 dark:bg-primary/20 rounded-xl flex items-center justify-center">
                   <Plus className="h-5 w-5 text-primary" strokeWidth={3} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-none uppercase">Yangi Mijoz Qo&apos;shish</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Mijoz ma&apos;lumotlarini to&apos;ldiring</p>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">Yangi Mijoz Qo&apos;shish</h3>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1.5">Mijoz ma&apos;lumotlarini to&apos;ldiring</p>
                 </div>
               </div>
             </div>
-            <div className="p-8 lg:p-10 space-y-8 bg-slate-50/30">
+            <div className="p-8 lg:p-10 space-y-8 bg-slate-50/30 dark:bg-black/20">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
                   { label: "F.I.SH *", key: "name", placeholder: "Ism sharif" },
@@ -206,12 +206,12 @@ export function CustomerSelector() {
                       placeholder={field.placeholder}
                       value={(newCustomer as any)[field.key]}
                       onChange={(e) => setNewCustomer(prev => ({ ...prev, [field.key]: e.target.value }))}
-                      className="h-12 rounded-xl bg-white border-slate-100 font-bold focus:ring-4 focus:ring-primary/5 transition-all text-sm uppercase placeholder:normal-case placeholder:font-medium placeholder:text-slate-300 shadow-sm"
+                      className="h-12 rounded-xl bg-white dark:bg-slate-900 border-slate-100 dark:border-white/10 font-bold focus:ring-4 focus:ring-primary/5 transition-all text-sm uppercase placeholder:normal-case placeholder:font-medium placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm"
                     />
                   </div>
                 ))}
                 <div className="lg:col-span-2 flex items-end justify-end gap-3 pt-6">
-                  <Button variant="ghost" onClick={() => setShowAddForm(false)} className="h-12 px-8 rounded-xl font-bold uppercase text-[9px] tracking-widest text-slate-400 hover:text-slate-600 hover:bg-white transition-all">Bekor Qilish</Button>
+                  <Button variant="ghost" onClick={() => setShowAddForm(false)} className="h-12 px-8 rounded-xl font-bold uppercase text-[9px] tracking-widest text-slate-400 hover:text-slate-600 hover:bg-white dark:hover:bg-white/10 transition-all">Bekor Qilish</Button>
                   <Button onClick={handleAddCustomer} className="h-12 px-10 rounded-xl bg-primary text-white font-bold uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20 hover:bg-[#047857] active:scale-95 transition-all">Mijozni Saqlash</Button>
                 </div>
               </div>
@@ -230,7 +230,7 @@ export function CustomerSelector() {
                   "group relative cursor-pointer border rounded-[2rem] overflow-hidden transition-all duration-500",
                   isSelected
                     ? "bg-slate-900 border-slate-900 shadow-2xl scale-[1.02] z-10"
-                    : "bg-white border-slate-100 hover:bg-white hover:shadow-xl hover:-translate-y-1 shadow-sm"
+                    : "bg-white dark:bg-white/5 border-slate-100 dark:border-white/5 hover:bg-white dark:hover:bg-white/10 hover:shadow-xl hover:-translate-y-1 shadow-sm"
                 )}
                 onClick={() => !isCreatingOrder && !loading && handleSelectCustomer(customer)}
               >
@@ -238,7 +238,7 @@ export function CustomerSelector() {
                   <div className="flex justify-between items-start">
                     <div className={cn(
                       "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                      isSelected ? "bg-primary text-white shadow-lg shadow-primary/30 rotate-12" : "bg-primary/5 text-primary group-hover:rotate-6 shadow-inner"
+                      isSelected ? "bg-primary text-white shadow-lg shadow-primary/30 rotate-12" : "bg-primary/5 dark:bg-primary/20 text-primary group-hover:rotate-6 shadow-inner"
                     )}>
                       <Building className="h-5 w-5" strokeWidth={2.5} />
                     </div>
@@ -252,13 +252,13 @@ export function CustomerSelector() {
                   <div className="space-y-1.5">
                     <h3 className={cn(
                       "text-lg font-bold tracking-tight line-clamp-1 transition-all duration-500 uppercase",
-                      isSelected ? "text-white" : "text-slate-900 group-hover:text-primary"
+                      isSelected ? "text-white" : "text-slate-900 dark:text-slate-200 group-hover:text-primary"
                     )}>
                       {customer.name}
                     </h3>
                     <p className={cn(
                       "text-[9px] font-bold uppercase tracking-[0.25em] transition-all duration-500",
-                      isSelected ? "text-primary/70" : "text-slate-400 group-hover:text-primary/70"
+                      isSelected ? "text-primary/70" : "text-slate-400 dark:text-slate-500 group-hover:text-primary/70"
                     )}>
                       {customer.legalName}
                     </p>
@@ -266,17 +266,17 @@ export function CustomerSelector() {
 
                   <div className={cn(
                     "space-y-3 pt-6 border-t transition-all duration-500",
-                    isSelected ? "border-white/10" : "border-slate-50"
+                    isSelected ? "border-white/10" : "border-slate-50 dark:border-white/5"
                   )}>
                     <div className="flex items-center gap-3">
                       <Phone className={cn("h-3.5 w-3.5", isSelected ? "text-primary/70" : "text-slate-300")} strokeWidth={2.5} />
-                      <span className={cn("text-[10px] font-bold font-mono tracking-tighter", isSelected ? "text-white/70" : "text-slate-500")}>
+                      <span className={cn("text-[10px] font-bold font-mono tracking-tighter", isSelected ? "text-white/70" : "text-slate-500 dark:text-slate-400")}>
                         {customer.contactPhone || '—'}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <MapPin className={cn("h-3.5 w-3.5", isSelected ? "text-primary/70" : "text-slate-300")} strokeWidth={2.5} />
-                      <span className={cn("text-[10px] font-bold truncate tracking-tight uppercase leading-none", isSelected ? "text-white/60" : "text-slate-400")}>
+                      <span className={cn("text-[10px] font-bold truncate tracking-tight uppercase leading-none", isSelected ? "text-white/60" : "text-slate-400 dark:text-slate-500")}>
                         {customer.address || '—'}
                       </span>
                     </div>
@@ -284,7 +284,7 @@ export function CustomerSelector() {
                 </div>
 
                 {isCreatingOrder && isSelected && (
-                  <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center backdrop-blur-[2px] transition-all z-20">
+                  <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 flex items-center justify-center backdrop-blur-[2px] transition-all z-20">
                     <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent shadow-lg shadow-primary/20"></div>
                   </div>
                 )}
@@ -295,13 +295,13 @@ export function CustomerSelector() {
 
         {/* Empty State Redesign */}
         {filteredCustomers.length === 0 && (
-          <div className="py-24 text-center bg-white border border-dashed border-slate-200 rounded-[2.5rem] shadow-inner">
-            <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Users size={32} className="text-slate-200" strokeWidth={1.5} />
+          <div className="py-24 text-center bg-white dark:bg-white/5 border border-dashed border-slate-200 dark:border-white/10 rounded-[2.5rem] shadow-inner">
+            <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900/40 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Users size={32} className="text-slate-200 dark:text-slate-700" strokeWidth={1.5} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight uppercase leading-none">Mijoz Topilmadi</h3>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 mb-10 max-w-xs mx-auto">Qidiruv natijasida hech qanday mos mijoz topilmadi</p>
-            <Button onClick={() => setShowAddForm(true)} variant="outline" className="h-12 px-10 rounded-xl font-bold uppercase tracking-widest text-[10px] border-slate-200 text-slate-600 hover:text-primary hover:border-primary/20 transition-all">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight uppercase leading-none">Mijoz Topilmadi</h3>
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-2 mb-10 max-w-xs mx-auto">Qidiruv natijasida hech qanday mos mijoz topilmadi</p>
+            <Button onClick={() => setShowAddForm(true)} variant="outline" className="h-12 px-10 rounded-xl font-bold uppercase tracking-widest text-[10px] border-slate-200 text-slate-600 hover:text-primary hover:border-primary/20 dark:border-white/10 dark:text-slate-400 dark:hover:text-primary transition-all">
               <Plus size={16} className="mr-2" strokeWidth={3} />
               Yangi Mijoz Qo&apos;shish
             </Button>

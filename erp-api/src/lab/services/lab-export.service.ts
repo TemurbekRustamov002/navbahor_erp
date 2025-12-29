@@ -40,39 +40,77 @@ export class LabExportService {
                 }
             },
             orderBy: { createdAt: 'desc' },
-            take: 1000 // Limit for performance
+            take: 2000 // Increased limit
         });
 
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet('Laboratoriya Natijalari');
 
+        // Styles
+        const headerStyle: Partial<ExcelJS.Style> = {
+            font: { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 },
+            fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } }, // Slate-800
+            alignment: { horizontal: 'center', vertical: 'middle' },
+            border: {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            }
+        };
+
         // Headers
-        const headerRow = sheet.addRow(['Sana', 'Toy ID', 'Marka', 'Mahsulot', 'Navi', 'Sinf', 'Namlik %', 'Ifloslik %', 'Uzunlik', 'Mustahkamlik', 'Mikroneyr', 'Labchi']);
-        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } };
+        const headerLabels = [
+            'Sana', 'Toy ID', 'Marka No', 'Mahsulot', 'Navi', 'Sinf',
+            'Namlik (%)', 'Ifloslik (%)', 'Mikroneyr', 'Uzunlik (mm)',
+            'Mustahkamlik', 'Tahlilchi', 'Izoh'
+        ];
+        const headerRow = sheet.addRow(headerLabels);
+        headerRow.height = 25;
+        headerRow.eachCell((cell) => {
+            cell.style = headerStyle as ExcelJS.Style;
+        });
 
         // Data
-        for (const result of results) {
-            sheet.addRow([
+        results.forEach(result => {
+            const row = sheet.addRow([
                 new Date(result.createdAt).toLocaleDateString('uz-UZ'),
-                result.toy?.id.substring(0, 8),
+                result.toy?.orderNo || result.toyId.substring(0, 8),
                 result.toy?.marka?.number,
                 result.toy?.productType,
                 result.navi,
                 result.grade,
-                (result as any).moisture,
-                (result as any).trash,
-                (result as any).lengthMm,
-                (result as any).strength,
-                (result as any).micronaire,
-                (result as any).operatorName
+                Number(result.moisture),
+                Number(result.trash),
+                Number((result as any).micronaire || 0),
+                Number(result.lengthMm),
+                Number(result.strength),
+                (result as any).operatorName || '-',
+                result.comment || ''
             ]);
-        }
+            row.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
 
-        sheet.columns.forEach(col => { col.width = 15; });
+        // Auto filter and column widths
+        sheet.autoFilter = { from: 'A1', to: { row: 1, column: headerLabels.length } };
+        sheet.columns = [
+            { width: 15 }, // Sana
+            { width: 12 }, // Toy ID
+            { width: 12 }, // Marka No
+            { width: 15 }, // Mahsulot
+            { width: 8 },  // Navi
+            { width: 10 }, // Sinf
+            { width: 12 }, // Namlik
+            { width: 12 }, // Ifloslik
+            { width: 12 }, // Mikroneyr
+            { width: 15 }, // Uzunlik
+            { width: 15 }, // Mustahkamlik
+            { width: 20 }, // Tahlilchi
+            { width: 30 }, // Izoh
+        ];
 
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename="Lab_Results_${Date.now()}.xlsx"`);
+        res.setHeader('Content-Disposition', `attachment; filename="Navbahor_Lab_${Date.now()}.xlsx"`);
 
         await workbook.xlsx.write(res);
         res.end();
@@ -96,51 +134,104 @@ export class LabExportService {
         const printer = new PdfPrinter(fonts);
 
         const docDefinition: TDocumentDefinitions = {
+            pageSize: 'A5',
+            pageOrientation: 'portrait',
+            pageMargins: [30, 30, 30, 30],
             content: [
-                { text: 'SIFAT SERTIFIKATI', style: 'header', alignment: 'center', margin: [0, 0, 0, 10] },
-                { text: 'CERTIFICATE OF QUALITY', style: 'subheader', alignment: 'center', margin: [0, 0, 0, 20] },
-
+                // Header with simulated logo area
                 {
-                    style: 'tableExample',
+                    columns: [
+                        {
+                            text: 'NAVBAHOR TEKSTIL',
+                            style: 'brand',
+                            width: '*'
+                        },
+                        {
+                            text: 'LABORATORIYA\nHISOBOTI',
+                            style: 'reportTitle',
+                            alignment: 'right',
+                            width: 'auto'
+                        }
+                    ]
+                },
+                { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 360, y2: 5, lineWidth: 2, lineColor: '#1e293b' }] },
+                { text: '\n' },
+
+                { text: 'SIFAT SERTIFIKATI / QUALITY CERTIFICATE', style: 'header', alignment: 'center', margin: [0, 10, 0, 15] },
+
+                // Info Section
+                {
+                    style: 'infoTable',
                     table: {
-                        widths: ['*', '*'],
+                        widths: ['auto', '*'],
                         body: [
-                            [{ text: 'Mahsulot (Product):', bold: true }, result.toy.productType],
-                            [{ text: 'Marka (Batch):', bold: true }, result.toy.marka.number],
-                            [{ text: 'Toy ID (Bale ID):', bold: true }, result.toy.id],
-                            [{ text: 'Sana (Date):', bold: true }, new Date(result.createdAt).toLocaleDateString()]
+                            [{ text: 'Mahsulot / Product:', style: 'label' }, { text: String(result.toy.productType), style: 'value' }],
+                            [{ text: 'Marka / Batch:', style: 'label' }, { text: `M-${result.toy.marka.number}`, style: 'value' }],
+                            [{ text: 'Toy № / Bale No:', style: 'label' }, { text: String(result.toy.orderNo), style: 'value' }],
+                            [{ text: 'Sana / Date:', style: 'label' }, { text: new Date(result.createdAt).toLocaleDateString('uz-UZ'), style: 'value' }]
                         ]
                     },
                     layout: 'noBorders'
                 },
 
                 { text: '\n' },
+                { text: 'TAHLIL NATIJALARI / ANALYSIS RESULTS', style: 'sectionHeader' },
+                { canvas: [{ type: 'line', x1: 0, y1: 2, x2: 150, y2: 2, lineWidth: 1, lineColor: '#cbd5e1' }] },
+                { text: '\n' },
 
+                // Results Table
                 {
-                    style: 'tableExample',
+                    style: 'resultsTable',
                     table: {
                         widths: ['*', '*'],
                         body: [
-                            [{ text: 'Navi (Type):', bold: true }, result.navi],
-                            [{ text: 'Sinf (Grade):', bold: true }, result.grade],
-                            [{ text: 'Namlik (Moisture):', bold: true }, `${result.moisture} %`],
-                            [{ text: 'Ifloslik (Trash):', bold: true }, `${result.trash} %`],
-                            [{ text: 'Mikroneyr (Mic):', bold: true }, (result as any).micronaire || '-'],
-                            [{ text: 'Uzunlik (Length):', bold: true }, `${result.lengthMm} mm`],
-                            [{ text: 'Mustahkamlik (Str):', bold: true }, `${result.strength} g/tex`]
+                            [{ text: 'Navi (Type)', style: 'tableLabel' }, { text: String(result.navi), style: 'tableValue' }],
+                            [{ text: 'Sinf (Grade)', style: 'tableLabel' }, { text: String(result.grade), style: 'tableValue' }],
+                            [{ text: 'Namlik (Moisture)', style: 'tableLabel' }, { text: `${result.moisture} %`, style: 'tableValue' }],
+                            [{ text: 'Ifloslik (Trash)', style: 'tableLabel' }, { text: `${result.trash} %`, style: 'tableValue' }],
+                            [{ text: 'Mikroneyr (Mic)', style: 'tableLabel' }, { text: String((result as any).micronaire || '-'), style: 'tableValue' }],
+                            [{ text: 'Uzunlik (Length)', style: 'tableLabel' }, { text: `${result.lengthMm} mm`, style: 'tableValue' }],
+                            [{ text: 'Mustahkamlik (Strength)', style: 'tableLabel' }, { text: `${result.strength} g/tex`, style: 'tableValue' }]
                         ]
                     },
-                    layout: 'lightHorizontalLines'
+                    layout: {
+                        hLineWidth: (i) => (i === 0 || i === 7 ? 0 : 0.5),
+                        vLineWidth: () => 0,
+                        hLineColor: () => '#e2e8f0',
+                        paddingTop: () => 6,
+                        paddingBottom: () => 6,
+                    }
                 },
 
                 { text: '\n\n' },
-                { text: `Operator: ${(result as any).operatorName || '-'}`, alignment: 'right' },
-                { text: 'Tasdiqlandi: ___________________', alignment: 'right', margin: [0, 20, 0, 0] }
+                {
+                    columns: [
+                        {
+                            stack: [
+                                { text: 'MAS\'UL SHAXS / RESPONSIBLE:', style: 'footerLabel' },
+                                { text: (result as any).operatorName || 'LAB-EXPERT', style: 'footerValue' }
+                            ]
+                        },
+                        {
+                            stack: [
+                                { text: 'TASDIQLANDI / APPROVED:', style: 'footerLabel', alignment: 'right' },
+                                { text: '\n___________________', alignment: 'right' }
+                            ]
+                        }
+                    ]
+                }
             ],
             styles: {
-                header: { fontSize: 22, bold: true, color: '#1565C0' },
-                subheader: { fontSize: 16, italics: true, color: '#666' },
-                tableExample: { margin: [0, 5, 0, 15] }
+                brand: { fontSize: 14, bold: true, color: '#0f172a' },
+                reportTitle: { fontSize: 10, bold: true, color: '#64748b' },
+                header: { fontSize: 16, bold: true, color: '#1e293b' },
+                sectionHeader: { fontSize: 10, bold: true, color: '#334155' },
+                label: { fontSize: 10, color: '#64748b', bold: true },
+                value: { fontSize: 10, color: '#0f172a', bold: true },
+                tableLabel: { fontSize: 10, color: '#475569', margin: [0, 2, 0, 2] },
+                tableValue: { fontSize: 11, bold: true, color: '#0f172a', alignment: 'right' },
+                footerLabel: { fontSize: 8, color: '#94a3b8', bold: true },
+                footerValue: { fontSize: 10, bold: true, color: '#1e293b', margin: [0, 2, 0, 0] }
             },
             defaultStyle: {
                 font: 'Roboto'
@@ -150,7 +241,7 @@ export class LabExportService {
         const pdfDoc = printer.createPdfKitDocument(docDefinition);
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=Certificate_${result.toy.id.substring(0, 8)}.pdf`);
+        res.setHeader('Content-Disposition', `attachment; filename=Certificate_${result.toy.orderNo || result.toy.id.substring(0, 8)}.pdf`);
 
         pdfDoc.pipe(res);
         pdfDoc.end();

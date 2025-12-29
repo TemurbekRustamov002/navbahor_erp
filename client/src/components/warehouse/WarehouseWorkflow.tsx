@@ -98,16 +98,16 @@ export function WarehouseWorkflow() {
   };
 
   return (
-    <div className="h-full flex bg-[#f8fafc]">
+    <div className="h-full flex bg-[#f8fafc] dark:bg-slate-950">
       {/* Navbahor Workflow Sidebar - Glassmorphism */}
-      <div className="w-80 bg-white/80 backdrop-blur-xl border-r border-slate-200 flex-shrink-0 flex flex-col relative z-20 shadow-xl shadow-slate-200/50">
-        <div className="p-8 border-b border-slate-100 bg-white/40">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] mb-3">CRM & Logistika</p>
+      <div className="w-80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-white/5 flex-shrink-0 flex flex-col relative z-20 shadow-xl shadow-slate-200/50 dark:shadow-black/20">
+        <div className="p-8 border-b border-slate-100 dark:border-white/5 bg-white/40 dark:bg-black/10">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-3">CRM & Logistika</p>
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shadow-inner">
+            <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 text-primary rounded-2xl flex items-center justify-center shadow-inner">
               <ClipboardCheck className="h-6 w-6" strokeWidth={2.5} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Ishchi <span className="text-primary italic">Oqim</span></h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Ishchi <span className="text-primary italic">Oqim</span></h3>
           </div>
         </div>
 
@@ -127,16 +127,16 @@ export function WarehouseWorkflow() {
                   status === "current"
                     ? "bg-primary text-white shadow-xl shadow-primary/20 border-primary scale-[1.02] z-10"
                     : status === "completed"
-                      ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/80"
-                      : "bg-white/50 text-slate-400 border-transparent hover:bg-white hover:border-slate-200",
+                      ? "bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/20 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/20"
+                      : "bg-white/50 dark:bg-white/5 text-slate-400 dark:text-slate-500 border-transparent hover:bg-white dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/5",
                   !canAccess && "opacity-30 cursor-not-allowed grayscale"
                 )}
               >
                 <div className={cn(
                   "flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-500",
                   status === "current" && "bg-white/20 ring-4 ring-white/10",
-                  status === "completed" && "bg-white text-emerald-600 shadow-md",
-                  status === "upcoming" && "bg-slate-100 group-hover:bg-white group-hover:scale-105"
+                  status === "completed" && "bg-white dark:bg-white/10 text-emerald-600 dark:text-emerald-400 shadow-md",
+                  status === "upcoming" && "bg-slate-100 dark:bg-white/5 group-hover:bg-white dark:group-hover:bg-white/10 group-hover:scale-105"
                 )}>
                   {status === "completed" ? (
                     <CheckCircle className="h-5 w-5" strokeWidth={2.5} />
@@ -148,12 +148,12 @@ export function WarehouseWorkflow() {
                 <div className="flex-1 min-w-0">
                   <span className={cn(
                     "text-[8px] font-bold uppercase tracking-[0.2em] block leading-none",
-                    status === "current" ? "text-white/60" : "text-slate-400"
+                    status === "current" ? "text-white/60" : "text-slate-400 dark:text-slate-500"
                   )}>Step 0{index + 1}</span>
-                  <div className="font-bold uppercase tracking-widest text-[10px] mt-1.5">{step.label}</div>
+                  <div className="font-bold uppercase tracking-widest text-[10px] mt-1.5 dark:text-slate-200">{step.label}</div>
                   <div className={cn(
                     "text-[9px] font-medium mt-1 line-clamp-1 opacity-70",
-                    status === "current" ? "text-white" : "text-slate-500"
+                    status === "current" ? "text-white" : "text-slate-500 dark:text-slate-400"
                   )}>
                     {step.description}
                   </div>
@@ -162,7 +162,7 @@ export function WarehouseWorkflow() {
                 {canAccess && status !== "current" && (
                   <ArrowRight className={cn(
                     "h-3.5 w-3.5 shrink-0 transition-all duration-300",
-                    status === "completed" ? "text-emerald-500" : "text-slate-300 group-hover:translate-x-1 group-hover:text-primary"
+                    status === "completed" ? "text-emerald-500" : "text-slate-300 dark:text-slate-600 group-hover:translate-x-1 group-hover:text-primary"
                   )} strokeWidth={2.5} />
                 )}
               </button>
@@ -172,39 +172,39 @@ export function WarehouseWorkflow() {
 
         {/* Selected Summary - Glass Card */}
         {(selectedCustomer || currentOrder) && (
-          <div className="p-6 border-t border-slate-100 bg-white/40 backdrop-blur-sm">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] mb-4">Aktiv Ma&apos;lumot</h3>
+          <div className="p-6 border-t border-slate-100 dark:border-white/5 bg-white/40 dark:bg-white/5 backdrop-blur-sm">
+            <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-4">Aktiv Ma&apos;lumot</h3>
             <div className="space-y-3">
               {selectedCustomer && (
-                <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm transition-all hover:border-primary/20">
-                  <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center">
+                <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-3 rounded-2xl shadow-sm transition-all hover:border-primary/20 dark:hover:border-primary/40">
+                  <div className="w-10 h-10 rounded-xl bg-primary/5 dark:bg-primary/20 text-primary flex items-center justify-center">
                     <Users size={18} strokeWidth={2.5} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[8px] font-bold text-slate-400 uppercase leading-none mb-1">Buyurtmachi</p>
-                    <p className="text-[11px] font-bold text-slate-900 truncate uppercase mt-0.5">{selectedCustomer.name}</p>
+                    <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase leading-none mb-1">Buyurtmachi</p>
+                    <p className="text-[11px] font-bold text-slate-900 dark:text-white truncate uppercase mt-0.5">{selectedCustomer.name}</p>
                   </div>
                 </div>
               )}
               {currentOrder && (
-                <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm transition-all hover:border-emerald-200">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-3 rounded-2xl shadow-sm transition-all hover:border-emerald-200 dark:hover:border-emerald-900/40">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-500 flex items-center justify-center">
                     <Package size={18} strokeWidth={2.5} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[8px] font-bold text-slate-400 uppercase leading-none mb-1">Buyurtma No</p>
-                    <p className="text-[11px] font-mono font-bold text-emerald-600 mt-0.5">ORD-{currentOrder.number}</p>
+                    <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase leading-none mb-1">Buyurtma No</p>
+                    <p className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-500 mt-0.5">ORD-{currentOrder.number}</p>
                   </div>
                 </div>
               )}
               {currentChecklist && (
-                <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm transition-all hover:border-amber-200">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-3 rounded-2xl shadow-sm transition-all hover:border-amber-200 dark:hover:border-amber-900/40">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-500 flex items-center justify-center">
                     <Scan size={18} strokeWidth={2.5} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[8px] font-bold text-slate-400 uppercase leading-none mb-1">Tanlangan</p>
-                    <p className="text-[11px] font-mono font-bold text-amber-700 mt-0.5">
+                    <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase leading-none mb-1">Tanlangan</p>
+                    <p className="text-[11px] font-mono font-bold text-amber-700 dark:text-amber-500 mt-0.5">
                       {currentChecklist.items?.filter(item => item.scanned).length || 0} / {currentChecklist.items?.length || 0} TOY
                     </p>
                   </div>
@@ -216,22 +216,22 @@ export function WarehouseWorkflow() {
 
         {/* Error Display */}
         {error && (
-          <div className="mx-5 mb-5 p-4 bg-rose-50 border border-rose-100 rounded-2xl animate-in fade-in slide-in-from-bottom-2">
+          <div className="mx-5 mb-5 p-4 bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/20 rounded-2xl animate-in fade-in slide-in-from-bottom-2">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
               <p className="text-[9px] font-bold text-rose-500 uppercase tracking-widest">Tizim Xatoligi</p>
             </div>
-            <p className="text-[11px] font-medium text-rose-700 leading-snug">{error}</p>
+            <p className="text-[11px] font-medium text-rose-700 dark:text-rose-400 leading-snug">{error}</p>
           </div>
         )}
       </div>
 
       {/* Main Content Area - Refined Spacing */}
-      <div className="flex-1 min-h-0 relative bg-slate-50/50">
+      <div className="flex-1 min-h-0 relative bg-slate-50/50 dark:bg-black/20">
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,theme(colors.primary.500/0.03),transparent_40%)]" />
 
         <div className="h-full flex flex-col p-6 lg:p-10">
-          <div className="flex-1 bg-white/80 backdrop-blur-md border border-white/60 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden relative">
+          <div className="flex-1 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md border border-white/60 dark:border-white/5 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/20 overflow-hidden relative">
             {currentStep === "customer" && <CustomerSelector />}
             {currentStep === "toys" && <ToysByBrands />}
             {currentStep === "checklist" && <ChecklistManager />}

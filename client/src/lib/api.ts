@@ -13,22 +13,6 @@ const WS_URL = trimTrailingSlash(RAW_WS_URL);
 
 console.log('🔧 API Configuration:', { API_BASE_URL, WS_URL });
 
-// Force log every API call to debug port issues
-const originalCreate = axios.create;
-axios.create = function (config) {
-  const instance = originalCreate.call(this, config);
-  instance.interceptors.request.use((config) => {
-    console.log('🌐 API Request:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      baseURL: config.baseURL,
-      fullURL: `${config.baseURL}${config.url}`
-    });
-    return config;
-  });
-  return instance;
-};
-
 // Create axios instance with default configuration
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -75,11 +59,31 @@ api.interceptors.request.use(
       config.url?.includes(endpoint) || config.url?.endsWith('/health')
     );
 
+    // If no token in memory, try storage
+    let currentToken = token;
+    if (!currentToken && typeof window !== 'undefined') {
+      // 1. Try direct keys
+      currentToken = localStorage.getItem('auth-token') || localStorage.getItem('accessToken');
+
+      // 2. Try Zustand auth-storage
+      if (!currentToken) {
+        try {
+          const authStorage = localStorage.getItem('auth-storage');
+          if (authStorage) {
+            const parsed = JSON.parse(authStorage);
+            currentToken = parsed.state?.accessToken;
+          }
+        } catch (e) {
+          console.error('Failed to parse auth-storage');
+        }
+      }
+    }
+
     // Add auth token if available and not a public endpoint
-    if (token && !config.headers.Authorization && !isPublicEndpoint) {
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔐 Adding auth token to request:', token.substring(0, 20) + '...');
-    } else if (!token && !isPublicEndpoint) {
+    if (currentToken && !config.headers.Authorization && !isPublicEndpoint) {
+      config.headers.Authorization = `Bearer ${currentToken}`;
+      console.log('🔐 Adding auth token to request:', config.url);
+    } else if (!currentToken && !isPublicEndpoint) {
       console.warn('⚠️ No auth token available for API request:', config.url);
     } else if (isPublicEndpoint) {
       console.log('🌐 Public endpoint, no auth required:', config.url);
@@ -109,6 +113,7 @@ api.interceptors.response.use(
         // Clear local storage tokens
         localStorage.removeItem('auth-token');
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('auth-storage'); // CRITICAL: Clear zustand store to stop redirect loops
         window.location.href = '/?error=unauthorized';
       }
     }

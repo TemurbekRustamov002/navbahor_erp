@@ -28,10 +28,10 @@ export function LabCard({ sample }: LabCardProps) {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case "PENDING": return "bg-amber-500/10 text-amber-600 border-amber-500/20";
-      case "APPROVED": return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
-      case "REJECTED": return "bg-rose-500/10 text-rose-600 border-rose-500/20";
-      default: return "bg-slate-500/10 text-slate-600 border-slate-500/20";
+      case "PENDING": return "bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/20";
+      case "APPROVED": return "bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+      case "REJECTED": return "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/20";
+      default: return "bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-400 border-slate-500/20";
     }
   };
 
@@ -66,30 +66,30 @@ export function LabCard({ sample }: LabCardProps) {
 
   const handleDelete = () => {
     if (window.confirm("Bu tahlilni o'chirishni tasdiqlaysizmi?")) {
-      deleteSample(sample.id);
+      deleteSample(sample.toyId);
     }
   };
 
   return (
     <Card className={cn(
-      "group relative overflow-hidden transition-all duration-500 border-none rounded-3xl bg-white/40 backdrop-blur-xl shadow-xl hover:shadow-primary/5 hover:-translate-y-1",
-      sample.showToSales && "ring-2 ring-primary/20"
+      "group relative overflow-hidden transition-all duration-500 border-none rounded-3xl bg-white/40 dark:bg-slate-900/60 dark:backdrop-blur-xl shadow-xl hover:shadow-primary/5 hover:-translate-y-1",
+      sample.showToWarehouse && "ring-2 ring-primary/20 dark:ring-primary/40"
     )}>
       <div className="absolute top-0 left-0 w-2 h-full bg-primary/20" />
 
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-foreground text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform">
+            <div className="w-12 h-12 bg-foreground dark:bg-white text-white dark:text-black rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform">
               <FlaskConical size={24} />
             </div>
             <div>
-              <h3 className="text-lg font-black text-foreground uppercase tracking-tight leading-none mb-1">
+              <h3 className="text-lg font-black text-foreground dark:text-white uppercase tracking-tight leading-none mb-1">
                 {sample.markaLabel}
               </h3>
               <div className="flex items-center gap-2">
                 <StatusIcon className={cn("h-3 w-3", sample.status === "PENDING" ? "text-amber-500" : "text-primary")} />
-                <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                <span className="text-[10px] font-black text-muted-foreground/60 dark:text-slate-500 uppercase tracking-widest">
                   {sample.status === "PENDING" ? "NAVBATDA" : "TASDIQLANGAN"}
                 </span>
               </div>
@@ -112,26 +112,26 @@ export function LabCard({ sample }: LabCardProps) {
             { label: "STR", value: sample.strength, color: "text-emerald-500" },
             { label: "LEN", value: sample.lengthMm, color: "text-primary" }
           ].map((metric, i) => (
-            <div key={i} className="p-3 bg-secondary/50 rounded-2xl border border-white/50 group-hover:bg-white transition-colors">
-              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-1">{metric.label}</p>
+            <div key={i} className="p-3 bg-secondary/50 dark:bg-white/5 rounded-2xl border border-white/50 dark:border-white/5 group-hover:bg-white dark:group-hover:bg-white/10 transition-colors">
+              <p className="text-[9px] font-bold text-muted-foreground/60 dark:text-slate-500 uppercase tracking-widest mb-1">{metric.label}</p>
               <p className={cn("text-lg font-black tabular-nums leading-none", metric.color)}>{metric.value}</p>
             </div>
           ))}
         </div>
 
         {/* Meta Info */}
-        <div className="flex items-center justify-between border-t border-white/20 pt-5 mt-auto">
+        <div className="flex items-center justify-between border-t border-white/20 dark:border-white/5 pt-5 mt-auto">
           <div className="flex items-center gap-4">
             <div
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/50 rounded-lg cursor-pointer hover:bg-white transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/50 dark:bg-white/5 rounded-lg cursor-pointer hover:bg-white dark:hover:bg-white/10 transition-colors"
               onClick={() => setShowDetails(!showDetails)}
             >
               <Award className="h-3 w-3 text-primary" />
-              <span className="text-[10px] font-black text-foreground uppercase">{sample.grade}</span>
+              <span className="text-[10px] font-black text-foreground dark:text-white uppercase">{sample.grade}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/50 rounded-lg">
-              <Calendar className="h-3 w-3 text-muted-foreground" />
-              <span className="text-[10px] font-black text-muted-foreground uppercase">{formatDate(sample.createdAt)}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/50 dark:bg-white/5 rounded-lg">
+              <Calendar className="h-3 w-3 text-muted-foreground dark:text-slate-500" />
+              <span className="text-[10px] font-black text-muted-foreground dark:text-slate-500 uppercase">{formatDate(sample.createdAt)}</span>
             </div>
           </div>
 
@@ -149,19 +149,19 @@ export function LabCard({ sample }: LabCardProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => toggleShowToSales(sample.id)}
+              onClick={() => toggleShowToSales(sample.toyId)}
               className={cn(
                 "h-10 w-10 p-0 rounded-xl transition-all shadow-sm",
-                sample.showToSales ? "text-primary bg-primary/10" : "text-muted-foreground"
+                sample.showToWarehouse ? "text-primary bg-primary/10" : "text-muted-foreground"
               )}
             >
-              {sample.showToSales ? <Eye size={18} /> : <EyeOff size={18} />}
+              {sample.showToWarehouse ? <Eye size={18} /> : <EyeOff size={18} />}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              className="h-10 w-10 p-0 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+              className="h-10 w-10 p-0 rounded-xl hover:bg-rose-500 dark:hover:bg-rose-900/40 hover:text-white dark:hover:text-rose-400 text-slate-400 dark:text-slate-600 transition-all shadow-sm"
             >
               <Trash2 size={18} />
             </Button>
@@ -170,15 +170,15 @@ export function LabCard({ sample }: LabCardProps) {
 
         {/* Details Dropdown */}
         {showDetails && (
-          <div className="mt-4 pt-4 border-t border-white/20 space-y-2 animate-in slide-in-from-top-2 duration-300">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase">
+          <div className="mt-4 pt-4 border-t border-white/20 dark:border-white/5 space-y-2 animate-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground dark:text-slate-500 uppercase">
               <User className="h-3 w-3" />
               <span>Tahlilchi: {sample.analyst || "Noma'lum"}</span>
             </div>
             {sample.comment && (
-              <div className="p-3 bg-white/50 rounded-xl border border-white/50">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Izoh</p>
-                <p className="text-xs font-medium text-foreground">{sample.comment}</p>
+              <div className="p-3 bg-white/50 dark:bg-black/40 rounded-xl border border-white/50 dark:border-white/10">
+                <p className="text-[10px] font-bold text-muted-foreground dark:text-slate-500 uppercase mb-1">Izoh</p>
+                <p className="text-xs font-medium text-foreground dark:text-white">{sample.comment}</p>
               </div>
             )}
           </div>

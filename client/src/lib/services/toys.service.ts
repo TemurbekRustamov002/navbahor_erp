@@ -10,6 +10,7 @@ export interface CreateToyRequest {
   netto: number;
   orderNo?: number; // Backend tomonidan avtomatik aniqlanadi
   operatorId?: string;
+  brigade?: string;
 }
 
 export interface ToysListResponse {
@@ -25,6 +26,7 @@ export interface ToysQuery {
   productType?: ProductType;
   labStatus?: string;
   withoutLabResult?: boolean;
+  brigade?: string;
   page?: number;
   limit?: number;
 }
@@ -37,6 +39,7 @@ class ToysService {
       if (query.productType) params.append('productType', query.productType);
       if (query.labStatus) params.append('labStatus', query.labStatus);
       if (query.withoutLabResult) params.append('withoutLabResult', query.withoutLabResult.toString());
+      if (query.brigade) params.append('brigade', query.brigade);
       if (query.page) params.append('page', query.page.toString());
       if (query.limit) params.append('limit', query.limit.toString());
 

@@ -94,18 +94,20 @@ export class MarkasController {
   }
 
   // Export endpoints
-  @Roles('ADMIN', 'SCALE', 'LAB', 'WAREHOUSE')
+  @Public()
   @Get('export/excel')
   @ApiOperation({ summary: 'Export markas to Excel format' })
   async exportExcel(@Query() query: MarkaQueryDto, @Res() res: Response) {
     await this.exportSvc.exportMarkasToExcel(res, undefined, {
       format: 'excel',
-      includeDetails: true, // Auto include details for Excel
-      includeToys: String(query.withUntestedToys) === 'true' || query.withUntestedToys === true
+      includeDetails: true,
+      includeToys: String(query.withUntestedToys) === 'true' || query.withUntestedToys === true,
+      productTypes: query.productType ? [query.productType] : undefined,
+      statuses: query.status ? [query.status] : undefined,
     });
   }
 
-  @Roles('ADMIN', 'SCALE', 'LAB', 'WAREHOUSE')
+  @Public()
   @Get(':id/export/pdf')
   @ApiOperation({ summary: 'Export detailed marka passport (PDF)' })
   async exportMarkaPassport(@Param('id') id: string, @Res() res: Response) {
@@ -124,7 +126,7 @@ export class MarkasController {
     }
   }
 
-  @Roles('ADMIN', 'SCALE', 'LAB', 'WAREHOUSE')
+  @Public()
   @Get(':id/label')
   @ApiOperation({ summary: 'Generate label for marka' })
   async getMarkaLabel(@Param('id') id: string, @Res() res: Response) {
@@ -141,7 +143,7 @@ export class MarkasController {
     }
   }
 
-  @Roles('ADMIN', 'SCALE', 'LAB', 'WAREHOUSE')
+  @Public()
   @Post('export/excel/selected')
   @ApiOperation({ summary: 'Export selected markas to Excel' })
   async exportSelectedExcel(@Body('markaIds') markaIds: string[], @Res() res: Response) {

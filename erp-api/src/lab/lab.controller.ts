@@ -83,6 +83,8 @@ export class LabController {
     grade: LabGrade;
     strength: number;
     lengthMm: number;
+    micronaire?: number;
+    operatorName?: string;
     comment?: string;
   }) {
     // Validate grade enum
@@ -104,6 +106,8 @@ export class LabController {
     grade: LabGrade;
     strength: number;
     lengthMm: number;
+    micronaire?: number;
+    operatorName?: string;
     comment?: string;
   }) {
     // Validate grade enum

@@ -48,17 +48,17 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   // Improved action handlers with error handling and loading states
-  const handleToggleShowToSales = useCallback(async (sampleId: string) => {
+  const handleToggleShowToSales = useCallback(async (toyId: string) => {
     try {
       setIsLoading(true);
-      await toggleShowToSales(sampleId);
+      await toggleShowToSales(toyId);
       toast.success("Savdo ko'rsatish holati o'zgartirildi");
     } catch (error) {
       toast.error("Xatolik yuz berdi", {
         title: "Savdo holati o'zgartirishda muammo",
         action: {
           label: "Qayta urinish",
-          onClick: () => handleToggleShowToSales(sampleId)
+          onClick: () => handleToggleShowToSales(toyId)
         }
       });
     } finally {
@@ -66,20 +66,20 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
     }
   }, [toggleShowToSales, toast]);
 
-  const handleDeleteSample = useCallback(async (sampleId: string) => {
+  const handleDeleteSample = useCallback(async (toyId: string) => {
     if (!window.confirm("Haqiqatan ham bu tahlilni o'chirmoqchimisiz?")) {
       return;
     }
 
     try {
-      setIsDeleting(sampleId);
-      await deleteSample(sampleId);
+      setIsDeleting(toyId);
+      await deleteSample(toyId);
       toast.success("Tahlil muvaffaqiyatli o'chirildi");
     } catch (error) {
       toast.error("Tahlilni o'chirishda xatolik yuz berdi", {
         action: {
           label: "Qayta urinish",
-          onClick: () => handleDeleteSample(sampleId)
+          onClick: () => handleDeleteSample(toyId)
         }
       });
     } finally {
@@ -158,9 +158,9 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
       // Analyst filter
       if (analystFilter && sample.analyst !== analystFilter) return false;
 
-      // Show to sales filter
-      if (showToSalesFilter === "yes" && !sample.showToSales) return false;
-      if (showToSalesFilter === "no" && sample.showToSales) return false;
+      // Show to warehouse filter
+      if (showToSalesFilter === "yes" && !sample.showToWarehouse) return false;
+      if (showToSalesFilter === "no" && sample.showToWarehouse) return false;
 
       // Date filter
       if (dateFrom && sample.createdAt < dateFrom) return false;
@@ -204,12 +204,12 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
 
   const getGradeColor = (grade: string) => {
     switch (grade) {
-      case "OLIY": return "text-green-700 bg-green-100";
-      case "YAXSHI": return "text-blue-700 bg-blue-100";
-      case "ORTA": return "text-yellow-700 bg-yellow-100";
-      case "ODDIY": return "text-orange-700 bg-orange-100";
-      case "IFLOS": return "text-red-700 bg-red-100";
-      default: return "text-gray-700 bg-gray-100";
+      case "OLIY": return "text-green-700 dark:text-emerald-400 bg-green-100 dark:bg-emerald-950/30 border-green-200 dark:border-emerald-800/30";
+      case "YAXSHI": return "text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/30";
+      case "ORTA": return "text-yellow-700 dark:text-amber-400 bg-yellow-100 dark:bg-amber-950/30 border-yellow-200 dark:border-amber-800/30";
+      case "ODDIY": return "text-orange-700 dark:text-orange-400 bg-orange-100 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800/30";
+      case "IFLOS": return "text-red-700 dark:text-rose-400 bg-red-100 dark:bg-rose-950/30 border-red-200 dark:border-rose-800/30";
+      default: return "text-gray-700 dark:text-slate-400 bg-gray-100 dark:bg-slate-800/30 border-gray-200 dark:border-slate-700/30";
     }
   };
 
@@ -252,11 +252,11 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
         showCloseButton={false}
       >
         {/* Professional Header with Actions */}
-        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30">
+        <div className="flex items-center justify-between p-6 border-b border-border dark:border-white/10 bg-muted/30 dark:bg-black/40">
           <div className="flex items-center gap-3">
             <FlaskConical className="h-6 w-6 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground dark:text-slate-500">
                 Jami natijalar: {samples.length} | Ko'rsatilgan: {filteredSamples.length}
               </p>
             </div>
@@ -266,7 +266,7 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
               variant="outline"
               size="sm"
               onClick={handleResetFilters}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
               disabled={isLoading}
             >
               <RefreshCw className="h-4 w-4" />
@@ -276,7 +276,7 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
               variant="outline"
               size="sm"
               onClick={() => setShowFilterModal(true)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
               disabled={isLoading}
             >
               <Filter className="h-4 w-4" />
@@ -286,7 +286,7 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
               variant="outline"
               size="sm"
               onClick={handleExport}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
               disabled={isLoading}
             >
               <Download className="h-4 w-4" />
@@ -296,7 +296,7 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 dark:text-slate-500 dark:hover:text-white"
               disabled={isLoading}
               aria-label="Modalni yopish"
             >
@@ -306,20 +306,20 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
         </div>
 
         {/* Quick Search */}
-        <div className="p-4 border-b bg-muted/50 border-border">
+        <div className="p-4 border-b bg-muted/50 dark:bg-black/20 border-border dark:border-white/5">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-slate-600" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Marka, sinf yoki analitik nomi bo'yicha qidirish..."
-              className="pl-10"
+              className="pl-10 dark:bg-black/40 dark:border-white/10 dark:text-white"
             />
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col dark:bg-black/10">
           {/* Results Table */}
           <div className="flex-1 overflow-auto p-4">
             {paginatedSamples.length === 0 ? (
@@ -330,17 +330,17 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-3 font-medium">Marka</th>
-                      <th className="text-left p-3 font-medium">Sinf</th>
-                      <th className="text-left p-3 font-medium">Namlik</th>
-                      <th className="text-left p-3 font-medium">Axloq</th>
-                      <th className="text-left p-3 font-medium">Mustahkamlik</th>
-                      <th className="text-left p-3 font-medium">Uzunlik</th>
-                      <th className="text-left p-3 font-medium">Analitik</th>
-                      <th className="text-left p-3 font-medium">Holat</th>
-                      <th className="text-left p-3 font-medium">Sana</th>
-                      <th className="text-left p-3 font-medium">Amallar</th>
+                    <tr className="border-b dark:border-white/10">
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Marka</th>
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Sinf</th>
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Namlik</th>
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Axloq</th>
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Mustahkamlik</th>
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Uzunlik</th>
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Analitik</th>
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Holat</th>
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Sana</th>
+                      <th className="text-left p-3 font-medium dark:text-slate-400">Amallar</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -350,25 +350,25 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                         (marka.productType === 'TOLA' ? `${marka.sex} ${marka.number}` : `${marka.productType} ${marka.number}`) : 'N/A';
 
                       return (
-                        <tr key={sample.id} className="border-b hover:bg-muted/50">
-                          <td className="p-3">{markaLabel}</td>
+                        <tr key={sample.id} className="border-b dark:border-white/5 hover:bg-muted/50 dark:hover:bg-white/5">
+                          <td className="p-3 dark:text-white">{markaLabel}</td>
                           <td className="p-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getGradeColor(sample.grade)}`}>
+                            <span className={cn("px-2 py-1 rounded-full text-xs font-medium border", getGradeColor(sample.grade))}>
                               {sample.grade}
                             </span>
                           </td>
-                          <td className="p-3">{sample.moisture}%</td>
-                          <td className="p-3">{sample.trash}%</td>
-                          <td className="p-3">{sample.strength}</td>
-                          <td className="p-3">{sample.lengthMm}mm</td>
-                          <td className="p-3">{sample.analyst || '-'}</td>
+                          <td className="p-3 dark:text-white">{sample.moisture}%</td>
+                          <td className="p-3 dark:text-white">{sample.trash}%</td>
+                          <td className="p-3 dark:text-white">{sample.strength}</td>
+                          <td className="p-3 dark:text-white">{sample.lengthMm}mm</td>
+                          <td className="p-3 dark:text-white">{sample.analyst || '-'}</td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
                               {getStatusIcon(sample.status)}
-                              <span className="text-sm">{getStatusText(sample.status)}</span>
+                              <span className="text-sm dark:text-white">{getStatusText(sample.status)}</span>
                             </div>
                           </td>
-                          <td className="p-3 text-sm text-muted-foreground">
+                          <td className="p-3 text-sm text-muted-foreground dark:text-slate-500">
                             {formatDate(sample.createdAt)}
                           </td>
                           <td className="p-3">
@@ -377,12 +377,12 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleToggleShowToSales(sample.id)}
-                                disabled={isLoading || isDeleting === sample.id}
-                                className="h-8 w-8 p-0"
-                                aria-label={sample.showToSales ? "Savdodan yashirish" : "Savdoda ko'rsatish"}
+                                onClick={() => handleToggleShowToSales(sample.toyId)}
+                                disabled={isLoading || isDeleting === sample.toyId}
+                                className="h-8 w-8 p-0 dark:text-slate-500 dark:hover:text-white"
+                                aria-label={sample.showToWarehouse ? "Savdodan yashirish" : "Savdoda ko'rsatish"}
                               >
-                                {sample.showToSales ?
+                                {sample.showToWarehouse ?
                                   <Eye className="h-4 w-4" /> :
                                   <EyeOff className="h-4 w-4" />
                                 }
@@ -394,8 +394,8 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleEdit(sample)}
-                                  disabled={isLoading || isDeleting === sample.id}
-                                  className="h-8 w-8 p-0"
+                                  disabled={isLoading || isDeleting === sample.toyId}
+                                  className="h-8 w-8 p-0 dark:text-slate-500 dark:hover:text-white"
                                   aria-label="Tahlilni tahrirlash"
                                 >
                                   <Edit className="h-4 w-4" />
@@ -407,12 +407,12 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleDeleteSample(sample.id)}
-                                  disabled={isLoading || isDeleting === sample.id}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => handleDeleteSample(sample.toyId)}
+                                  disabled={isLoading || isDeleting === sample.toyId}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
                                   aria-label="Tahlilni o'chirish"
                                 >
-                                  {isDeleting === sample.id ? (
+                                  {isDeleting === sample.toyId ? (
                                     <RefreshCw className="h-4 w-4 animate-spin" />
                                   ) : (
                                     <Trash2 className="h-4 w-4" />
@@ -432,8 +432,8 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex items-center justify-between px-4 py-3 border-t dark:border-white/10 dark:bg-black/20">
+              <div className="text-sm text-muted-foreground dark:text-slate-500">
                 {filteredSamples.length} natijadan {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredSamples.length)} ko'rsatilmoqda
               </div>
               <div className="flex items-center gap-2">
@@ -442,10 +442,11 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                   size="sm"
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1 || isLoading}
+                  className="dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
                 >
                   Oldingi
                 </Button>
-                <span className="text-sm">
+                <span className="text-sm dark:text-white">
                   {currentPage} / {totalPages}
                 </span>
                 <Button
@@ -453,6 +454,7 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                   size="sm"
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages || isLoading}
+                  className="dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
                 >
                   Keyingi
                 </Button>
@@ -480,7 +482,7 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                 id="markaFilter"
                 value={markaFilter}
                 onChange={(e) => setMarkaFilter(e.target.value)}
-                className="w-full mt-1 p-2 border border-input rounded-md bg-background"
+                className="w-full mt-1 p-2 border border-input rounded-md bg-background dark:bg-black/40 dark:border-white/10 dark:text-white"
               >
                 <option value="">Barchasi</option>
                 {uniqueMarkas.map((marka) => (
@@ -498,7 +500,7 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                 id="statusFilter"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as "all" | "pending" | "approved" | "rejected")}
-                className="w-full mt-1 p-2 border border-input rounded-md bg-background"
+                className="w-full mt-1 p-2 border border-input rounded-md bg-background dark:bg-black/40 dark:border-white/10 dark:text-white"
               >
                 <option value="all">Barchasi</option>
                 <option value="pending">Kutilmoqda</option>
@@ -514,7 +516,7 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                 id="gradeFilter"
                 value={gradeFilter}
                 onChange={(e) => setGradeFilter(e.target.value)}
-                className="w-full mt-1 p-2 border border-input rounded-md bg-background"
+                className="w-full mt-1 p-2 border border-input rounded-md bg-background dark:bg-black/40 dark:border-white/10 dark:text-white"
               >
                 <option value="">Barchasi</option>
                 {uniqueGrades.map((grade) => (
@@ -532,7 +534,7 @@ export function LabResultsModal({ isOpen, onClose, onSampleEdit }: LabResultsMod
                 id="showToSalesFilter"
                 value={showToSalesFilter}
                 onChange={(e) => setShowToSalesFilter(e.target.value as "all" | "yes" | "no")}
-                className="w-full mt-1 p-2 border border-input rounded-md bg-background"
+                className="w-full mt-1 p-2 border border-input rounded-md bg-background dark:bg-black/40 dark:border-white/10 dark:text-white"
               >
                 <option value="all">Barchasi</option>
                 <option value="yes">Ha</option>

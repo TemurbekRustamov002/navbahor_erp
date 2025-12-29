@@ -192,14 +192,6 @@ class LabService {
     }
   }
 
-  // Export functions
-  private getHeaders() {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    return {
-      'Authorization': token ? `Bearer ${token}` : '',
-    };
-  }
-
   async exportResultsToExcel(query: any = {}): Promise<Blob> {
     try {
       const params = new URLSearchParams();
@@ -207,13 +199,9 @@ class LabService {
       if (query.from) params.append('from', query.from);
       if (query.to) params.append('to', query.to);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/lab/export/excel?${params.toString()}`, {
-        method: 'GET',
-        headers: this.getHeaders(),
+      return await apiClient.get<Blob>(`/lab/export/excel?${params.toString()}`, {
+        responseType: 'blob',
       });
-
-      if (!response.ok) throw new Error('Excel eksport xatosi');
-      return await response.blob();
     } catch (error: any) {
       throw new Error(error.message || 'Excel eksport qilishda xatolik');
     }
@@ -221,13 +209,9 @@ class LabService {
 
   async exportCertificatePDF(toyId: string): Promise<Blob> {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/lab/results/${toyId}/export/certificate`, {
-        method: 'GET',
-        headers: this.getHeaders(),
+      return await apiClient.get<Blob>(`/lab/results/${toyId}/export/certificate`, {
+        responseType: 'blob',
       });
-
-      if (!response.ok) throw new Error('Sertifikat yaratishda xatolik');
-      return await response.blob();
     } catch (error: any) {
       throw new Error(error.message || 'Sifat sertifikatini yuklab olishda xatolik');
     }

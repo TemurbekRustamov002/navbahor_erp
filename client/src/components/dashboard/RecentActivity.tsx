@@ -36,7 +36,8 @@ const statusIcons = {
 }
 
 export function RecentActivity() {
-  const { recentActivities, fetchDashboardData } = useDashboardStore()
+  const recentActivities = useDashboardStore(state => state.recentActivities)
+  const fetchDashboardData = useDashboardStore(state => state.fetchDashboardData)
 
   useEffect(() => {
     fetchDashboardData()

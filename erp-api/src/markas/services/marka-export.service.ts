@@ -4,6 +4,7 @@ import { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 import PdfPrinter from 'pdfmake';
 import { TDocumentDefinitions } from 'pdfmake/interfaces';
+import * as QRCode from 'qrcode';
 
 export interface MarkaExportOptions {
   format: 'pdf' | 'excel';
@@ -30,11 +31,25 @@ const fonts = {
 export class MarkaExportService {
   constructor(private prisma: PrismaService) { }
 
-  /**
-   * Export markas to Excel format with corporate styling
-   */
   async exportMarkasToExcel(res: Response, markaIds: string[] | undefined, options: MarkaExportOptions) {
-    const where = markaIds ? { id: { in: markaIds } } : {};
+    const where: any = {};
+
+    if (markaIds && markaIds.length > 0) {
+      where.id = { in: markaIds };
+    } else {
+      // Build where clause from options
+      if (options.productTypes && options.productTypes.length > 0) {
+        where.productType = { in: options.productTypes };
+      }
+      if (options.statuses && options.statuses.length > 0) {
+        where.status = { in: options.statuses };
+      }
+      if (options.dateRange) {
+        where.createdAt = {};
+        if (options.dateRange.from) where.createdAt.gte = options.dateRange.from;
+        if (options.dateRange.to) where.createdAt.lte = options.dateRange.to;
+      }
+    }
 
     const markas = await this.prisma.marka.findMany({
       where,
@@ -49,17 +64,44 @@ export class MarkaExportService {
     });
 
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Navbahor ERP';
-    workbook.created = new Date();
+    const sheet = workbook.addWorksheet('Markalar Ro\'yxati', {
+      views: [{ state: 'frozen', ySplit: 5 }]
+    });
 
-    const sheet = workbook.addWorksheet('Markalar');
+    // --- STYLES ---
+    const brandFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+    const headerFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+    const stripeFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+    const borderStyle: Partial<ExcelJS.Borders> = {
+      top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+      left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+      bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+      right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+    };
 
-    // Headers
+    // --- HEADER SECTION ---
+    sheet.mergeCells('A1:J2');
+    const titleCell = sheet.getCell('A1');
+    titleCell.value = 'NAVBAHOR TEXTILE ERP - MARKALAR HISOBOTI';
+    titleCell.font = { size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    titleCell.fill = brandFill;
+
+    sheet.getCell('A4').value = 'JAMI MARKALAR:';
+    sheet.getCell('A4').font = { bold: true, color: { argb: 'FF64748B' } };
+    sheet.getCell('B4').value = markas.length;
+    sheet.getCell('B4').font = { bold: true };
+
+    sheet.getCell('D4').value = 'EKSPORT SANASI:';
+    sheet.getCell('D4').font = { bold: true, color: { argb: 'FF64748B' } };
+    sheet.getCell('E4').value = new Date().toLocaleDateString('uz-UZ');
+
+    // --- TABLE HEADERS ---
     const headers = [
+      '№',
       'Marka Raqami',
       'Mahsulot Turi',
-      'Sex',
-      'Bo\'lim',
+      'Bo\'lim / Sex',
       'Seleksiya',
       'PTM',
       'Status',
@@ -69,30 +111,26 @@ export class MarkaExportService {
     ];
 
     if (options.includeToys) {
-      headers.push('Toy ID', 'Toy №', 'Netto', 'Brutto', 'Lab Class');
+      headers.push('Toy №', 'Netto (kg)', 'Sinf (Grade)');
     }
 
     const headerRow = sheet.addRow(headers);
-    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
-    headerRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF2C3E50' } // Corporate Blue
-    };
+    headerRow.height = 25;
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+      cell.fill = headerFill;
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = borderStyle;
+    });
 
-    // Auto-filter
-    sheet.autoFilter = {
-      from: { row: 1, column: 1 },
-      to: { row: 1, column: headers.length }
-    };
-
-    // Data
+    // --- DATA ---
+    let rowIdx = 1;
     for (const marka of markas) {
-      const baseRow = [
-        marka.number,
+      const baseData = [
+        rowIdx++,
+        `M-${marka.number}`,
         marka.productType,
-        marka.sex,
-        marka.department,
+        `${marka.department} / ${marka.sex || '-'}`,
         marka.selection || '-',
         marka.ptm || '-',
         marka.status,
@@ -101,44 +139,39 @@ export class MarkaExportService {
         new Date(marka.createdAt).toLocaleDateString('uz-UZ')
       ];
 
-      if (options.includeToys && marka.toys && markas.length < 500) { // Limit details for huge exports
+      if (options.includeToys && marka.toys) {
         if (marka.toys.length === 0) {
-          sheet.addRow([...baseRow, '', '', '', '', '']);
+          const row = sheet.addRow([...baseData, '-', '-', '-']);
+          row.eachCell(c => { c.border = borderStyle; c.alignment = { vertical: 'middle', horizontal: 'center' }; });
         } else {
           for (const toy of marka.toys) {
-            sheet.addRow([
-              ...baseRow,
-              toy.id.substring(0, 8),
+            const row = sheet.addRow([
+              ...baseData,
               toy.orderNo,
               Number(toy.netto),
-              Number(toy.brutto),
-              (toy as any).labResult?.grade || 'N/A'
+              (toy as any).labResult?.grade || '-'
             ]);
+            row.eachCell(c => { c.border = borderStyle; c.alignment = { vertical: 'middle', horizontal: 'center' }; });
           }
         }
       } else {
-        sheet.addRow(baseRow);
+        const row = sheet.addRow(baseData);
+        row.eachCell(c => { c.border = borderStyle; c.alignment = { vertical: 'middle', horizontal: 'center' }; });
       }
     }
 
-    // Adjust columns
-    sheet.columns.forEach(column => {
-      column.width = 15;
-      column.alignment = { wrapText: true, vertical: 'middle', horizontal: 'left' };
+    // --- COL WIDTHS ---
+    sheet.columns.forEach((col, i) => {
+      col.width = i === 1 ? 15 : i === 3 ? 20 : 12;
     });
 
-    // Formatting totals row if needed (omitted for brevity)
-
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="Markalar_Export_${Date.now()}.xlsx"`);
+    res.setHeader('Content-Disposition', `attachment; filename="Markalar_${Date.now()}.xlsx"`);
 
     await workbook.xlsx.write(res);
     res.end();
   }
 
-  /**
-   * Export single High-Quality PDF Report for Marka
-   */
   async exportMarkaDetailsPdf(res: Response, markaId: string) {
     const marka = await this.prisma.marka.findUnique({
       where: { id: markaId },
@@ -151,136 +184,136 @@ export class MarkaExportService {
       }
     });
 
-    if (!marka) {
-      throw new Error('Marka topilmadi');
-    }
+    if (!marka) throw new Error('Marka topilmadi');
+
+    const qrData = `MARKA:${marka.number}:${marka.id}`;
+    const qrCodeDataURL = await QRCode.toDataURL(qrData);
 
     const printer = new PdfPrinter(fonts);
-
     const docDefinition: TDocumentDefinitions = {
       content: [
-        { text: 'NAVBAHOR TEXTILE', style: 'header', alignment: 'center', color: '#1565C0', margin: [0, 0, 0, 10] },
-        { text: 'MARKA PASPORTI', style: 'subheader', alignment: 'center', margin: [0, 0, 0, 20] },
-
-        // Marka Info Table
+        {
+          columns: [
+            {
+              stack: [
+                { text: 'NAVBAHOR TEXTILE', style: 'header', color: '#4f46e5' },
+                { text: 'MARKA PASPORTI (PASSPORT)', style: 'subheader' }
+              ]
+            },
+            {
+              image: qrCodeDataURL,
+              width: 80,
+              alignment: 'right'
+            }
+          ]
+        },
+        { canvas: [{ type: 'line', x1: 0, y1: 10, x2: 515, y2: 10, lineWidth: 1, lineColor: '#e2e8f0' }] },
+        { text: '\n' },
         {
           style: 'tableExample',
           table: {
             widths: ['*', '*'],
             body: [
-              [{ text: 'Marka Raqami:', bold: true }, marka.number],
-              [{ text: 'Mahsulot Turi:', bold: true }, marka.productType],
-              [{ text: 'Sex / Bo\'lim:', bold: true }, `${marka.sex} / ${marka.department}`],
-              [{ text: 'Seleksiya:', bold: true }, marka.selection || '-'],
-              [{ text: 'PTM:', bold: true }, marka.ptm || '-'],
-              [{ text: 'Jami Toylar:', bold: true }, marka._count.toys.toString()],
-              [{ text: 'Status:', bold: true }, marka.status],
-              [{ text: 'Sana:', bold: true }, new Date(marka.createdAt).toLocaleDateString('uz-UZ')]
+              [{ text: 'Marka Raqami:', bold: true }, String(`M-${marka.number}`)],
+              [{ text: 'Mahsulot Turi:', bold: true }, String(marka.productType)],
+              [{ text: 'Bo\'lim / Sex:', bold: true }, String(`${marka.department} / ${marka.sex || '-'}`)],
+              [{ text: 'Seleksiya / PTM:', bold: true }, String(`${marka.selection || '-'} / ${marka.ptm || '-'}`)],
+              [{ text: 'Jami Toylar:', bold: true }, String(marka._count.toys)],
+              [{ text: 'Status:', bold: true }, String(marka.status)],
+              [{ text: 'Yaratilgan Sana:', bold: true }, String(new Date(marka.createdAt).toLocaleString('uz-UZ'))]
             ]
           },
           layout: 'lightHorizontalLines',
           margin: [0, 0, 0, 20]
         },
-
-        { text: 'Toylar Ro\'yxati', style: 'sectionHeader', margin: [0, 10, 0, 10] },
-
-        // Toys Table
+        { text: 'TOYLAR RO\'YXATI', style: 'sectionHeader', margin: [0, 10, 0, 10] },
         {
           table: {
             headerRows: 1,
-            widths: ['auto', 'auto', '*', '*', '*', 'auto'],
+            widths: ['auto', '*', '*', '*', '*', 'auto'],
             body: [
               [
                 { text: '№', style: 'tableHeader' },
-                { text: 'ID', style: 'tableHeader' },
+                { text: 'Toy ID', style: 'tableHeader' },
+                { text: 'Brigada', style: 'tableHeader' },
                 { text: 'Netto (kg)', style: 'tableHeader' },
-                { text: 'Brutto (kg)', style: 'tableHeader' },
-                { text: 'Lab Class', style: 'tableHeader' },
+                { text: 'Sinf (Grade)', style: 'tableHeader' },
                 { text: 'Sana', style: 'tableHeader' }
               ],
               ...marka.toys.map(toy => [
-                toy.orderNo.toString(),
-                toy.id.substring(0, 8),
-                Number(toy.netto).toFixed(2),
-                Number(toy.brutto).toFixed(2),
-                (toy as any).labResult?.grade || '-',
-                new Date(toy.createdAt).toLocaleDateString('uz-UZ')
+                String(toy.orderNo),
+                String(toy.qrUid),
+                String((toy as any).brigade || '-'),
+                String(Number(toy.netto).toFixed(1)),
+                String((toy as any).labResult?.grade || '-'),
+                String(new Date(toy.createdAt).toLocaleDateString('uz-UZ'))
               ])
             ]
           },
           layout: {
-            fillColor: function (rowIndex: number) {
-              return (rowIndex === 0) ? '#CCCCCC' : null;
-            }
+            fillColor: (rowIndex: number) => (rowIndex === 0 ? '#4f46e5' : null),
           }
         },
-
         { text: '\n\n' },
-        { text: 'Imzo: __________________________', alignment: 'right', margin: [0, 40, 40, 0] }
+        {
+          columns: [
+            { text: 'Mas\'ul nazoratchi:', bold: true },
+            { text: 'Imzo: __________________________', alignment: 'right' }
+          ]
+        }
       ],
       styles: {
-        header: { fontSize: 22, bold: true },
-        subheader: { fontSize: 16, bold: true },
-        sectionHeader: { fontSize: 14, bold: true, color: '#444' },
-        tableHeader: { bold: true, fontSize: 12, color: 'black' },
-        tableExample: { margin: [0, 5, 0, 15] }
+        header: { fontSize: 24, bold: true },
+        subheader: { fontSize: 14, bold: true, color: '#64748b' },
+        sectionHeader: { fontSize: 12, bold: true },
+        tableHeader: { bold: true, color: 'white' }
       },
-      defaultStyle: {
-        font: 'Roboto'
-      }
+      defaultStyle: { font: 'Roboto' }
     };
 
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
-
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=Marka_${marka.number}_Passport.pdf`);
-
+    res.setHeader('Content-Disposition', `attachment; filename=Marka_${marka.number}.pdf`);
     pdfDoc.pipe(res);
     pdfDoc.end();
   }
 
   async generateMarkaQRCode(markaId: string): Promise<string> {
-    const marka = await this.prisma.marka.findUnique({
-      where: { id: markaId }
-    });
-
-    if (!marka) {
-      throw new Error('Marka topilmadi');
-    }
-
-    // Simplified QR code - base64 placeholder
-    const qrData = `MARKA:${marka.number}:${marka.productType}:${marka.id}`;
-    const base64QR = Buffer.from(qrData).toString('base64');
-    return `data:image/png;base64,${base64QR}`;
+    const marka = await this.prisma.marka.findUnique({ where: { id: markaId } });
+    if (!marka) throw new Error('Marka topilmadi');
+    const qrData = `MARKA:${marka.number}:${marka.id}`;
+    return await QRCode.toDataURL(qrData);
   }
 
-  // Keep existing Label Generator (ZPL)
+  /**
+   * Professional Industrial ZPL Label for Marka
+   */
   async generateMarkaLabel(markaId: string): Promise<string> {
     const marka = await this.prisma.marka.findUnique({
       where: { id: markaId },
       include: { _count: { select: { toys: true } } }
     });
+    if (!marka) throw new Error('Marka topilmadi');
 
-    if (!marka) {
-      throw new Error('Marka topilmadi');
-    }
-
-    const qrCodeData = `MARKA:${marka.number}:${marka.productType}:${marka.id}`;
-
-    let labelContent = `^XA\n`; // Start label
-    labelContent += `^MMT\n`; // Set media type
-    labelContent += `^PW400\n`; // Set print width
-    labelContent += `^LL200\n`; // Set label length
-    labelContent += `^FO50,20^A0N,30,30^FD MARKA ${marka.number}^FS\n`;
-    labelContent += `^FO50,60^A0N,20,20^FD${marka.productType}^FS\n`;
-    labelContent += `^FO200,60^A0N,20,20^FD${marka.sex}^FS\n`;
-    if (marka.selection) labelContent += `^FO50,85^A0N,15,15^FDSel: ${marka.selection}^FS\n`;
-    labelContent += `^FO50,110^A0N,15,15^FDSig'im: ${marka.used}/${marka.capacity}^FS\n`;
-    labelContent += `^FO200,110^A0N,15,15^FD${marka.status}^FS\n`;
-    labelContent += `^FO280,20^BQN,2,4^FDLA,${qrCodeData}^FS\n`;
+    const qrData = `MARKA:${marka.number}:${marka.id}`;
     const date = new Date(marka.createdAt).toLocaleDateString('uz-UZ');
-    labelContent += `^FO50,135^A0N,12,12^FD${date}^FS\n`;
-    labelContent += `^XZ\n`; // End label
-    return labelContent;
+
+    let zpl = `^XA\n`;
+    zpl += `^CF0,40\n`;
+    zpl += `^FO50,50^FDNAVBAHOR TEXTILE^FS\n`;
+    zpl += `^CF0,60\n`;
+    zpl += `^FO50,110^FDMARKA M-${marka.number}^FS\n`;
+    zpl += `^CF0,30\n`;
+    zpl += `^FO50,180^FDTuri: ${marka.productType}^FS\n`;
+    zpl += `^FO50,220^FDSex: ${marka.department} / ${marka.sex || '-'}^FS\n`;
+    zpl += `^FO50,260^FDSana: ${date}^FS\n`;
+    zpl += `^FO50,300^FDStatus: ${marka.status}^FS\n`;
+
+    // QR Code
+    zpl += `^FO500,100^BQN,2,6^FDLA,${qrData}^FS\n`;
+    zpl += `^FO500,280^A0N,20,20^FDSCAN ME^FS\n`;
+
+    zpl += `^XZ`;
+    return zpl;
   }
 }

@@ -359,7 +359,7 @@ export function ProfessionalChecklistManager({
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       {/* Prestigious Industrial Header & Stats */}
-      <div className="relative overflow-hidden rounded-[3rem] glass-panel border border-border shadow-2xl p-10 lg:p-14">
+      <div className="relative overflow-hidden rounded-[3rem] glass-panel border border-border dark:border-white/5 shadow-2xl p-10 lg:p-14 dark:bg-slate-900/60">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-30" />
         <div className="absolute -top-32 -right-32 w-80 h-80 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
@@ -374,7 +374,7 @@ export function ProfessionalChecklistManager({
 
             <div className="space-y-3">
               <div className="flex items-center gap-4">
-                <h2 className="text-4xl lg:text-5xl font-black text-foreground uppercase tracking-tighter leading-none">
+                <h2 className="text-4xl lg:text-5xl font-black text-foreground dark:text-white uppercase tracking-tighter leading-none">
                   Checklist <span className="text-primary italic">Plani</span>
                 </h2>
                 <span className={cn(
@@ -385,12 +385,12 @@ export function ProfessionalChecklistManager({
                 </span>
               </div>
               <div className="flex items-center gap-6">
-                <p className="text-[14px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                <p className="text-[14px] font-bold text-muted-foreground dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
-                  MIJOZ: <span className="text-foreground">{customerName}</span>
+                  MIJOZ: <span className="text-foreground dark:text-white">{customerName}</span>
                 </p>
-                <div className="w-1.5 h-1.5 rounded-full bg-border" />
-                <p className="font-mono-premium italic opacity-50">
+                <div className="w-1.5 h-1.5 rounded-full bg-border dark:bg-white/20" />
+                <p className="font-mono-premium italic opacity-50 dark:text-slate-500">
                   ID: #{currentChecklist.id.substring(0, 8).toUpperCase()}
                 </p>
               </div>
@@ -400,9 +400,9 @@ export function ProfessionalChecklistManager({
           {/* High-Fidelity Stats Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 xl:gap-10">
             <div className="space-y-2">
-              <p className="text-label-premium">Jami Toylar</p>
-              <p className="text-4xl font-black text-foreground tracking-tighter tabular-nums leading-none">
-                {currentChecklist.totalItems} <span className="text-xs font-bold text-muted-foreground/60 lowercase tracking-normal">dona</span>
+              <p className="text-label-premium dark:text-slate-400">Jami Toylar</p>
+              <p className="text-4xl font-black text-foreground dark:text-white tracking-tighter tabular-nums leading-none">
+                {currentChecklist.totalItems} <span className="text-xs font-bold text-muted-foreground/60 dark:text-slate-500 lowercase tracking-normal">dona</span>
               </p>
             </div>
             <div className="space-y-2">
@@ -429,13 +429,13 @@ export function ProfessionalChecklistManager({
 
       {/* Industrial Toolbar - Senior Polish */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 px-6">
-        <div className="flex items-center gap-3 bg-secondary/80 p-2 rounded-[1.75rem] border border-border backdrop-blur-xl">
+        <div className="flex items-center gap-3 bg-secondary/80 dark:bg-slate-900/60 p-2 rounded-[1.75rem] border border-border dark:border-white/5 backdrop-blur-xl">
           <Button
             variant={viewMode === 'toys' ? 'secondary' : 'ghost'}
             onClick={() => setViewMode('toys')}
             className={cn(
               "h-14 px-8 rounded-2xl transition-all font-black text-[12px] uppercase tracking-widest gap-3",
-              viewMode === 'toys' ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground"
+              viewMode === 'toys' ? "bg-background dark:bg-slate-800 text-foreground dark:text-white shadow-md" : "text-muted-foreground dark:text-slate-400 hover:text-foreground dark:hover:text-white"
             )}
           >
             <Eye className="h-4 w-4" />
@@ -446,7 +446,7 @@ export function ProfessionalChecklistManager({
             onClick={() => setViewMode('checklist')}
             className={cn(
               "h-14 px-8 rounded-2xl transition-all font-black text-[12px] uppercase tracking-widest gap-3",
-              viewMode === 'checklist' ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground"
+              viewMode === 'checklist' ? "bg-background dark:bg-slate-800 text-foreground dark:text-white shadow-md" : "text-muted-foreground dark:text-slate-400 hover:text-foreground dark:hover:text-white"
             )}
           >
             <ShoppingCart className="h-4 w-4" />
@@ -465,7 +465,7 @@ export function ProfessionalChecklistManager({
             </Button>
           )}
 
-          <div className="flex items-center gap-3 bg-secondary p-2 rounded-2xl border border-border">
+          <div className="flex items-center gap-3 bg-secondary dark:bg-slate-900/50 p-2 rounded-2xl border border-border dark:border-white/5">
             {permissions.canExport && (
               <Button
                 onClick={handleExport}
@@ -533,41 +533,41 @@ export function ProfessionalChecklistManager({
             </h4>
             <div className="grid gap-6">
               {currentChecklist.summary.map((summary) => (
-                <div key={summary.markaId} className="group relative glass-card rounded-[2.5rem] p-8 border-none shadow-xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2">
+                <div key={summary.markaId} className="group relative glass-card rounded-[2.5rem] p-8 border-none shadow-xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2 dark:bg-slate-900/60 dark:border dark:border-white/5">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110" />
 
                   <div className="flex items-center justify-between mb-8 relative z-10">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-secondary rounded-2xl flex items-center justify-center shadow-inner ring-1 ring-border">
+                      <div className="w-12 h-12 bg-secondary dark:bg-white/5 rounded-2xl flex items-center justify-center shadow-inner ring-1 ring-border dark:ring-white/10">
                         <span className="text-primary font-black text-xl italic tabular-nums">M</span>
                       </div>
                       <div>
-                        <h5 className="text-xl font-black text-foreground uppercase tracking-tight">{summary.markaLabel}</h5>
-                        <p className="font-mono-premium text-[10px] opacity-40 mt-0.5">MARKA KOD: {summary.markaId.substring(0, 6).toUpperCase()}</p>
+                        <h5 className="text-xl font-black text-foreground dark:text-white uppercase tracking-tight">{summary.markaLabel}</h5>
+                        <p className="font-mono-premium text-[10px] opacity-40 mt-0.5 dark:text-slate-400">MARKA KOD: {summary.markaId.substring(0, 6).toUpperCase()}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-black text-primary tracking-tighter tabular-nums">{summary.totalWeight.toFixed(2)} <span className="text-[11px] font-bold text-muted-foreground lowercase">kg</span></p>
-                      <p className="text-label-premium">SOF VAZN</p>
+                      <p className="text-2xl font-black text-primary tracking-tighter tabular-nums">{summary.totalWeight.toFixed(2)} <span className="text-[11px] font-bold text-muted-foreground dark:text-slate-500 lowercase">kg</span></p>
+                      <p className="text-label-premium dark:text-slate-400">SOF VAZN</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-8 mb-8 relative z-10">
-                    <div className="bg-secondary/50 p-5 rounded-2xl border border-border">
-                      <p className="text-label-premium mb-1.5 opacity-50">TOYLAR SONI</p>
-                      <p className="text-xl font-black text-foreground tabular-nums">{summary.totalToys} <span className="text-xs font-bold text-muted-foreground">dona</span></p>
+                    <div className="bg-secondary/50 dark:bg-black/20 p-5 rounded-2xl border border-border dark:border-white/5">
+                      <p className="text-label-premium mb-1.5 opacity-50 dark:text-slate-400">TOYLAR SONI</p>
+                      <p className="text-xl font-black text-foreground dark:text-white tabular-nums">{summary.totalToys} <span className="text-xs font-bold text-muted-foreground dark:text-slate-500">dona</span></p>
                     </div>
-                    <div className="bg-secondary/50 p-5 rounded-2xl border border-border">
-                      <p className="text-label-premium mb-1.5 opacity-50">O&apos;RTACHA SIFAT</p>
-                      <p className="text-xl font-black text-foreground tabular-nums">{summary.averageQuality.toFixed(1)} <span className="text-xs font-bold text-muted-foreground">Pnt</span></p>
+                    <div className="bg-secondary/50 dark:bg-black/20 p-5 rounded-2xl border border-border dark:border-white/5">
+                      <p className="text-label-premium mb-1.5 opacity-50 dark:text-slate-400">O&apos;RTACHA SIFAT</p>
+                      <p className="text-xl font-black text-foreground dark:text-white tabular-nums">{summary.averageQuality.toFixed(1)} <span className="text-xs font-bold text-muted-foreground dark:text-slate-500">Pnt</span></p>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-3 relative z-10">
                     {Object.entries(summary.grades).map(([grade, count]) => (
-                      <div key={grade} className="flex items-center gap-3 px-4 py-2 bg-primary/5 rounded-xl border border-primary/20 transition-all hover:bg-primary/10">
+                      <div key={grade} className="flex items-center gap-3 px-4 py-2 bg-primary/5 dark:bg-primary/20 rounded-xl border border-primary/20 transition-all hover:bg-primary/10">
                         <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(11,174,74,0.5)]" />
-                        <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest leading-none">
+                        <span className="text-[11px] font-black text-muted-foreground dark:text-slate-400 uppercase tracking-widest leading-none">
                           {grade}: <span className="text-primary tabular-nums">{count}</span>
                         </span>
                       </div>
@@ -585,13 +585,13 @@ export function ProfessionalChecklistManager({
             <Package className="h-4 w-4 text-primary" />
             TANLANGAN TOYLAR MONITORINGI
           </h4>
-          <div className="glass-card rounded-[2.5rem] border-none shadow-2xl overflow-hidden flex flex-col min-h-[500px]">
+          <div className="glass-card rounded-[2.5rem] border-none shadow-2xl overflow-hidden flex flex-col min-h-[500px] dark:bg-slate-900/60 dark:border dark:border-white/5">
             {currentChecklist.items.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center py-20 text-center px-10">
-                <div className="w-24 h-24 bg-secondary rounded-[2rem] flex items-center justify-center mb-8 animate-pulse">
-                  <Package className="h-10 w-10 text-muted-foreground/30" />
+                <div className="w-24 h-24 bg-secondary dark:bg-white/5 rounded-[2rem] flex items-center justify-center mb-8 animate-pulse">
+                  <Package className="h-10 w-10 text-muted-foreground/30 dark:text-slate-600" />
                 </div>
-                <h3 className="text-xl font-black text-muted-foreground/30 uppercase tracking-[0.25em] mb-4">Checklist Bo&apos;sh</h3>
+                <h3 className="text-xl font-black text-muted-foreground/30 dark:text-slate-600 uppercase tracking-[0.25em] mb-4">Checklist Bo&apos;sh</h3>
                 <p className="text-label-premium max-w-xs mx-auto text-center">
                   Operatsiyani boshlash uchun zahiradagi toylarni checklistga yuklang
                 </p>
@@ -599,7 +599,7 @@ export function ProfessionalChecklistManager({
             ) : (
               <div className="p-4 space-y-4 max-h-[700px] overflow-y-auto scrollbar-premium">
                 {currentChecklist.items.map((item, index) => (
-                  <div key={item.id} className="group flex items-center justify-between p-6 bg-secondary/50 rounded-[1.75rem] border border-border transition-all hover:bg-background hover:shadow-xl hover:shadow-slate-900/5 hover:-translate-x-1">
+                  <div key={item.id} className="group flex items-center justify-between p-6 bg-secondary/50 dark:bg-slate-900/40 rounded-[1.75rem] border border-border transition-all hover:bg-background dark:hover:bg-slate-800/60 hover:shadow-xl hover:shadow-slate-900/5 hover:-translate-x-1">
                     <div className="flex items-center gap-6">
                       <span className="w-12 h-12 flex items-center justify-center text-[12px] font-black text-muted-foreground font-mono bg-background rounded-xl shadow-inner border border-border">
                         #{String(index + 1).padStart(2, '0')}

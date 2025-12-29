@@ -31,7 +31,7 @@ interface DashboardState {
     fetchDashboardData: () => Promise<void>;
 }
 
-export const useDashboardStore = create<DashboardState>((set) => ({
+export const useDashboardStore = create<DashboardState>((set, get) => ({
     stats: null,
     recentActivities: [],
     weeklyPerformance: [],
@@ -39,14 +39,23 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     error: null,
 
     fetchDashboardData: async () => {
+        const { isLoading } = get();
+        if (isLoading) return;
+
         set({ isLoading: true, error: null });
         try {
             // Use the admin/stats/dashboard endpoint
             const response = await apiClient.get('/admin/stats/dashboard');
+
+            // Handle different potential response structures
+            const statsData = response.stats || response.data?.stats || response.data || null;
+            const activitiesData = response.recentActivities || response.data?.recentActivities || [];
+            const performanceData = response.weeklyPerformance || response.data?.weeklyPerformance || [];
+
             set({
-                stats: response.data.stats,
-                recentActivities: response.data.recentActivities,
-                weeklyPerformance: response.data.weeklyPerformance,
+                stats: statsData,
+                recentActivities: activitiesData,
+                weeklyPerformance: performanceData,
                 isLoading: false
             });
         } catch (error: any) {
