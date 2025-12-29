@@ -38,7 +38,12 @@ export function LoginForm() {
       const success = await login(credentials)
 
       if (success) {
-        router.push('/dashboard')
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser?.role === 'SCANNER') {
+          router.push('/scanner')
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch (err) {
       // Error handling already done in authStore

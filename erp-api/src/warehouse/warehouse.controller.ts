@@ -77,6 +77,13 @@ export class WarehouseController {
 
   // Checklists Management  
   @Public()
+  @Get('checklists')
+  @ApiOperation({ summary: 'Get all active checklists' })
+  async getChecklists() {
+    return this.checklistsService.findAllActive();
+  }
+
+  @Public()
   @Post('orders/:orderId/checklist')
   @ApiOperation({ summary: 'Create checklist for order' })
   async createChecklist(@Param('orderId') orderId: string) {

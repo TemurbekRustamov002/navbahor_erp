@@ -4,6 +4,7 @@ import { useBackendMarkaStore } from "@/stores/backendMarkaStore";
 import { useBackendToyStore } from "@/stores/backendToyStore";
 import { useLanguageStore } from "@/stores/languageStore";
 import { useScaleProfessional } from "@/lib/hooks/useScale";
+import { WS_URL } from "@/lib/api";
 import { ScaleDisplay } from "./ScaleDisplay";
 import { ToyForm } from "./ToyForm";
 import { EnhancedRecentToys } from "./EnhancedRecentToys";
@@ -41,7 +42,7 @@ export default function TaroziPage() {
   const [selectedMarkaId, setSelectedMarkaId] = useState<string>("");
   const [showSettings, setShowSettings] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [wsUrl, setWsUrl] = useState("ws://localhost:8081/scale");
+  const [wsUrl, setWsUrl] = useState(WS_URL || "ws://localhost:8080");
 
   const {
     currentReading,

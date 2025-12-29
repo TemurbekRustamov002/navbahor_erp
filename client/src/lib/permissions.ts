@@ -189,6 +189,14 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.REPORTS_VIEW, Permission.REPORTS_EXPORT, Permission.REPORTS_ADVANCED,
     Permission.SETTINGS_VIEW, Permission.SETTINGS_UPDATE_PROFILE, Permission.SETTINGS_CHANGE_PASSWORD,
   ],
+  [Role.SCANNER]: [
+    Permission.DASHBOARD_VIEW,
+    Permission.WAREHOUSE_VIEW,
+    Permission.WAREHOUSE_CHECKLIST,
+    Permission.WAREHOUSE_SCAN,
+    Permission.TOY_VIEW,
+    Permission.SETTINGS_VIEW,
+  ],
 };
 
 // Helper functions

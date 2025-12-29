@@ -28,11 +28,13 @@ async function main() {
 
   console.log('🗑️  Database cleaned successfully');
 
-  // 1. Create Demo Users exactly as requested
+  const IS_PRODUCTION = process.env.IS_PRODUCTION === 'true';
+
+  // 1. Create Essential Users
   const passwordHash = await bcrypt.hash('admin123', 10);
   const taroziHash = await bcrypt.hash('tarozi123', 10);
   const labHash = await bcrypt.hash('lab123', 10);
-  const omborHash = await bcrypt.hash('ombor123', 10);
+  const scannerHash = await bcrypt.hash('scanner123', 10);
 
   const admin = await prisma.user.create({
     data: {
@@ -45,7 +47,7 @@ async function main() {
     },
   });
 
-  const tarozi = await prisma.user.create({
+  await prisma.user.create({
     data: {
       username: 'tarozi',
       email: 'tarozi@navbahor.uz',
@@ -56,7 +58,7 @@ async function main() {
     },
   });
 
-  const laborant = await prisma.user.create({
+  await prisma.user.create({
     data: {
       username: 'laborant',
       email: 'lab@navbahor.uz',
@@ -67,20 +69,26 @@ async function main() {
     },
   });
 
-  const ombor = await prisma.user.create({
+  await prisma.user.create({
     data: {
-      username: 'ombor',
-      email: 'ombor@navbahor.uz',
-      password: omborHash,
-      fullName: 'Ombor Mudiri',
-      role: Role.WAREHOUSE,
+      username: 'scanner',
+      email: 'scanner@navbahor.uz',
+      password: scannerHash,
+      fullName: 'Urovo Skaner Qurilmasi',
+      role: Role.SCANNER as any,
       isActive: true,
     },
   });
 
-  console.log('👥 Demo logins created: admin/admin123, tarozi/tarozi123, laborant/lab123, ombor/ombor123');
+  console.log('👥 Essential users created: admin/admin123, tarozi/tarozi123, laborant/lab123, scanner/scanner123');
 
-  // 2. Create Sample Customers
+  if (IS_PRODUCTION) {
+    console.log('🚀 Production mode: Skipping sample data creation.');
+    console.log('✅ Production Setup Completed!');
+    return;
+  }
+
+  // 2. Create Sample Customers (Development Mode Only)
   const customer = await prisma.customer.create({
     data: {
       name: "Global Textiles MCHJ",
@@ -149,6 +157,52 @@ async function main() {
     }
   }
 
+  // 5. Create a sample Warehouse Order and Checklist for Testing Scanner
+  const order = await prisma.wHOrder.create({
+    data: {
+      customerId: customer.id,
+      number: '5001',
+      status: 'TSD_CHECKLIST',
+    }
+  });
+
+  const readyToys = await prisma.toy.findMany({
+    where: { readyForWarehouse: true },
+    take: 3
+  });
+
+  for (const toy of readyToys) {
+    await prisma.wHItem.create({
+      data: {
+        orderId: order.id,
+        toyId: toy.id,
+        markaId: toy.markaId,
+        productType: toy.productType as any,
+        orderNo: toy.orderNo,
+        netto: toy.netto
+      }
+    });
+  }
+
+  const checklist = await prisma.wHChecklist.create({
+    data: {
+      orderId: order.id,
+      code: `CL-5001-${Date.now()}`,
+      status: 'READY'
+    }
+  });
+
+  for (const toy of readyToys) {
+    await prisma.wHChecklistItem.create({
+      data: {
+        checklistId: checklist.id,
+        toyId: toy.id,
+        scanned: false
+      }
+    });
+  }
+
+  console.log('📦 Sample order and checklist created for scanner testing.');
   console.log('✅ Seeding completed successfully!');
 }
 

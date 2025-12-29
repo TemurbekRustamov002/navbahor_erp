@@ -11,9 +11,13 @@ export default function HomePage() {
   const { user, isAuthenticated } = useAuthStore()
 
   useEffect(() => {
-    // Agar user login qilgan bo'lsa, dashboard'ga yo'naltirish
+    // Agar user login qilgan bo'lsa, tegishli sahifaga yo'naltirish
     if (isAuthenticated && user) {
-      router.push('/dashboard')
+      if (user.role === 'SCANNER') {
+        router.push('/scanner')
+      } else {
+        router.push('/dashboard')
+      }
     }
   }, [isAuthenticated, user, router])
 

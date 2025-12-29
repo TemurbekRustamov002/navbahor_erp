@@ -43,6 +43,7 @@ interface WarehouseItem {
 
 interface WarehouseChecklist {
   id: string;
+  code?: string;
   orderId: string;
   status: string;
   totalItems: number;
@@ -59,6 +60,9 @@ interface ChecklistItem {
   orderNo: number;
   productType: string;
   netto: number;
+  brutto?: number;
+  tara?: number;
+  markaNo?: string | number;
   scanned: boolean;
   scannedAt?: string;
   qrCode?: string;
@@ -89,6 +93,7 @@ interface WarehouseBackendState {
 
   // Data
   orders: WarehouseOrder[];
+  checklists: any[];
   readyToys: ReadyToysGroup[];
 
   // Loading states
@@ -101,7 +106,9 @@ interface WarehouseBackendState {
 
   // API actions
   fetchOrders: () => Promise<void>;
+  fetchChecklists: () => Promise<void>;
   fetchReadyToys: () => Promise<void>;
+  fetchChecklistById: (id: string) => Promise<WarehouseChecklist>;
   createOrder: (customerId: string) => Promise<WarehouseOrder>;
   addItemsToOrder: (orderId: string, toyIds: string[]) => Promise<void>;
   createChecklist: (orderId: string) => Promise<WarehouseChecklist>;
@@ -123,6 +130,7 @@ export const useWarehouseBackendStore = create<WarehouseBackendState>()(
     currentOrder: null,
     currentChecklist: null,
     orders: [],
+    checklists: [],
     readyToys: [],
     loading: false,
     error: null,
@@ -158,6 +166,34 @@ export const useWarehouseBackendStore = create<WarehouseBackendState>()(
       }
     },
 
+    fetchChecklists: async () => {
+      try {
+        set({ loading: true, error: null });
+        const response = await apiClient.get('/warehouse/checklists');
+        set({ checklists: response || [] });
+      } catch (error: any) {
+        console.error('Checklists fetch error:', error);
+        set({ error: error.response?.data?.message || 'Failed to fetch checklists' });
+      } finally {
+        set({ loading: false });
+      }
+    },
+
+    fetchChecklistById: async (id: string) => {
+      try {
+        set({ loading: true, error: null });
+        const response = await apiClient.get(`/warehouse/checklists/${id}`);
+        set({ currentChecklist: response });
+        return response;
+      } catch (error: any) {
+        console.error('Checklist fetch by id error:', error);
+        set({ error: error.response?.data?.message || 'Failed to fetch checklist details' });
+        throw error;
+      } finally {
+        set({ loading: false });
+      }
+    },
+
     fetchReadyToys: async () => {
       try {
         set({ loading: true, error: null });
@@ -182,7 +218,8 @@ export const useWarehouseBackendStore = create<WarehouseBackendState>()(
         const { orders } = get();
         set({
           orders: [response, ...orders],
-          currentOrder: response
+          currentOrder: response,
+          currentChecklist: response.checklist || null
         });
 
         return response;

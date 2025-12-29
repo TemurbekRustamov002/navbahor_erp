@@ -15,7 +15,8 @@ import {
   Printer,
   ArrowRight,
   Timer,
-  List
+  List,
+  FileEdit
 } from "lucide-react";
 
 export function ChecklistManager() {
@@ -65,6 +66,13 @@ export function ChecklistManager() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentStep("toys")}
+              className="h-12 px-6 rounded-xl border-slate-100 dark:border-white/5 bg-white dark:bg-white/5 font-bold uppercase tracking-widest text-[9px] hover:bg-slate-50 dark:hover:bg-white/10 dark:text-slate-200 transition-all"
+            >
+              <FileEdit className="h-4 w-4 mr-2" strokeWidth={3} /> Tahrirlash
+            </Button>
             <Button variant="ghost" className="h-12 px-6 rounded-xl border-slate-100 dark:border-white/5 bg-white dark:bg-white/5 font-bold uppercase tracking-widest text-[9px] hover:bg-slate-50 dark:hover:bg-white/10 dark:text-slate-200 transition-all">
               <Printer className="h-4 w-4 mr-2" strokeWidth={3} /> Chiqarish
             </Button>

@@ -266,6 +266,7 @@ enum Role {
   PRODUCTION_MANAGER
   CUSTOMER_MANAGER
   SALES_MANAGER
+  SCANNER
 }
 
 enum MarkaStatus {

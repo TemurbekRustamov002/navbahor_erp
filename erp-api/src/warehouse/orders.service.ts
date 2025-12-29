@@ -10,6 +10,26 @@ export class OrdersService {
   constructor(private prisma: PrismaService) { }
 
   async createOrder(createOrderDto: { customerId: string }) {
+    // 1. Check if an active order already exists for this customer (not yet loaded/shipped)
+    const existingOrder = await this.prisma.wHOrder.findFirst({
+      where: {
+        customerId: createOrderDto.customerId,
+        status: { not: 'YUKLANDI' }
+      },
+      include: {
+        items: true,
+        checklist: {
+          include: { items: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (existingOrder) {
+      console.log(`♻️ Found active order for customer ${createOrderDto.customerId}: ${existingOrder.number}`);
+      return existingOrder;
+    }
+
     // Generate unique order number
     const orderNumber = `WH-${Date.now()}`;
 

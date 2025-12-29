@@ -5,11 +5,30 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ChecklistsService {
   constructor(private prisma: PrismaService) { }
 
+  async findAllActive() {
+    return this.prisma.wHChecklist.findMany({
+      where: {
+        status: { in: ['READY', 'SCANNED'] }
+      },
+      include: {
+        order: {
+          include: {
+            customer: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+  }
+
   async createFromOrder(orderId: string) {
     const order = await this.prisma.wHOrder.findUnique({
       where: { id: orderId },
       include: {
-        items: true
+        items: true,
+        checklist: true
       }
     });
 
@@ -17,7 +36,36 @@ export class ChecklistsService {
       throw new NotFoundException('Order not found');
     }
 
-    if (order.status !== 'TARKIB_TANLANGAN') {
+    // If checklist exists, sync items and return it
+    if (order.checklist) {
+      console.log(`♻️ Syncing existing checklist for order ${order.number}`);
+
+      const existingItemToyIds = (order.checklist as any).items?.map(i => i.toyId) || [];
+      const orderToyIds = order.items.map(i => i.toyId);
+
+      // Add missing items
+      const missingToyIds = orderToyIds.filter(id => !existingItemToyIds.includes(id));
+      if (missingToyIds.length > 0) {
+        await this.prisma.$transaction(
+          missingToyIds.map(toyId =>
+            this.prisma.wHChecklistItem.create({
+              data: {
+                checklistId: order.checklist.id,
+                toyId: toyId,
+                scanned: false
+              }
+            })
+          )
+        );
+      }
+
+      // Optionally: Remove items that were removed from order but not yet scanned
+      // For now, adding is enough to satisfy the 'add more' use case.
+
+      return this.findOne(order.checklist.id);
+    }
+
+    if (order.status !== 'TARKIB_TANLANGAN' && order.status !== 'TSD_CHECKLIST') {
       throw new BadRequestException('Order must have selected items first');
     }
 

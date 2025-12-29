@@ -64,15 +64,19 @@ export function WarehouseWorkflow() {
   }, [error, clearError]);
 
   // Auto-advance logic
+  // Auto-advance logic - Faqat ma'lumot o'zgarganda ishlaydi
   useEffect(() => {
-    if (currentStep === "customer" && selectedCustomer && currentOrder) {
-      setCurrentStep("toys");
-    } else if (currentStep === "toys" && currentOrder && currentOrder.items.length > 0) {
-      // Stay on toys
-    } else if (currentStep === "checklist" && currentChecklist && (currentChecklist.items?.length || 0) > 0) {
-      setCurrentStep("scanning");
+    if (selectedCustomer && currentOrder) {
+      if (currentChecklist || currentOrder.checklist) {
+        // Agar checklist bo'lsa, foydalanuvchini checklistga olib o'tamiz (lekin faqat birinchi marta)
+        if (currentStep === "customer" || currentStep === "toys") {
+          setCurrentStep("checklist");
+        }
+      } else if (currentStep === "customer") {
+        setCurrentStep("toys");
+      }
     }
-  }, [currentStep, selectedCustomer, currentOrder, currentChecklist, setCurrentStep]);
+  }, [selectedCustomer?.id, currentOrder?.id, currentChecklist?.id]);
 
   const getStepStatus = (stepId: WorkflowStep) => {
     const currentIndex = steps.findIndex(s => s.id === currentStep);

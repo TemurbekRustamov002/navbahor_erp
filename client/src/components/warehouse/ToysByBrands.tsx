@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { formatWeight, safeNumber, safeToFixed } from '@/lib/utils/number';
 import { useWarehouseBackendStore } from '@/stores/warehouseBackendStore';
 import { useBackendLabStore } from "@/stores/backendLabStore";
@@ -30,6 +30,13 @@ export function ToysByBrands() {
   const [selectedGrade, setSelectedGrade] = useState<string>("all");
   const [selectedToys, setSelectedToys] = useState<string[]>([]);
   const [brandFilters, setBrandFilters] = useState<Record<string, string>>({});
+
+  // Sinhronlash: agar orderda toylar bo'lsa, ularni tanlangan deb belgilaymiz
+  useEffect(() => {
+    if (currentOrder?.items?.length && selectedToys.length === 0) {
+      setSelectedToys(currentOrder.items.map(i => i.toyId));
+    }
+  }, [currentOrder]);
 
   // Use readyToys from warehouse backend store
   const approvedToys = readyToys.flatMap(group => group.toys);
@@ -299,7 +306,7 @@ export function ToysByBrands() {
 
       {/* Navbahor Floating Action Bar */}
       {selectedToysCount > 0 && (
-        <div className="fixed bottom-12 left-1/2 -translate-x-[calc(50%-160px)] w-full max-w-3xl px-8 animate-in slide-in-from-bottom-8 duration-700 z-50">
+        <div className="fixed bottom-12 left-1/2 lg:left-[calc(50%+160px)] -translate-x-1/2 w-full max-w-3xl px-8 animate-in slide-in-from-bottom-8 duration-700 z-50">
           <div className="bg-slate-900/95 dark:bg-black/90 backdrop-blur-xl p-4 pl-10 rounded-[2rem] shadow-2xl flex items-center justify-between gap-10 border border-white/10">
             <div className="flex items-center gap-10">
               <div className="flex flex-col">

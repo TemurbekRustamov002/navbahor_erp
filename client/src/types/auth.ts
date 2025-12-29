@@ -24,7 +24,8 @@ export enum Role {
   PRODUCTION_MANAGER = 'PRODUCTION_MANAGER',
   CUSTOMER_MANAGER = 'CUSTOMER_MANAGER',
   SALES_MANAGER = 'SALES_MANAGER',
-  ACCOUNTANT = 'ACCOUNTANT'
+  ACCOUNTANT = 'ACCOUNTANT',
+  SCANNER = 'SCANNER'
 }
 
 export interface LoginRequest {
@@ -82,5 +83,12 @@ export const DEMO_USERS = [
     fullName: 'Ombor Mudiri',
     role: Role.WAREHOUSE,
     description: 'Tayyor mahsulot va chiqim nazorati',
+  },
+  {
+    username: 'scanner',
+    password: 'scanner123',
+    fullName: 'Urovo Skaner Qurilmasi',
+    role: Role.SCANNER,
+    description: 'Mobil skanerlash terminali',
   }
 ] as const;

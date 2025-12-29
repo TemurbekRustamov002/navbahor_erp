@@ -11,7 +11,8 @@ import {
   Factory,
   Settings,
   BarChart3,
-  Package
+  Package,
+  Smartphone
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -105,6 +106,15 @@ const services = [
     icon: Settings,
     color: 'bg-gray-500',
     route: '/dashboard/settings',
+    isActive: true
+  },
+  {
+    id: 'scanner',
+    title: 'Mobil Skaner',
+    description: 'Qurilmalar uchun soddalashtirilgan terminal interfeysi',
+    icon: Smartphone,
+    color: 'bg-slate-900',
+    route: '/scanner',
     isActive: true
   }
 ]
