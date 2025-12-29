@@ -70,17 +70,27 @@ export class ScaleService {
     });
   }
 
-  // Scale Reading Management
-  async recordReading(scaleId: string, dto: ScaleReadingDto): Promise<ScaleReading> {
-    try {
-      // Validate scale exists and is active
-      const scale = await this.prisma.scaleConfig.findFirst({
-        where: { id: scaleId, isActive: true },
-      });
+  private lastSaveTime = new Map<string, number>();
 
-      if (!scale) {
-        throw new BadRequestException('Scale not found or inactive');
+  // Scale Reading Management
+  async recordReading(scaleId: string, dto: ScaleReadingDto): Promise<ScaleReading | null> {
+    try {
+      const now = Date.now();
+      const lastSave = this.lastSaveTime.get(scaleId) || 0;
+
+      // Optimization: Only save to DB if:
+      // 1. It's a STABLE reading (important for records)
+      // 2. It's been more than 5 seconds since last save (for history/monitoring)
+      // 3. Weight is 0 (reset state)
+      const shouldSave = dto.isStable || (now - lastSave > 5000) || dto.weight === 0;
+
+      if (!shouldSave) {
+        // Still update heartbeat in memory/background if needed, 
+        // but skipping full DB record to prevent 30s delay
+        return null;
       }
+
+      this.lastSaveTime.set(scaleId, now);
 
       // Record the reading
       const reading = await this.prisma.scaleReading.create({
@@ -88,12 +98,12 @@ export class ScaleService {
           scaleId,
           value: dto.weight,
           isStable: dto.isStable ?? false,
-          toyId: (dto as any).toyId || null,
+          toyId: (dto as any).toyId || (dto as any).markaId || null,
         },
       });
 
-      // Update scale heartbeat
-      await this.updateScaleHeartbeat(scaleId);
+      // Update scale heartbeat (async/background)
+      this.updateScaleHeartbeat(scaleId).catch(() => { });
 
       return reading;
     } catch (error) {

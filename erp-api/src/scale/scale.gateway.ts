@@ -24,9 +24,9 @@ interface AuthenticatedSocket extends Socket {
   namespace: '/scale',
   cors: {
     origin: [
-      'http://localhost:3100', 
-      'http://localhost:3101', 
-      'http://localhost:3102', 
+      'http://localhost:3100',
+      'http://localhost:3101',
+      'http://localhost:3102',
       'http://localhost:3103',
       'http://192.168.1.100:3100'
     ],
@@ -41,7 +41,7 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   private connectedScales = new Map<string, string>(); // scaleId -> socketId
   private activeSessions = new Map<string, any>(); // sessionId -> session data
 
-  constructor(private scaleService: ScaleService) {}
+  constructor(private scaleService: ScaleService) { }
 
   afterInit(server: Server) {
     this.logger.log('Scale WebSocket Gateway initialized');
@@ -49,14 +49,14 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
 
   handleConnection(client: AuthenticatedSocket) {
     this.logger.log(`Scale client connected: ${client.id}`);
-    
+
     // Send current scale status to new client
     this.sendScaleOverview(client);
   }
 
   handleDisconnect(client: AuthenticatedSocket) {
     this.logger.log(`Scale client disconnected: ${client.id}`);
-    
+
     // Remove from connected scales if it was a scale connection
     for (const [scaleId, socketId] of this.connectedScales.entries()) {
       if (socketId === client.id) {
@@ -84,7 +84,7 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   ) {
     try {
       const { scaleId, department } = data;
-      
+
       // Update scale connection status
       await this.scaleService.updateScaleConfig(scaleId, {
         connectionStatus: 'connected',
@@ -95,7 +95,7 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       client.department = department;
 
       this.logger.log(`Scale registered: ${scaleId} in department ${department}`);
-      
+
       // Broadcast to all clients that scale is connected
       this.server.emit('scale:connected', {
         scaleId,
@@ -118,31 +118,28 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   ) {
     try {
       const { scaleId, ...readingData } = data;
-      
-      // Record the reading in database
-      const reading = await this.scaleService.recordReading(scaleId, readingData);
-      
-      // Broadcast to all clients in real-time
+
+      // 1. BROADCAST IMMEDIATELY to all clients for real-time UI
+      // This is the CRITICAL fix for the 30s delay - don't wait for DB
       this.server.emit('scale:reading', {
         scaleId,
-        weight: Number(reading.value),
-        isStable: reading.isStable,
-        unit: 'kg',
-        markaId: reading.toyId,
-        timestamp: reading.timestamp,
+        weight: Number(readingData.weight),
+        isStable: readingData.isStable,
+        unit: readingData.unit || 'kg',
+        markaId: (readingData as any).markaId || (readingData as any).toyId,
+        timestamp: new Date().toISOString(),
       });
 
-      return { success: true, data: reading };
+      // 2. RECORD IN DATABASE ASYNCHRONOUSLY
+      // We only save important readings (stable or significant changes) to avoid DB bloat
+      // But for now, we just make it async so it doesn't block the response
+      this.scaleService.recordReading(scaleId, readingData).catch(err => {
+        this.logger.error(`Background DB record failed: ${err.message}`);
+      });
+
+      return { success: true };
     } catch (error) {
       this.logger.error(`Failed to process scale reading: ${error.message}`);
-      
-      // Send error to specific client
-      client.emit('scale:error', {
-        scaleId: data.scaleId,
-        error: error.message,
-        timestamp: new Date(),
-      });
-      
       return { success: false, error: error.message };
     }
   }
@@ -155,10 +152,10 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   ) {
     try {
       const { scaleId, sessionId, markaId } = data;
-      
+
       // Check if session can be started (conflict prevention)
       const canStart = await this.scaleService.startScaleSession(scaleId, sessionId);
-      
+
       if (!canStart) {
         client.emit('scale:session:conflict', {
           scaleId,
@@ -166,7 +163,7 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
           message: 'Another scale in this department is currently active',
           timestamp: new Date(),
         });
-        
+
         return { success: false, error: 'Session conflict' };
       }
 
@@ -187,7 +184,7 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       });
 
       this.logger.log(`Scale session started: ${sessionId} on scale ${scaleId}`);
-      
+
       return { success: true, sessionId };
     } catch (error) {
       this.logger.error(`Failed to start scale session: ${error.message}`);
@@ -202,10 +199,10 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   ) {
     const { sessionId } = data;
     const session = this.activeSessions.get(sessionId);
-    
+
     if (session) {
       this.activeSessions.delete(sessionId);
-      
+
       // Broadcast session ended
       this.server.emit('scale:session:ended', {
         sessionId,
@@ -213,10 +210,10 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
         duration: Date.now() - session.startedAt.getTime(),
         timestamp: new Date(),
       });
-      
+
       this.logger.log(`Scale session ended: ${sessionId}`);
     }
-    
+
     return { success: true };
   }
 
@@ -228,12 +225,12 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   ) {
     try {
       await this.scaleService.updateScaleHeartbeat(data.scaleId);
-      
+
       client.emit('scale:heartbeat:ack', {
         scaleId: data.scaleId,
         timestamp: new Date(),
       });
-      
+
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -248,13 +245,13 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   ) {
     try {
       const info = await this.scaleService.getScalesWithActiveMarkas(data.department);
-      
+
       client.emit('scale:department:info:response', {
         ...info,
         connectedScales: Array.from(this.connectedScales.keys()),
         activeSessions: Array.from(this.activeSessions.values()),
       });
-      
+
       return { success: true };
     } catch (error) {
       this.logger.error(`Failed to get department info: ${error.message}`);
@@ -266,7 +263,7 @@ export class ScaleGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   private async sendScaleOverview(client: AuthenticatedSocket) {
     try {
       const configs = await this.scaleService.getScaleConfigs();
-      
+
       client.emit('scale:overview', {
         scales: configs,
         connectedScales: Array.from(this.connectedScales.keys()),

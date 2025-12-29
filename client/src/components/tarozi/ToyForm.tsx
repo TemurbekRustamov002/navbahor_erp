@@ -31,6 +31,7 @@ interface ToyFormProps {
   currentWeight: number;
   isStable: boolean;
   isConnected: boolean;
+  isSerialConnected?: boolean;
   hardwareConnectedCount: number;
   activeMarkas: Marka[];
   className?: string;
@@ -41,6 +42,7 @@ export function ToyForm({
   currentWeight,
   isStable,
   isConnected,
+  isSerialConnected,
   hardwareConnectedCount,
   activeMarkas,
   className,
@@ -61,11 +63,15 @@ export function ToyForm({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Determine if any scale (network or local serial) is active
+  const isScaleActive = (isConnected && hardwareConnectedCount > 0) || !!isSerialConnected;
+
   useEffect(() => {
-    if (isConnected && hardwareConnectedCount > 0) {
+    // If a scale is active, automatically sync Brutto with scale reading
+    if (isScaleActive) {
       setBrutto(currentWeight);
     }
-  }, [currentWeight, isConnected, hardwareConnectedCount]);
+  }, [currentWeight, isScaleActive]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -283,11 +289,11 @@ export function ToyForm({
                 <Input
                   type="number"
                   value={brutto}
-                  readOnly={isConnected && hardwareConnectedCount > 0}
+                  readOnly={isScaleActive}
                   onChange={(e) => setBrutto(e.target.value ? Number(e.target.value) : "")}
                   className={cn(
                     "h-11 pl-9 pr-3 bg-slate-50/50 dark:bg-white/5 border-none rounded-xl font-mono text-sm font-bold text-slate-900 dark:text-white focus:ring-primary/20 transition-all",
-                    (isConnected && hardwareConnectedCount > 0) && "text-primary dark:text-emerald-400 cursor-not-allowed opacity-80"
+                    isScaleActive && "text-primary dark:text-emerald-400 cursor-not-allowed opacity-80"
                   )}
                   placeholder="0.00"
                 />

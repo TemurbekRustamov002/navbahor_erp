@@ -472,8 +472,11 @@ export const useScaleProfessional = (): UseScaleReturn => {
         serialRef.current = new WebSerialScale();
       }
 
+      let lastEmitTime = 0;
       serialRef.current.onData((reading: ParsedReading) => {
-        // 1. Update local UI
+        const now = Date.now();
+
+        // 1. Update local UI (ALWAYS immediate for local user)
         const mappedReading: ScaleReading = {
           scaleId: 'local_serial',
           weight: reading.weight,
@@ -484,8 +487,14 @@ export const useScaleProfessional = (): UseScaleReturn => {
         };
         setCurrentReading(mappedReading);
 
-        // 2. Broadcast to backend if connected and scale is selected
-        if (socketRef.current?.connected && activeScale) {
+        // 2. Broadcast to backend with THROTTLE
+        // Only emit if:
+        // - It's STABLE (crucial for weighing)
+        // - It's been > 200ms since last emit (smooth UI for others)
+        const shouldEmit = reading.isStable || (now - lastEmitTime > 200);
+
+        if (socketRef.current?.connected && activeScale && shouldEmit) {
+          lastEmitTime = now;
           socketRef.current.emit('scale:reading', {
             scaleId: activeScale.id,
             weight: reading.weight,

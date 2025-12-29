@@ -1,6 +1,9 @@
 node_modules
-.next
-dist
+**/.next
+**/dist
 .env
 *.local
 tsconfig.tsbuildinfo
+*.xlsx
+*.csv
+*.txt

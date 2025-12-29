@@ -100,9 +100,13 @@ export class WebSerialScale {
                         // Append new data to buffer
                         buffer += decoder.decode(value);
 
-                        // Process complete lines (usually ending with \r\n)
-                        const lines = buffer.split(/\r?\n/);
-                        buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
+                        // Process complete lines (ending with \r, \n, or \r\n)
+                        const lines = buffer.split(/[\r\n]+/);
+
+                        // Keep the last incomplete fragment in buffer
+                        // But limit buffer size to 10KB to prevent lag/memory leaks
+                        const lastFragment = lines.pop() || "";
+                        buffer = lastFragment.length > 10240 ? "" : lastFragment;
 
                         for (const line of lines) {
                             const trimmedLine = line.trim();

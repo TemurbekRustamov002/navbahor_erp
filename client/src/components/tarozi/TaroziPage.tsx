@@ -190,6 +190,7 @@ export default function TaroziPage() {
               currentWeight={currentReading?.weight || 0}
               isStable={currentReading?.isStable || false}
               isConnected={isConnected}
+              isSerialConnected={isSerialConnected}
               hardwareConnectedCount={hardwareConnectedCount}
               activeMarkas={activeMarkas}
               onMarkaChange={setSelectedMarkaId}
