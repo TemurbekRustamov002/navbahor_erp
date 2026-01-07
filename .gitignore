@@ -7,3 +7,4 @@ tsconfig.tsbuildinfo
 *.xlsx
 *.csv
 *.txt
+/hujjatlar
