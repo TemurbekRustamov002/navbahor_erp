@@ -11,15 +11,11 @@ services:
       POSTGRES_DB: navbahor_erp
     volumes:
       - ./db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   redis:
     image: redis:7-alpine
     container_name: erp_redis
     restart: always
-    ports:
-      - "6379:6379"
 
   api:
     build:
@@ -62,10 +58,10 @@ services:
     container_name: erp_nginx
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - "8081:80"
+      - "4443:443"
     volumes:
-      - ./nginx/conf:/etc/nginx/templates
+      - erp_nginx_conf:/etc/nginx/conf.d
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     environment:
@@ -86,3 +82,6 @@ services:
       certbot renew;
       sleep 12h & wait $${!};
       done;"
+
+volumes:
+  erp_nginx_conf:
