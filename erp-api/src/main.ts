@@ -19,12 +19,19 @@ async function bootstrap() {
 
   // CORS configuration for Production Security
   const allowedOrigins = [
-  'http://localhost:3100',
-  'http://213.230.67.221:3100', // To'g'ri IP qo'shildi
-];
+    'https://erp.bhr.uz',
+    'http://localhost:3100',
+    'http://localhost:3000',
+  ];
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Temporarily allow all for debugging if needed, or stick to list
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'idempotency-key'],
     credentials: true,
@@ -83,9 +90,9 @@ async function bootstrap() {
     },
   });
 
-// main.ts
-const port = configService.get<number>('PORT') || 8080; 
-await app.listen(port, '0.0.0.0'); // 0.0.0.0 — bu Docker tashqaridan so'rov qabul qilishi uchun shart!
+  // main.ts
+  const port = configService.get<number>('PORT') || 8080;
+  await app.listen(port, '0.0.0.0'); // 0.0.0.0 — bu Docker tashqaridan so'rov qabul qilishi uchun shart!
 
   logger.log(`🚀 ERP API Server running on port ${port}`);
   logger.log(`🌍 Environment: ${configService.get<string>('NODE_ENV')}`);
