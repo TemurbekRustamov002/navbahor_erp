@@ -7,3 +7,16 @@ tsconfig.tsbuildinfo
 *.xlsx
 *.csv
 *.txt
+
+# Ignore database data
+db_data/
+postgres_data/
+
+# Ignore SSL certificates and Certbot data
+certbot/conf/
+certbot/www/
+certbot/logs/
+
+# Misc
+.DS_Store
+*.log
