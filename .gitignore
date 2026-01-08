@@ -76,3 +76,4 @@ erp-api/test-printer.js
 erp-api/test-toys.js
 erp-api/print_raw.ps1
 erp-api/list_users.ts
+*.txt
