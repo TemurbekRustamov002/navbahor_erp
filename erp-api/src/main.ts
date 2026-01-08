@@ -96,6 +96,7 @@ async function bootstrap() {
 
   logger.log(`🚀 ERP API Server running on port ${port}`);
   logger.log(`🌍 Environment: ${configService.get<string>('NODE_ENV')}`);
+  logger.log(`📅 Last Deployment: ${new Date().toISOString()}`);
   logger.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
   logger.log(`🔗 API Base URL: http://localhost:${port}/api/v1`);
 }
