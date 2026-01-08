@@ -1,8 +1,6 @@
-temurbek@dellserver:/data/projects/navbahor_erp$ cat docker-compose.yml
 version: '3.8'
 
 services:
-  # Ma'lumotlar bazasi
   db:
     image: postgres:15-alpine
     container_name: erp_db
@@ -13,50 +11,41 @@ services:
       POSTGRES_DB: navbahor_erp
     volumes:
       - ./db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
-  # Redis (Kelajak uchun tayyor holatda)
   redis:
     image: redis:7-alpine
     container_name: erp_redis
     restart: always
-    ports:
-      - "6379:6379"
 
-  # Backend (NestJS)
   api:
     build:
       context: ./erp-api
       dockerfile: Dockerfile
     container_name: erp_api
     restart: always
-    privileged: true # USB portlarga kirish uchun
+    privileged: true
     devices:
-      - "/dev/ttyUSB0:/dev/ttyUSB0" # Tarozi uchun (agar port boshqa bo'lsa o'zgartiriladi)
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
     environment:
-      - NODE_ENV=production
-      - PORT=8080
-      - DATABASE_URL=postgresql://navbahor_admin:66068926Aa@db:5432/navbahor_erp?schema=public
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=navbahor_erp_ultra_secure_secret_key_2024_professional_cotton_factory_system
-      - JWT_REFRESH_SECRET=navbahor_erp_refresh_token_ultra_secure_secret_key_2024
-      - JWT_EXPIRES=24h
-      - JWT_REFRESH_EXPIRES=7d
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgresql://navbahor_admin:66068926Aa@db:5432/navbahor_erp
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: navbahor_erp_ultra_secure_secret_key_2024_professional_cotton_factory_system
+      JWT_REFRESH_SECRET: navbahor_erp_refresh_token_ultra_secure_secret_key_2024
     expose:
       - "8080"
     depends_on:
       - db
       - redis
 
-  # Frontend (Next.js)
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=https://${DOMAIN_NAME}/api/v1
-        - NEXT_PUBLIC_WS_URL=wss://${DOMAIN_NAME}
+        NEXT_PUBLIC_API_URL: https://${DOMAIN_NAME}/api/v1
+        NEXT_PUBLIC_WS_URL: wss://${DOMAIN_NAME}
     container_name: erp_client
     restart: always
     expose:
@@ -69,14 +58,14 @@ services:
     container_name: erp_nginx
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - "8081:80"
+      - "4443:443"
     volumes:
-      - ./nginx/conf:/etc/nginx/templates
+      - erp_nginx_conf:/etc/nginx/conf.d
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
+      DOMAIN_NAME: ${DOMAIN_NAME}
     depends_on:
       - client
       - api
@@ -87,4 +76,12 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    entrypoint: >
+      /bin/sh -c "trap exit TERM;
+      while :; do
+      certbot renew;
+      sleep 12h & wait $${!};
+      done;"
+
+volumes:
+  erp_nginx_conf:

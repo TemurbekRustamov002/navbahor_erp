@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Ma'lumotlar bazasi
+  db:
+    image: postgres:15-alpine
+    container_name: erp_db
+    restart: always
+    environment:
+      POSTGRES_USER: navbahor_admin
+      POSTGRES_PASSWORD: "66068926Aa"
+      POSTGRES_DB: navbahor_erp
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Redis (Kelajak uchun tayyor holatda)
+  redis:
+    image: redis:7-alpine
+    container_name: erp_redis
+    restart: always
+    # ports qismini olib tashlasa ham bo'ladi (xavfsizlik uchun), 
+    # chunki api ichki tarmoqda ulanadi.
+
+  # Backend (NestJS)
+  api:
+    build:
+      context: ./erp-api
+      dockerfile: Dockerfile
+    container_name: erp_api
+    restart: always
+    privileged: true # USB portlarga kirish uchun
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0" # Tarozi uchun (agar port boshqa bo'lsa o'zgartiriladi)
+environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - DATABASE_URL=postgresql://navbahor_admin:66068926Aa@db:5432/navbahor_erp?schema=public
+      - REDIS_URL=redis://redis:6379 # <--- Bu yerda servis nomi ishlatilishi shart
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379     
+      - JWT_SECRET=navbahor_erp_ultra_secure_secret_key_2024_professional_cotton_factory_system
+      - JWT_REFRESH_SECRET=navbahor_erp_refresh_token_ultra_secure_secret_key_2024
+      - JWT_EXPIRES=24h
+      - JWT_REFRESH_EXPIRES=7d
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - redis
+
+  # Frontend (Next.js)
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://213.230.67.221:8080/api/v1
+        - NEXT_PUBLIC_WS_URL=ws://213.230.67.221:8080
+    container_name: erp_client
+    restart: always
+    ports:
+      - "3100:3100"
+    depends_on:
+      - api

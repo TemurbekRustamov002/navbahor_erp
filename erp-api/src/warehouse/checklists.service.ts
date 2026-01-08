@@ -40,6 +40,7 @@ export class ChecklistsService {
     if (order.checklist) {
       console.log(`♻️ Syncing existing checklist for order ${order.number}`);
 
+      const checklistId = order.checklist.id;
       const existingItemToyIds = (order.checklist as any).items?.map(i => i.toyId) || [];
       const orderToyIds = order.items.map(i => i.toyId);
 
@@ -50,7 +51,7 @@ export class ChecklistsService {
           missingToyIds.map(toyId =>
             this.prisma.wHChecklistItem.create({
               data: {
-                checklistId: order.checklist.id,
+                checklistId,
                 toyId: toyId,
                 scanned: false
               }

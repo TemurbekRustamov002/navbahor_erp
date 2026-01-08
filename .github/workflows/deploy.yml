@@ -1,23 +1,32 @@
-name: Deploy Navbahor ERP
+name: Deploy to Server
 
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: SSH to server and deploy
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: temurbek
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
           script: |
             cd /data/projects/navbahor_erp
-            git pull origin main
-            docker compose down
-            docker compose up -d --build
+            git pull origin master
+            
+            # Rebuild and restart containers
+            # Using --build to ensure code changes are reflected in images
+            docker-compose down
+            docker-compose up -d --build
+            
+            # Clean up unused images to save space
+            docker image prune -f

@@ -1,5 +1,0 @@
-"id","username","email","password","fullName","role","isActive","createdAt"
-"6b33dec4-d950-4fca-bba8-5082a44c8f22","laborant","laborant@navbahor.uz","$2b$10$NJdoozTjhdl8kq5FLjvfJu2lToIYt7jjamhqZd08GsPrDJRS2Yn2O","Laboratoriya Mutaxassisi","LAB",True,"2025-12-06 14:04:10.67"
-"bc645dc6-7569-4829-b726-b119a0287774","admin","admin@navbahor.uz","$2b$10$bTf6ZL1OyYiKEyk5XV3kbeExzW0uQ98M5Zv7MEf1U11I4IDNmMtGC","System Administrator","ADMIN",True,"2025-12-06 14:04:10.666"
-"e56e1922-a322-4395-8a4e-293e99d30dac","tarozi","tarozi@navbahor.uz","$2b$10$NJdoozTjhdl8kq5FLjvfJu2lToIYt7jjamhqZd08GsPrDJRS2Yn2O","Tarozi Operatori","SCALE",True,"2025-12-06 14:04:10.671"
-"f06295c5-6c09-4e90-a927-2c72900252f1","ombor","ombor@navbahor.uz","$2b$10$NJdoozTjhdl8kq5FLjvfJu2lToIYt7jjamhqZd08GsPrDJRS2Yn2O","Ombor Boshqaruvchisi","WAREHOUSE",True,"2025-12-06 14:04:10.669"

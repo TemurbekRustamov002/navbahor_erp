@@ -4,95 +4,123 @@ import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
-    private client: Redis | null = null;
-    private memoryStore = new Map<string, { value: string, expiry: number }>();
-    private readonly logger = new Logger(RedisService.name);
-    private useMemory = false;
+  private client: Redis | null = null;
+  private memoryStore = new Map<string, { value: string; expiry: number }>();
+  private readonly logger = new Logger(RedisService.name);
+  private useMemory = false;
 
-    constructor(private configService: ConfigService) { }
+  constructor(private configService: ConfigService) {}
 
-    onModuleInit() {
-        try {
-            const host = this.configService.get<string>('REDIS_HOST', 'localhost');
-            const port = this.configService.get<number>('REDIS_PORT', 6379);
+  onModuleInit() {
+    try {
+      // 1. Birinchi navbatda Docker-compose'dagi REDIS_URL ni o'qiymiz
+      const redisUrl = this.configService.get<string>('REDIS_URL');
+      
+      // 2. Agar REDIS_URL bo'lmasa, individual host va portni o'qiymiz
+      const host = this.configService.get<string>('REDIS_HOST', 'redis');
+      const port = this.configService.get<number>('REDIS_PORT', 6379);
+      const password = this.configService.get<string>('REDIS_PASSWORD');
 
-            this.client = new Redis({
-                host,
-                port,
-                password: this.configService.get<string>('REDIS_PASSWORD'),
-                retryStrategy: (times) => {
-                    if (times > 3) {
-                        this.logger.warn('Redis connection failed, switching to in-memory fallback');
-                        this.useMemory = true;
-                        return null; // Stop retrying
-                    }
-                    return Math.min(times * 50, 2000);
-                }
-            });
+      this.logger.log(`Attempting to connect to Redis: ${redisUrl ? 'via URL' : host + ':' + port}`);
 
-            this.client.on('error', (err) => {
-                if (!this.useMemory) {
-                    this.logger.error(`Redis error: ${err.message}`);
-                }
-            });
-        } catch (e) {
-            this.logger.warn('Failed to initialize Redis, using in-memory fallback');
+      const connectionOptions = redisUrl 
+        ? redisUrl 
+        : {
+            host,
+            port,
+            password,
+          };
+
+      this.client = new Redis(connectionOptions as any, {
+        // Tarmoq uzilsa qayta ulanish strategiyasi
+        retryStrategy: (times) => {
+          const delay = Math.min(times * 100, 3000);
+          if (times > 5) {
+            this.logger.warn('Redis connection failed after 5 attempts, switching to in-memory fallback');
             this.useMemory = true;
-        }
-    }
+            return null; // Qayta urinishni to'xtatish
+          }
+          return delay;
+        },
+        // Ulanish vaqti chegarasi
+        connectTimeout: 10000,
+      });
 
-    onModuleDestroy() {
-        if (this.client) {
-            this.client.disconnect();
-        }
-    }
+      this.client.on('connect', () => {
+        this.logger.log('Successfully connected to Redis');
+        this.useMemory = false;
+      });
 
-    async get(key: string): Promise<string | null> {
-        if (this.useMemory || !this.client) {
-            const item = this.memoryStore.get(key);
-            if (!item) return null;
-            if (item.expiry < Date.now()) {
-                this.memoryStore.delete(key);
-                return null;
-            }
-            return item.value;
+      this.client.on('error', (err) => {
+        // Faqat xotira rejimiga o'tmagan bo'lsak xatoni ko'rsatamiz
+        if (!this.useMemory) {
+          this.logger.error(`Redis connection error: ${err.message}`);
         }
-        try {
-            return await this.client.get(key);
-        } catch (e) {
-            this.useMemory = true;
-            return this.get(key);
-        }
-    }
+      });
 
-    async set(key: string, value: string, ttl?: number): Promise<void> {
-        if (this.useMemory || !this.client) {
-            const expiry = Date.now() + (ttl ? ttl * 1000 : 24 * 60 * 60 * 1000);
-            this.memoryStore.set(key, { value, expiry });
-            return;
-        }
-        try {
-            if (ttl) {
-                await this.client.set(key, value, 'EX', ttl);
-            } else {
-                await this.client.set(key, value);
-            }
-        } catch (e) {
-            this.useMemory = true;
-            await this.set(key, value, ttl);
-        }
+    } catch (e) {
+      this.logger.error('Critical failure during Redis initialization', e);
+      this.useMemory = true;
     }
+  }
 
-    async del(key: string): Promise<void> {
-        if (this.useMemory || !this.client) {
-            this.memoryStore.delete(key);
-            return;
-        }
-        try {
-            await this.client.del(key);
-        } catch (e) {
-            this.useMemory = true;
-            await this.del(key);
-        }
+  onModuleDestroy() {
+    if (this.client) {
+      this.client.disconnect();
     }
+  }
+
+  async get(key: string): Promise<string | null> {
+    if (this.useMemory || !this.client || this.client.status !== 'ready') {
+      const item = this.memoryStore.get(key);
+      if (!item) return null;
+      if (item.expiry < Date.now()) {
+        this.memoryStore.delete(key);
+        return null;
+      }
+      return item.value;
+    }
+    try {
+      return await this.client.get(key);
+    } catch (e) {
+      this.logger.warn(`Redis GET failed for key: ${key}, using memory fallback`);
+      return this.getFallback(key);
+    }
+  }
+
+  async set(key: string, value: string, ttl?: number): Promise<void> {
+    if (this.useMemory || !this.client || this.client.status !== 'ready') {
+      const expiry = Date.now() + (ttl ? ttl * 1000 : 24 * 60 * 60 * 1000);
+      this.memoryStore.set(key, { value, expiry });
+      return;
+    }
+    try {
+      if (ttl) {
+        await this.client.set(key, value, 'EX', ttl);
+      } else {
+        await this.client.set(key, value);
+      }
+    } catch (e) {
+      this.logger.warn(`Redis SET failed for key: ${key}, using memory fallback`);
+      const expiry = Date.now() + (ttl ? ttl * 1000 : 24 * 60 * 60 * 1000);
+      this.memoryStore.set(key, { value, expiry });
+    }
+  }
+
+  async del(key: string): Promise<void> {
+    if (this.useMemory || !this.client || this.client.status !== 'ready') {
+      this.memoryStore.delete(key);
+      return;
+    }
+    try {
+      await this.client.del(key);
+    } catch (e) {
+      this.memoryStore.delete(key);
+    }
+  }
+
+  private getFallback(key: string): string | null {
+    const item = this.memoryStore.get(key);
+    return item ? item.value : null;
+  }
 }
