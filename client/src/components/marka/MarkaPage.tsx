@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import { Marka } from "@/types/marka";
 import {
   Package,
   Plus,
@@ -53,59 +54,44 @@ export default function MarkaPage() {
 
   return (
     <div className="min-h-screen bg-[#dcfce7] dark:bg-[#0a120b] flex flex-col animate-in fade-in duration-500">
-      {/* Premium Navigation Header */}
-      <header className="bg-white/50 dark:bg-black/40 backdrop-blur-2xl border-b border-white/70 dark:border-white/10 sticky top-0 z-50">
-        <div className="max-w-[1600px] mx-auto px-8 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-10">
-            {/* <button
-              onClick={() => router.push('/dashboard')}
-              className="group flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary transition-all"
-            >
-              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10 transition-transform group-hover:-translate-x-1">
-                <ArrowLeft size={18} strokeWidth={2} />
+      {/* Ultra-Slim Premium Header */}
+      <header className="bg-white/90 dark:bg-[#0a120b]/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto px-6 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                <Package size={18} strokeWidth={2.5} />
               </div>
-              Bosh Sahifa
-            </button> */}
-
-            <div className="w-[1px] h-8 bg-slate-200" />
-
-            <div className="flex items-center gap-5">
-              <div className="w-12 h-12 rounded-[1.2rem] bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
-                <Package size={24} strokeWidth={2} />
+              <div className="hidden sm:block">
+                <h1 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none">Markalar</h1>
+                <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Control Panel</p>
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight leading-none">Mahsulot Markalari</h1>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1.5 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  Jonli Inventarizatsiya
-                </p>
+            </div>
+
+            <div className="hidden lg:flex items-center gap-6 ml-2 pl-6 border-l border-slate-200 dark:border-white/5">
+              <div className="text-left">
+                <p className="text-[6.5px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Jami</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-white font-mono leading-none">{markas.length}</p>
+              </div>
+              <div className="text-left">
+                <p className="text-[6.5px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Faol</p>
+                <p className="text-xs font-bold text-primary font-mono leading-none">{markas.filter((m: Marka) => m.status === 'ACTIVE').length}</p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center gap-8 mr-6 px-8 border-x border-slate-100">
-              <div className="text-right">
-                <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1">Jami Markalar</p>
-                <p className="text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tighter leading-none">{markas.length}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1">Faol Markalar</p>
-                <p className="text-xl font-bold text-primary font-mono tracking-tighter leading-none">{markas.filter(m => m.status === 'ACTIVE').length}</p>
-              </div>
-            </div>
-
+          <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowForm(!showForm)}
               className={cn(
-                "h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-xs transition-all active:scale-95 flex items-center gap-3",
+                "h-9 px-4 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-all active:scale-95 flex items-center gap-2",
                 showForm
-                  ? "bg-slate-900 text-white shadow-xl shadow-slate-900/20"
-                  : "bg-primary text-white shadow-xl shadow-primary/20 hover:bg-green-700"
+                  ? "bg-slate-950 text-white"
+                  : "bg-primary text-white shadow-md shadow-primary/10 hover:bg-green-700"
               )}
             >
-              {showForm ? <Plus size={18} className="rotate-45" /> : <Plus size={18} />}
-              {showForm ? "Yopish" : "Yangi Marka"}
+              {showForm ? <Plus size={12} className="rotate-45" /> : <Plus size={12} />}
+              <span>{showForm ? "Yopish" : "Yangi"}</span>
             </Button>
 
             <Button
@@ -115,29 +101,28 @@ export default function MarkaPage() {
                   await exportAllMarkasToExcel();
                 } catch (error: any) {
                   console.error('Export error:', error);
-                  alert(error.message || 'Excel eksport qilishda xatolik yuz berdi');
                 }
               }}
-              className="h-12 px-6 rounded-xl border-white/60 dark:border-white/10 bg-white/40 dark:bg-white/5 backdrop-blur-2xl text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 active:scale-95 shadow-sm flex items-center gap-3"
+              className="h-9 px-3 rounded-lg border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold uppercase tracking-widest active:scale-95 flex items-center gap-2"
             >
-              <FileSpreadsheet size={18} />
-              <span className="hidden md:inline">Excelga Yuklash</span>
+              <FileSpreadsheet size={14} />
+              <span className="hidden md:inline">Eksport</span>
             </Button>
 
             <Button
               variant="outline"
               onClick={() => fetchMarkas()}
               disabled={isLoading}
-              className="h-12 w-12 rounded-xl border-white/60 dark:border-white/10 bg-white/40 dark:bg-white/5 backdrop-blur-2xl text-slate-600 dark:text-slate-400 hover:text-primary active:scale-95 shadow-sm p-0 flex items-center justify-center"
+              className="h-9 w-9 rounded-lg border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-primary active:scale-95 p-0 flex items-center justify-center"
             >
-              <RefreshCw size={20} className={cn(isLoading && "animate-spin")} />
+              <RefreshCw size={14} className={cn(isLoading && "animate-spin")} />
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content Dashboard Layout */}
-      <main className="max-w-[1600px] mx-auto w-full px-8 py-10 space-y-10">
+      <main className="max-w-[1600px] mx-auto w-full px-8 py-6 space-y-6">
 
         {/* Parametric Input Section */}
         {showForm && (
@@ -146,60 +131,56 @@ export default function MarkaPage() {
           </div>
         )}
 
-        {/* Global Control HUD */}
-        <div className="bg-white/50 dark:bg-[#111912]/60 backdrop-blur-2xl border border-white/70 dark:border-white/10 rounded-[2.5rem] p-8 shadow-xl shadow-black/5 flex flex-col md:flex-row items-center justify-between gap-8 animate-in fade-in duration-700">
-          <div className="flex-1 w-full relative group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} strokeWidth={2.5} />
+        {/* Floating Search & Status HUD */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex-1 relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="text-slate-400 dark:text-slate-500 group-focus-within:text-primary transition-colors" size={16} strokeWidth={2.5} />
+            </div>
             <Input
-              placeholder="Markani qidirish (ID, Mahsulot turi, PTM)..."
+              placeholder="Markani qidirish..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-15 pl-16 pr-10 bg-white/60 dark:bg-black/20 border-2 border-slate-200/40 dark:border-white/10 rounded-2xl text-[13px] font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:bg-white dark:focus:bg-black/40 focus:ring-4 focus:ring-primary/5 transition-all shadow-sm"
+              className="h-11 pl-11 pr-4 bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/5 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-700 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
             />
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="h-15 px-6 bg-white/70 dark:bg-black/20 border-2 border-slate-300/50 dark:border-white/10 rounded-2xl flex items-center gap-4 shadow-sm">
-              <button
-                onClick={() => setStatusFilter('ALL')}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                  statusFilter === 'ALL' ? "bg-slate-900 dark:bg-white dark:text-black text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-white/10"
-                )}
-              >
-                Barchasi
-              </button>
-              <div className="w-[1px] h-4 bg-slate-200" />
-              <button
-                onClick={() => setStatusFilter('ACTIVE')}
-                className={cn(
-                  "flex items-center gap-2.5 px-4 py-2 rounded-xl transition-all",
-                  statusFilter === 'ACTIVE' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-slate-600 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 font-bold"
-                )}
-              >
-                <div className={cn("w-2 h-2 rounded-full", statusFilter === 'ACTIVE' ? "bg-white" : "bg-emerald-500")} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Faol</span>
-              </button>
-              <button
-                onClick={() => setStatusFilter('PAUSED')}
-                className={cn(
-                  "flex items-center gap-2.5 px-4 py-2 rounded-xl transition-all",
-                  statusFilter === 'PAUSED' ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "text-slate-600 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-700 dark:hover:text-amber-400 font-bold"
-                )}
-              >
-                <div className={cn("w-2 h-2 rounded-full", statusFilter === 'PAUSED' ? "bg-white" : "bg-amber-500")} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Pauza</span>
-              </button>
-              <button
-                onClick={() => setStatusFilter('CLOSED')}
-                className={cn(
-                  "flex items-center gap-2.5 px-4 py-2 rounded-xl transition-all",
-                  statusFilter === 'CLOSED' ? "bg-slate-500 text-white shadow-lg shadow-slate-500/20" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white font-bold"
-                )}
-              >
-                <div className={cn("w-2 h-2 rounded-full", statusFilter === 'CLOSED' ? "bg-white" : "bg-slate-300")} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Yopiq</span>
-              </button>
+          <div className="flex items-center p-1 bg-slate-100/50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-xl shadow-inner">
+            <button
+              onClick={() => setStatusFilter('ALL')}
+              className={cn(
+                "px-4 h-9 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
+                statusFilter === 'ALL'
+                  ? "bg-slate-900 dark:bg-white dark:text-black text-white shadow-md shadow-black/10"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-white/10"
+              )}
+            >
+              Barchasi
+            </button>
+            <div className="w-[1px] h-3 bg-slate-200 dark:bg-white/10 mx-1" />
+            <div className="flex items-center gap-0.5">
+              {[
+                { id: 'ACTIVE', label: 'Faol', color: 'bg-emerald-500' },
+                { id: 'PAUSED', label: 'Pauza', color: 'bg-amber-500' },
+                { id: 'CLOSED', label: 'Yopiq', color: 'bg-slate-500' }
+              ].map((status) => (
+                <button
+                  key={status.id}
+                  onClick={() => setStatusFilter(status.id as any)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 h-9 rounded-lg transition-all",
+                    statusFilter === status.id
+                      ? "bg-white dark:bg-white/10 shadow-sm ring-1 ring-black/5 dark:ring-white/5"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  )}
+                >
+                  <div className={cn("w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.1)]", status.color)} />
+                  <span className={cn(
+                    "text-[9px] font-bold uppercase tracking-widest",
+                    statusFilter === status.id ? "text-slate-900 dark:text-white" : "text-slate-500"
+                  )}>{status.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>

@@ -55,6 +55,7 @@ error_log.txt
 
 # Database and persistent data
 db_data/
+db_data_local/
 postgres_data/
 
 # SSL and Certbot
@@ -64,6 +65,7 @@ certbot/
 # Application specific (local files)
 erp_bhr_uz.conf
 docker-compose.yml.save
+docker-compose.local.yml
 hujjatlar/
 *.xlsx
 *.csv

@@ -86,62 +86,65 @@ export function SidebarContent({ isExpanded = true, isCollapsed = false, isHover
 
   return (
     <div className="flex flex-col h-full">
-      {/* Logo Section - Slimmer */}
-      <div className="flex h-16 shrink-0 items-center px-1">
-        <div className="flex items-center group cursor-pointer w-full">
-          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm border border-primary/20 group-hover:scale-105 transition-all">
+      {/* Logo Section - Clean & Centered */}
+      <div className="flex h-16 shrink-0 items-center justify-center">
+        <div className="flex items-center group cursor-pointer">
+          <div className="w-10 h-10 bg-primary/10 rounded-[14px] flex items-center justify-center shadow-sm border border-primary/20 group-hover:bg-primary/20 transition-all duration-500">
             <Scale className="h-5 w-5 text-primary" />
           </div>
-          <div className={cn(
-            "ml-3 transition-all duration-300 overflow-hidden",
-            isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
-          )}>
-            <h2 className="text-lg font-black tracking-tight text-foreground whitespace-nowrap">
-              NAVBAHOR<span className="text-primary">.ERP</span>
-            </h2>
-          </div>
+          {isExpanded && (
+            <div className="ml-3 transition-opacity duration-500">
+              <h2 className="text-lg font-black tracking-tighter text-foreground whitespace-nowrap">
+                NAVBAHOR<span className="text-primary">.ERP</span>
+              </h2>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Navigation - Senior UI Polish */}
-      <nav className="flex-1 mt-6 px-1">
-        <ul role="list" className="space-y-1">
+      <nav className="flex-1 mt-8">
+        <ul role="list" className="space-y-2">
           {filteredNavigation.map((item) => {
             const isActive = pathname === item.href;
             return (
-              <li key={item.name}>
+              <li key={item.name} className="flex justify-center">
                 <Link
                   href={item.href}
                   className={cn(
-                    'group relative flex items-center gap-x-3 rounded-xl p-3 transition-all duration-300 font-medium text-sm',
+                    'group relative flex items-center rounded-xl transition-all duration-300 font-medium text-sm',
+                    isExpanded
+                      ? 'w-full gap-x-3 p-3'
+                      : 'w-10 h-10 justify-center',
                     isActive
-                      ? 'bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-                    !isExpanded && 'justify-center mx-1 px-2'
+                      ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(16,185,129,0.2)]'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
                   )}
                   title={!isExpanded ? item.name : undefined}
                 >
-                  {/* Active Indicator Bar
-                  {isActive && (
-                    <div className="absolute left-0 w-1 h-6 bg-primary rounded-r-full -translate-x-3" />
-                  )} */}
+                  {/* Active Indicator Bar - Left */}
+                  {isActive && isExpanded && (
+                    <div className="absolute left-0 w-1 h-5 bg-primary rounded-r-full -translate-x-2" />
+                  )}
 
                   <item.icon className={cn(
-                    'h-5 w-10 shrink-0 transition-transform duration-300 group-hover:scale-110',
-                    isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                    'h-5 w-5 shrink-0 transition-all duration-300',
+                    isActive
+                      ? 'text-primary'
+                      : 'text-muted-foreground group-hover:text-foreground group-hover:scale-110'
                   )} />
 
                   <span className={cn(
-                    "transition-all duration-300 whitespace-nowrap ",
-                    isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 w-0"
+                    "transition-all duration-500 whitespace-nowrap overflow-hidden",
+                    isExpanded ? "opacity-100 translate-x-0 w-auto ml-1" : "opacity-0 -translate-x-10 w-0"
                   )}>
                     {item.name}
                   </span>
 
-                  {/* Notification Dot Placeholder or Status
-                  {isActive && isExpanded && (
-                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-lg shadow-primary/50" />
-                  )} */}
+                  {/* Active Glow for collapsed mode */}
+                  {isActive && !isExpanded && (
+                    <div className="absolute inset-0 bg-primary/20 rounded-xl animate-pulse -z-10" />
+                  )}
                 </Link>
               </li>
             );
@@ -150,32 +153,32 @@ export function SidebarContent({ isExpanded = true, isCollapsed = false, isHover
       </nav>
 
       {/* Refined Account & Actions Section */}
-      <div className="mt-auto pt-6 border-t border-border pb-6 space-y-4">
+      <div className="mt-auto pt-6 border-t border-border/50 pb-6 space-y-4">
         {/* App Actions - Notifications, Theme, Lang */}
         <div className={cn(
-          "flex items-center glass-panel rounded-xl p-1.5 shadow-sm gap-1",
-          isExpanded ? "justify-between" : "flex-col justify-center"
+          "flex items-center rounded-2xl p-1.5 gap-1 transition-all duration-300",
+          isExpanded ? "bg-muted/30 justify-between px-2" : "flex-col justify-center bg-transparent"
         )}>
-          <div className={cn("flex gap-1", !isExpanded && "flex-col")}>
+          <div className={cn("flex gap-1", !isExpanded && "flex-col items-center")}>
             <ThemeToggle size="sm" />
             <LanguageToggle />
           </div>
 
-          <div className={cn("flex gap-1", !isExpanded && "flex-col")}>
+          <div className={cn("flex gap-1", !isExpanded && "flex-col items-center mt-2")}>
             <button
-              className="relative p-2 text-muted-foreground hover:text-primary transition-all bg-secondary/50 hover:bg-background rounded-lg border border-transparent hover:border-border"
+              className="relative p-2 text-muted-foreground hover:text-primary transition-all rounded-xl hover:bg-background"
               title="Bildirishnomalar"
             >
               <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+              <span className="absolute top-2 right-2 flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
               </span>
             </button>
 
             <button
               onClick={() => logout()}
-              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
               title="Chiqish"
             >
               <LogOut size={18} />
@@ -185,11 +188,11 @@ export function SidebarContent({ isExpanded = true, isCollapsed = false, isHover
 
         {/* User Profile */}
         <div className={cn(
-          "relative group transition-all duration-300",
-          isExpanded ? "bg-card border border-border p-3 rounded-2xl shadow-sm" : "p-1"
+          "relative group transition-all duration-300 overflow-hidden",
+          isExpanded ? "bg-card border border-border/50 p-2.5 rounded-2xl shadow-sm hover:border-primary/30" : "flex justify-center"
         )}>
-          <div className={cn("flex items-center", !isExpanded && "justify-center")}>
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-emerald-700 flex items-center justify-center shadow-lg shadow-primary/20 ring-2 ring-background shrink-0">
+          <div className={cn("flex items-center w-full", !isExpanded && "justify-center")}>
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/80 to-emerald-700 flex items-center justify-center shadow-lg shadow-primary/10 ring-1 ring-white/10 shrink-0">
               <span className="text-xs font-black text-white uppercase">{user?.username?.[0] || '?'}</span>
             </div>
             {isExpanded && (
@@ -197,18 +200,12 @@ export function SidebarContent({ isExpanded = true, isCollapsed = false, isHover
                 <p className="text-sm font-bold text-foreground truncate leading-none">
                   {user?.fullName || user?.username}
                 </p>
-                <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1.5 leading-none">
+                <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em] mt-1.5 leading-none">
                   {user?.role}
                 </p>
               </div>
             )}
           </div>
-
-          {isExpanded && (
-            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Settings className="w-3.5 h-3.5 text-muted-foreground hover:text-primary cursor-pointer" />
-            </div>
-          )}
         </div>
       </div>
     </div>
