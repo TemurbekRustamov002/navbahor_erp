@@ -64,6 +64,7 @@ certbot/
 
 # Application specific (local files)
 erp_bhr_uz.conf
+docker-compose.yml
 docker-compose.yml.save
 docker-compose.local.yml
 hujjatlar/
