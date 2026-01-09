@@ -170,6 +170,8 @@ export function StatsGrid() {
 
   const userStats = getRoleStats()
 
+  if (userStats.length === 0) return null
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in duration-700">
       {userStats.map((stat: StatItem, index: number) => (

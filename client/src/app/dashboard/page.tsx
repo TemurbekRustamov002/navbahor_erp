@@ -45,12 +45,12 @@ export default function DashboardPage() {
               </p>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <div className="px-4 py-2 rounded-xl bg-white/60 border border-white/20 backdrop-blur-md flex items-center gap-2 shadow-sm">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Departament:</span>
-                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">{user?.department || 'Markaziy'}</span>
+                <div className="px-4 py-2 rounded-xl bg-white/60 dark:bg-white/5 border border-white/20 dark:border-white/10 backdrop-blur-md flex items-center gap-2 shadow-sm">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Departament:</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">{user?.department || 'Markaziy'}</span>
                 </div>
-                <div className="px-4 py-2 rounded-xl bg-white/60 border border-white/20 backdrop-blur-md flex items-center gap-2 shadow-sm">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Vaqt:</span>
+                <div className="px-4 py-2 rounded-xl bg-white/60 dark:bg-white/5 border border-white/20 dark:border-white/10 backdrop-blur-md flex items-center gap-2 shadow-sm">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Vaqt:</span>
                   <span className="text-xs font-black text-primary tabular-nums">
                     {new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}
                   </span>
