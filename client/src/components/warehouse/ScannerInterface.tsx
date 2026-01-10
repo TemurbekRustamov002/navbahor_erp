@@ -85,7 +85,17 @@ export function ScannerInterface() {
       // console.log('Simple QR code scanned');
     }
 
-    // URL parsing logikasi (Yangi URL formati uchun)
+    // Hybrid format parsing (e.g., ID#URL)
+    if (code.includes('#')) {
+      const parts = code.split('#');
+      // If the first part looks like a UUID or a toy ID, take it
+      if (parts[0].length > 10) {
+        code = parts[0];
+        console.log('🔗 Hybrid QR detected, extracted ID:', code);
+      }
+    }
+
+    // URL parsing logikasi (Agar faqat URL kelsa)
     if (code.includes('erp.bhr.uz/toy/')) {
       try {
         const urlObj = new URL(code.startsWith('http') ? code : `https://${code}`);
@@ -96,7 +106,6 @@ export function ScannerInterface() {
           console.log('🔗 URL QR detected, extracted ID:', code);
         }
       } catch (e) {
-        // Fallback: agar URL parsing xato bersa, oddiy split ishlatamiz
         const extractedId = code.split('/').pop();
         if (extractedId) code = extractedId;
       }
