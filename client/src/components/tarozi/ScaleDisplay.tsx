@@ -45,7 +45,7 @@ export function ScaleDisplay({ weight, isStable, isConnected, className }: Scale
           isConnected ? "bg-primary/5 dark:bg-primary/10 border-primary/20 text-primary dark:text-primary/90" : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500"
         )}>
           {isConnected ? <Wifi size={12} strokeWidth={2} /> : <WifiOff size={12} strokeWidth={2} />}
-          <span className="text-[9px] font-bold uppercase tracking-widest">{isConnected ? "ONLINE" : "OFFLINE"}</span>
+          <span className="text-[9px] font-bold uppercase tracking-widest">{isConnected ? "ONLAYN" : "OFLAYN"}</span>
         </div>
       </div>
 
@@ -86,9 +86,9 @@ export function ScaleDisplay({ weight, isStable, isConnected, className }: Scale
               <div className={cn("w-1 h-1 rounded-full", isStable ? "bg-emerald-500" : "bg-amber-500")} />
             </div>
             <div className="min-w-0">
-              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">Status</p>
+              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">Holat</p>
               <h4 className="text-[9px] font-bold text-slate-900 uppercase tracking-tight truncate leading-none">
-                {isStable ? 'Ok' : '...'}
+                {isStable ? 'Barqaror' : '...'}
               </h4>
             </div>
           </div>

@@ -226,7 +226,7 @@ export function ScannerInterface() {
                 <Smartphone className="h-5 w-5 text-primary" strokeWidth={2.5} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">Urovo <span className="text-primary italic">Scan</span></h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none uppercase">Urovo <span className="text-primary italic">Skaner</span></h2>
                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
                   {currentChecklist?.items?.[0]?.marka?.number ? `Marka #${currentChecklist.items[0].marka.number}` : 'Tayyor'}
                 </p>
@@ -239,20 +239,22 @@ export function ScannerInterface() {
             )}>
               <div className={cn("w-2 h-2 rounded-full", isConnected ? "bg-primary animate-pulse" : "bg-red-500")} />
               <span className={cn("text-[8px] font-bold uppercase tracking-widest leading-none", isConnected ? "text-slate-900 dark:text-white" : "text-red-600 dark:text-red-400")}>
-                {isConnected ? "ONLINE" : "OFFLINE"}
+                {isConnected ? "ALOKA BOR" : "ALOKA YO'Q"}
               </span>
             </div>
           </div>
 
           <div className="flex gap-2">
-            <Button
-              variant={showManualList ? "secondary" : "outline"}
+            <button
               onClick={() => setShowManualList(!showManualList)}
-              className="flex-1 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5"
+              className={cn(
+                "flex-1 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5 flex items-center justify-center border",
+                showManualList ? "bg-slate-100 dark:bg-white/10" : "bg-white dark:bg-transparent"
+              )}
             >
               <List className="h-4 w-4" />
               Ro&apos;yxat ({status.total - status.scanned})
-            </Button>
+            </button>
             <Button
               variant="outline"
               onClick={handleDownloadLabels}
@@ -290,7 +292,7 @@ export function ScannerInterface() {
                       onClick={() => handleScan(item.toyId)}
                       className="h-8 text-[9px] font-bold uppercase tracking-wider text-primary bg-primary/5 dark:bg-primary/20 hover:bg-primary/10"
                     >
-                      Manual
+                      Kiritish
                     </Button>
                   </div>
                 ))}

@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { cn } from "@/lib/utils";
-import { printToyLabelVerbose } from "@/lib/utils/print";
+import { printToyLabelVerbose, printQualityCertificate } from "@/lib/utils/print";
 import { safeNumber } from "@/lib/utils/number";
 import {
   Package,
@@ -19,7 +19,8 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  FileText
 } from "lucide-react";
 
 interface EnhancedRecentToysProps {
@@ -162,11 +163,11 @@ export function EnhancedRecentToys({ selectedMarkaId }: EnhancedRecentToysProps)
                 {/* Weight Parameters */}
                 <div className="col-span-6 lg:col-span-3 flex items-center gap-6 border-x border-slate-100 dark:border-white/5 px-4">
                   <div className="flex flex-col">
-                    <span className="text-base font-black font-mono text-primary dark:text-primary/90 tabular-nums tracking-tighter leading-none">{safeNumber(toy.netto).toFixed(2)}</span>
-                    <span className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mt-1">NETTO KG</span>
+                    <span className="text-base font-black font-mono text-primary dark:text-primary/90 tabular-nums tracking-tighter leading-none">{safeNumber(toy.brutto).toFixed(2)}</span>
+                    <span className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mt-1">BRUTTO KG</span>
                   </div>
                   <div className="flex flex-col opacity-40 dark:opacity-30">
-                    <span className="text-[10px] font-bold font-mono text-slate-600 dark:text-slate-400 leading-none">B: {safeNumber(toy.brutto).toFixed(2)}</span>
+                    <span className="text-[10px] font-bold font-mono text-slate-600 dark:text-slate-400 leading-none">N: {safeNumber(toy.netto).toFixed(2)}</span>
                     <span className="text-[10px] font-bold font-mono text-slate-600 dark:text-slate-400 leading-none mt-1">T: {safeNumber(toy.tara).toFixed(2)}</span>
                   </div>
                 </div>
@@ -185,13 +186,32 @@ export function EnhancedRecentToys({ selectedMarkaId }: EnhancedRecentToysProps)
                           "bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20 text-amber-600 dark:text-amber-400"
                     )}>
                       {toy.labStatus === "APPROVED" ? <ShieldCheck size={12} strokeWidth={2} /> : <FlaskConical size={12} strokeWidth={2} />}
-                      <span className="text-[8px] font-black uppercase tracking-widest">{toy.labStatus}</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest">
+                        {toy.labStatus === "APPROVED" ? "TASDIQLANGAN" :
+                          toy.labStatus === "REJECTED" ? "RAD ETILGAN" : "KUTILMOQDA"}
+                      </span>
                     </div>
                   )}
                 </div>
 
                 {/* Actions HUD */}
                 <div className="col-span-12 lg:col-span-2 flex items-center justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => printQualityCertificate(toy)}
+                    disabled={toy.labStatus !== 'APPROVED'}
+                    className={cn(
+                      "h-8 w-8 rounded-lg transition-all active:scale-95",
+                      toy.labStatus === 'APPROVED'
+                        ? "bg-amber-500/10 border border-amber-500/20 text-amber-600 hover:bg-amber-500 hover:text-white"
+                        : "bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 text-slate-300 cursor-not-allowed"
+                    )}
+                    title="Sifat Sertifikati"
+                  >
+                    <FileText size={16} strokeWidth={2} />
+                  </Button>
+
                   <Button
                     variant="ghost"
                     size="icon"

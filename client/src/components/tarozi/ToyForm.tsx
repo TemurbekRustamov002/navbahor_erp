@@ -260,9 +260,9 @@ export function ToyForm({
 
           {/* Brigade Selection - NEW */}
           <div className="space-y-2">
-            <Label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Mas'ul Brigada</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {["1", "2", "3", "4"].map((b) => (
+            <Label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Mas&apos;ul Brigada</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {["1", "2", "3"].map((b) => (
                 <button
                   key={b}
                   type="button"
@@ -333,22 +333,53 @@ export function ToyForm({
           </div>
 
           {/* Results Engine */}
-          <div className="flex-1 min-h-[100px] flex flex-col items-center justify-center bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/10 p-4 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-2 opacity-5">
-              <Target size={40} strokeWidth={1} />
+          <div className="flex gap-4">
+            {/* Primary Weight Displayer (Brutto) */}
+            <div className="flex-1 min-h-[140px] flex flex-col items-center justify-center bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/10 p-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Scale size={80} />
+              </div>
+
+              <p className="text-[10px] font-black text-primary/60 dark:text-primary/40 uppercase tracking-[0.3em] mb-3">UMUMIY (BRUTTO)</p>
+
+              <div className="flex flex-col items-center relative z-10 transition-transform duration-500 group-hover:scale-105">
+                <div className="flex items-baseline gap-2">
+                  <span className={cn(
+                    "text-5xl font-black tabular-nums tracking-tighter transition-all duration-700 font-mono",
+                    brutto > 0 ? "text-slate-900 dark:text-white" : "text-slate-200 dark:text-white/10"
+                  )}>
+                    {formatWeight(brutto, 'kg', 2)}
+                  </span>
+                  <span className="text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">kg</span>
+                </div>
+              </div>
+
+              <div className="absolute bottom-0 left-0 w-full h-1 bg-primary/10">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${Math.min((brutto / 230) * 100, 100)}%` }}
+                />
+              </div>
             </div>
-            <p className="text-[8px] font-bold text-primary/60 dark:text-primary/40 uppercase tracking-[0.4em] mb-2">Netto Vazni</p>
-            <div className="flex items-baseline gap-2 relative z-10 transition-transform duration-500 group-hover:scale-105">
-              <span className={cn(
-                "text-4xl font-bold tabular-nums tracking-tighter transition-all duration-700 font-mono",
-                netto > 0 ? "text-slate-900 dark:text-white" : "text-slate-200 dark:text-white/10"
-              )}>
-                {formatWeight(netto, 'kg', 2)}
-              </span>
-              <span className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">kg</span>
+
+            {/* Secondary Weights Matrix */}
+            <div className="flex flex-col gap-3 w-40">
+              <div className="flex-1 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/10 p-4">
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">SOF OG'IRLIGI (NETTO)</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl font-bold dark:text-white font-mono">{formatWeight(Number(netto) || 0, 'kg', 2)}</span>
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">kg</span>
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/10 p-4">
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">TARA</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl font-bold dark:text-white font-mono">{formatWeight(Number(tara) || 0, 'kg', 2)}</span>
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">kg</span>
+                </div>
+              </div>
             </div>
           </div>
-
           {/* Feedback & Submission Console */}
           <div className="space-y-3 pt-2">
             {error && (

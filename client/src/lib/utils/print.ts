@@ -585,3 +585,235 @@ export async function printChecklistLabels(toys: ToyPrintData[]) {
     console.error('Bulk Preview error:', err);
   }
 }
+/**
+ * Quality Certificate Print (Sifat Sertifikati)
+ */
+export async function printQualityCertificate(toy: any) {
+  try {
+    const lab = toy.labResult || {};
+    const marka = toy.marka || {};
+
+    const dateStr = new Date(lab.createdAt || toy.createdAt).toLocaleDateString('uz-UZ', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          @page { size: A4; margin: 20mm; }
+          body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            color: #1a202c;
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 30px;
+          }
+          .company-name {
+            font-size: 18pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          }
+          .report-title {
+            text-align: right;
+            font-size: 10pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #4a5568;
+          }
+          .main-title {
+            text-align: center;
+            font-size: 20pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+            text-decoration: underline;
+          }
+          .metadata {
+            margin-bottom: 40px;
+            display: grid;
+            grid-template-cols: 1fr;
+            gap: 12px;
+          }
+          .meta-item {
+            font-size: 11pt;
+            display: flex;
+            gap: 10px;
+          }
+          .meta-label {
+            font-weight: 700;
+            min-width: 180px;
+            color: #2d3748;
+          }
+          .meta-value {
+            font-weight: 800;
+            text-transform: uppercase;
+          }
+          .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 50px;
+          }
+          .results-table th, .results-table td {
+            border: 1px solid #e2e8f0;
+            padding: 12px 15px;
+            text-align: left;
+          }
+          .results-table th {
+            background-color: #f8fafc;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 9pt;
+            color: #64748b;
+          }
+          .results-table td {
+            font-size: 11pt;
+            font-weight: 600;
+          }
+          .results-table .label-cell {
+            color: #4a5568;
+            font-weight: 600;
+          }
+          .results-table .value-cell {
+            text-align: right;
+            font-weight: 800;
+            font-family: 'Courier New', monospace;
+          }
+          .footer {
+            margin-top: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+          }
+          .footer-section {
+            width: 45%;
+          }
+          .footer-label {
+            font-size: 9pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #718096;
+            margin-bottom: 5px;
+          }
+          .footer-value {
+            font-size: 11pt;
+            font-weight: 800;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+          }
+          .stamp-area {
+            text-align: right;
+          }
+          .approved-stamp {
+            font-size: 8pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #a0aec0;
+            margin-bottom: 10px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-name">NAVBAHOR TEKSTIL</div>
+          <div class="report-title">LABORATORIYA<br>HISOBOTI</div>
+        </div>
+
+        <div class="main-title">SIFAT SERTIFIKATI / QUALITY CERTIFICATE</div>
+
+        <div class="metadata">
+          <div class="meta-item">
+            <span class="meta-label">Mahsulot / Product:</span>
+            <span class="meta-value">${toy.productType || 'TOLA'}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Marka / Batch:</span>
+            <span class="meta-value">M-${marka.number || '---'}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Toy / Bale No:</span>
+            <span class="meta-value">${toy.orderNo || '---'}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Sana / Date:</span>
+            <span class="meta-value">${dateStr}</span>
+          </div>
+        </div>
+
+        <div class="footer-label" style="margin-bottom: 15px; font-size: 10pt; color: #000; border-bottom: 2px solid #000; display: inline-block;">
+          TAHLIL NATIJALARI / ANALYSIS RESULTS
+        </div>
+
+        <table class="results-table">
+          <tr>
+            <td class="label-cell">Navi (Type)</td>
+            <td class="value-cell">${lab.navi || '---'}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Sinf (Grade)</td>
+            <td class="value-cell">${lab.grade || '---'}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Namlik (Moisture)</td>
+            <td class="value-cell">${lab.moisture ? lab.moisture.toFixed(1) + ' %' : '---'}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Ifloslik (Trash)</td>
+            <td class="value-cell">${lab.trash ? lab.trash.toFixed(1) + ' %' : '---'}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Mikroneyr (Mic)</td>
+            <td class="value-cell">${lab.mic || '4.2'}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Uzunlik (Length)</td>
+            <td class="value-cell">${lab.lengthMm ? lab.lengthMm + ' mm' : '---'}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Mustahkamlik (Strength)</td>
+            <td class="value-cell">${lab.strength ? lab.strength.toFixed(1) + ' g/tex' : '---'}</td>
+          </tr>
+        </table>
+
+        <div class="footer">
+          <div class="footer-section">
+            <div class="footer-label">MAS'UL SHAXS / RESPONSIBLE:</div>
+            <div class="footer-value">${lab.analyst || 'Administrator'}</div>
+          </div>
+          <div class="footer-section stamp-area">
+            <div class="approved-stamp">TASDIQLANDI / APPROVED:</div>
+            <div style="width: 150px; border-bottom: 1px solid #000; margin-left: auto;"></div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = () => {
+            window.print();
+            setTimeout(() => window.close(), 1000);
+          }
+        </script>
+      </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    }
+  } catch (err) {
+    console.error('Certificate print error:', err);
+  }
+}

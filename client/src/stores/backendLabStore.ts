@@ -55,6 +55,8 @@ interface LabState {
   }) => Promise<{ success: boolean; message: string }>;
   approveSample: (toyId: string) => Promise<{ success: boolean; message: string }>;
   rejectSample: (toyId: string, reason?: string) => Promise<{ success: boolean; message: string }>;
+  bulkApproveSamples: (toyIds: string[]) => Promise<{ success: boolean; message: string }>;
+  bulkRejectSamples: (toyIds: string[], reason?: string) => Promise<{ success: boolean; message: string }>;
   toggleWarehouse: (toyId: string) => Promise<{ success: boolean; message: string }>;
   deleteSample: (identifier: string) => Promise<{ success: boolean; message: string }>;
   toggleShowToSales: (identifier: string) => Promise<{ success: boolean; message: string }>;
@@ -227,8 +229,7 @@ export const useBackendLabStore = create<LabState>()(
       try {
         console.log('❌ Rejecting lab sample:', toyId, reason);
 
-        const response = await labService.rejectSample(toyId, reason);
-        console.log('✅ Reject response:', response);
+        await labService.rejectSample(toyId, reason);
 
         // Update local state
         set((state) => ({
@@ -245,6 +246,57 @@ export const useBackendLabStore = create<LabState>()(
         console.error('❌ Failed to reject lab sample:', errorMessage);
         set({ error: errorMessage, isLoading: false });
 
+        throw new Error(errorMessage);
+      }
+    },
+
+    bulkApproveSamples: async (toyIds: string[]) => {
+      if (!toyIds.length) return { success: true, message: 'Tanlanganlar yo\'q' };
+      set({ isLoading: true, error: null });
+      try {
+        console.log('✅ Bulk approving lab samples:', toyIds.length);
+
+        // Use Promise.all to call approve for each toyId
+        await Promise.all(toyIds.map(id => labService.approveSample(id)));
+
+        // Update local state
+        set((state) => ({
+          samples: state.samples.map(s =>
+            toyIds.includes(s.toyId) ? { ...s, status: 'APPROVED' as LabStatus, showToWarehouse: true } : s
+          ),
+          isLoading: false,
+          error: null
+        }));
+
+        return { success: true, message: `${toyIds.length} ta namuna tasdiqlandi` };
+      } catch (error: any) {
+        const errorMessage = 'Ommaviy tasdiqlashda xatolik yuz berdi';
+        set({ error: errorMessage, isLoading: false });
+        throw new Error(errorMessage);
+      }
+    },
+
+    bulkRejectSamples: async (toyIds: string[], reason?: string) => {
+      if (!toyIds.length) return { success: true, message: 'Tanlanganlar yo\'q' };
+      set({ isLoading: true, error: null });
+      try {
+        console.log('❌ Bulk rejecting lab samples:', toyIds.length);
+
+        await Promise.all(toyIds.map(id => labService.rejectSample(id, reason)));
+
+        // Update local state
+        set((state) => ({
+          samples: state.samples.map(s =>
+            toyIds.includes(s.toyId) ? { ...s, status: 'REJECTED' as LabStatus, showToWarehouse: false } : s
+          ),
+          isLoading: false,
+          error: null
+        }));
+
+        return { success: true, message: `${toyIds.length} ta namuna rad etildi` };
+      } catch (error: any) {
+        const errorMessage = 'Ommaviy rad etishda xatolik yuz berdi';
+        set({ error: errorMessage, isLoading: false });
         throw new Error(errorMessage);
       }
     },

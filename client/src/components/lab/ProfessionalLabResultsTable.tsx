@@ -4,34 +4,33 @@ import { useBackendLabStore } from "@/stores/backendLabStore";
 import { useBackendMarkaStore } from "@/stores/backendMarkaStore";
 import { useBackendToyStore } from "@/stores/backendToyStore";
 import { useAuthStore } from "@/stores/authStore";
-import { LabSample } from "@/types/lab";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { LabSample, LabStatus } from "@/types/lab";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
 import { cn } from "@/lib/utils";
 import {
-  FlaskConical,
   Search,
-  Filter,
-  X,
-  Eye,
-  EyeOff,
+  CheckCircle2,
+  XCircle,
+  FileText,
   Edit,
   Trash2,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  Download,
-  FileText,
-  TrendingUp,
-  Award,
-  AlertCircle,
-  Calendar,
+  ChevronDown,
+  ChevronRight,
+  Filter,
   Package,
-  ArrowDown
+  Activity,
+  Award,
+  Clock,
+  ArrowRight,
+  Layers,
+  CheckSquare,
+  Square,
+  Zap,
+  MoreVertical,
+  FlaskConical
 } from "lucide-react";
-import { exportFilteredLabSamplesToExcel, exportQualityCertificatePDF } from "@/lib/utils/labExport";
+import { exportQualityCertificatePDF } from "@/lib/utils/labExport";
 
 interface ProfessionalLabResultsTableProps {
   onSampleEdit: (sample: LabSample) => void;
@@ -39,314 +38,404 @@ interface ProfessionalLabResultsTableProps {
 }
 
 export function ProfessionalLabResultsTable({ onSampleEdit, onSampleApproval }: ProfessionalLabResultsTableProps) {
-  const { samples, toggleShowToSales, deleteSample, approveSample, rejectSample, fetchSamples } = useBackendLabStore();
+  const {
+    samples,
+    deleteSample,
+    approveSample,
+    rejectSample,
+    bulkApproveSamples,
+    bulkRejectSamples
+  } = useBackendLabStore();
   const { markas } = useBackendMarkaStore();
-  const { toys } = useBackendToyStore();
   const { user } = useAuthStore();
 
   const isAdmin = user?.role === "ADMIN" || user?.role === "LAB";
 
-  // Filters
+  // State
   const [search, setSearch] = useState("");
-  const [markaFilter, setMarkaFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "PENDING" | "APPROVED" | "REJECTED">("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isExporting, setIsExporting] = useState(false);
-  const itemsPerPage = 12;
+  const [statusFilter, setStatusFilter] = useState<"all" | LabStatus>("all");
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [selectedToyIds, setSelectedToyIds] = useState<Set<string>>(new Set());
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const filteredSamples = useMemo(() => {
-    return samples.filter(sample => {
-      const toy = toys.find(t => t.id === (sample.toyId || sample.sourceId));
+  // Derive grouped data
+  const { toys } = useBackendToyStore();
 
+  const groupedData = useMemo(() => {
+    // 1. Enrich and Filter
+    const enriched = samples.map(sample => {
+      const relatedToy = sample.toy || toys.find((t: any) => t.id === sample.toyId);
+      return {
+        ...sample,
+        toy: relatedToy,
+        // Ensure we have a markaId to group by
+        markaId: sample.markaId || relatedToy?.markaId || "UNKNOWN"
+      };
+    });
+
+    const filtered = enriched.filter(sample => {
       const matchesSearch = !search ||
-        (toy?.orderNo?.toString().includes(search)) ||
+        (sample.toy?.orderNo?.toString().includes(search)) ||
         (sample.markaLabel?.toLowerCase().includes(search.toLowerCase())) ||
         (sample.comment?.toLowerCase().includes(search.toLowerCase()));
 
-      const matchesMarka = !markaFilter || sample.markaId === markaFilter;
       const matchesStatus = statusFilter === "all" || sample.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
 
-      const sampleDate = new Date(sample.createdAt).toISOString().split('T')[0];
-      const matchesDateFrom = !dateFrom || sampleDate >= dateFrom;
-      const matchesDateTo = !dateTo || sampleDate <= dateTo;
-
-      return matchesSearch && matchesMarka && matchesStatus && matchesDateFrom && matchesDateTo;
-    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [samples, toys, search, markaFilter, statusFilter, dateFrom, dateTo]);
-
-  const totalPages = Math.ceil(filteredSamples.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedSamples = filteredSamples.slice(startIndex, startIndex + itemsPerPage);
-
-  const clearFilters = () => {
-    setSearch("");
-    setMarkaFilter("");
-    setStatusFilter("all");
-    setDateFrom("");
-    setDateTo("");
-    setCurrentPage(1);
-  };
-
-  const handleQuickApprove = async (sample: LabSample) => {
-    const toyId = sample.toyId || sample.sourceId || "";
-    if (!toyId) return;
-    try {
-      await approveSample(toyId);
-    } catch (error: any) {
-      console.error("Approval failed:", error);
-    }
-  };
-
-  const handleQuickReject = async (sample: LabSample) => {
-    const reason = prompt("Rad etish sababi:", "Sifat talablariga javob bermaydi");
-    if (!reason) return;
-    const toyId = sample.toyId || sample.sourceId || "";
-    if (!toyId) return;
-    try {
-      await rejectSample(toyId, reason);
-    } catch (error: any) {
-      console.error("Rejection failed:", error);
-    }
-  };
-
-  const handleDelete = async (sample: LabSample) => {
-    if (window.confirm("Tahlilni o'chirishni tasdiqlaysizmi?")) {
-      try {
-        await deleteSample(sample.toyId);
-      } catch (error: any) {
-        console.error("Delete failed:", error);
+    // 2. Group by Marka
+    const groups: Record<string, {
+      markaId: string;
+      markaLabel: string;
+      productType: string;
+      samples: LabSample[];
+      stats: {
+        avgMoisture: number;
+        avgTrash: number;
+        avgStrength: number;
+        avgMic: number;
+        count: number;
+        pending: number;
       }
+    }> = {};
+
+    filtered.forEach(sample => {
+      const gKey = sample.markaId || "UNKNOWN";
+      if (!groups[gKey]) {
+        const markaInfo = markas.find(m => m.id === sample.markaId);
+        groups[gKey] = {
+          markaId: sample.markaId || "",
+          markaLabel: sample.markaLabel || (markaInfo ? `Marka #${markaInfo.number}` : "NOMA'LUM MARKA"),
+          productType: sample.toy?.productType || "TOLA",
+          samples: [],
+          stats: { avgMoisture: 0, avgTrash: 0, avgStrength: 0, avgMic: 0, count: 0, pending: 0 }
+        };
+      }
+      groups[gKey].samples.push(sample);
+    });
+
+    // 3. Calculate Stats and Sort Groups
+    Object.values(groups).forEach(group => {
+      const count = group.samples.length;
+      group.stats.count = count;
+      group.stats.pending = group.samples.filter(s => s.status === "PENDING").length;
+      group.stats.avgMoisture = group.samples.reduce((sum, s) => sum + s.moisture, 0) / count;
+      group.stats.avgTrash = group.samples.reduce((sum, s) => sum + s.trash, 0) / count;
+      group.stats.avgStrength = group.samples.reduce((sum, s) => sum + s.strength, 0) / count;
+      group.stats.avgMic = group.samples.reduce((sum, s) => sum + (s.micronaire || 0), 0) / count;
+
+      // Sort samples in group by orderNo
+      group.samples.sort((a, b) => (b.toy?.orderNo || 0) - (a.toy?.orderNo || 0));
+    });
+
+    return Object.values(groups).sort((a, b) => b.markaLabel.localeCompare(a.markaLabel));
+  }, [samples, search, statusFilter]);
+
+  // Handlers
+  const toggleGroup = (markaId: string) => {
+    const next = new Set(expandedGroups);
+    if (next.has(markaId)) next.delete(markaId);
+    else next.add(markaId);
+    setExpandedGroups(next);
+  };
+
+  const toggleSelectAllInGroup = (markaId: string, samples: LabSample[]) => {
+    const next = new Set(selectedToyIds);
+    const allInGroupSelected = samples.every(s => next.has(s.toyId));
+
+    samples.forEach(s => {
+      if (allInGroupSelected) next.delete(s.toyId);
+      else next.add(s.toyId);
+    });
+    setSelectedToyIds(next);
+  };
+
+  const toggleSelectSample = (toyId: string) => {
+    const next = new Set(selectedToyIds);
+    if (next.has(toyId)) next.delete(toyId);
+    else next.add(toyId);
+    setSelectedToyIds(next);
+  };
+
+  const handleBatchApprove = async () => {
+    if (!isAdmin || selectedToyIds.size === 0) return;
+    if (!confirm(`${selectedToyIds.size} ta namunani TASDIQLASHNI xohlaysizmi?`)) return;
+
+    setIsProcessing(true);
+    try {
+      await bulkApproveSamples(Array.from(selectedToyIds));
+      setSelectedToyIds(new Set());
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleBatchReject = async () => {
+    if (!isAdmin || selectedToyIds.size === 0) return;
+    const reason = prompt(`${selectedToyIds.size} ta namunani RAD ETISH sababi:`, "Sifat talabiga javob bermaydi");
+    if (reason === null) return;
+
+    setIsProcessing(true);
+    try {
+      await bulkRejectSamples(Array.from(selectedToyIds), reason);
+      setSelectedToyIds(new Set());
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-transparent overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Search & Filter Bar - Advanced Glassmorphism */}
-      <div className="p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/60 dark:border-white/10 rounded-[3rem] shadow-2xl mb-10 transition-all duration-500 hover:shadow-primary/5">
-        <div className="flex flex-col xl:flex-row items-center gap-6">
-          <div className="flex-1 w-full relative group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-primary h-5 w-5" strokeWidth={2.5} />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Toy #, Marka yoki Izoh qidirish..."
-              className="h-14 pl-16 pr-6 rounded-2xl bg-white/50 dark:bg-black/40 border-slate-100 dark:border-white/10 text-slate-900 dark:text-white font-bold text-sm shadow-inner focus:bg-white dark:focus:bg-black/60 focus:ring-4 focus:ring-primary/10 transition-all uppercase placeholder:normal-case placeholder:text-slate-300 dark:placeholder:text-slate-700 placeholder:font-medium"
-            />
-          </div>
+    <div className="flex flex-col h-full space-y-6 relative pb-24">
+      {/* Header Search & Meta Stats */}
+      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between p-6 bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-3xl border border-white/60 dark:border-white/10 shadow-sm">
+        <div className="flex-1 w-full relative group">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-primary h-5 w-5" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Marka yoki Toy raqami orqali qidirish..."
+            className="h-12 pl-14 pr-6 rounded-2xl bg-white dark:bg-black/20 border-slate-100 dark:border-white/10 text-sm font-bold tracking-tight uppercase"
+          />
+        </div>
 
-          <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
-            <div className="flex items-center gap-4 flex-1 xl:flex-none">
-              <div className="relative flex-1 xl:w-60">
-                <select
-                  value={markaFilter}
-                  onChange={(e) => setMarkaFilter(e.target.value)}
-                  className="w-full h-14 px-6 rounded-2xl bg-white dark:bg-black/40 border border-slate-100 dark:border-white/10 text-slate-900 dark:text-white font-bold text-[10px] uppercase tracking-[0.2em] outline-none focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer appearance-none shadow-sm"
-                >
-                  <option value="" className="dark:bg-[#111912]">BARCHASI (MARKA)</option>
-                  {markas.map(m => <option key={m.id} value={m.id} className="dark:bg-[#111912]">Marka #{m.number}</option>)}
-                </select>
-                <ArrowDown className="absolute right-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 dark:text-slate-600 pointer-events-none" />
-              </div>
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="h-12 px-6 rounded-2xl bg-white dark:bg-white/10 border border-slate-100 dark:border-white/10 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 ring-primary/20 transition-all"
+          >
+            <option value="all">BARCHA HOLATLAR</option>
+            <option value="PENDING">KUTILMOQDA</option>
+            <option value="APPROVED">TASDIQLANGAN</option>
+            <option value="REJECTED">RAD ETILGAN</option>
+          </select>
 
-              <div className="relative flex-1 xl:w-56">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="w-full h-14 px-6 rounded-2xl bg-white dark:bg-black/40 border border-slate-100 dark:border-white/10 text-slate-900 dark:text-white font-bold text-[10px] uppercase tracking-[0.2em] outline-none focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer appearance-none shadow-sm"
-                >
-                  <option value="all" className="dark:bg-[#111912]">BARCHASI (HOLAT)</option>
-                  <option value="PENDING" className="dark:bg-[#111912]">KUTILMOQDA</option>
-                  <option value="APPROVED" className="dark:bg-[#111912]">TASDIQLANGAN</option>
-                  <option value="REJECTED" className="dark:bg-[#111912]">RAD ETILGAN</option>
-                </select>
-                <ArrowDown className="absolute right-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 dark:text-slate-600 pointer-events-none" />
-              </div>
-            </div>
-
-            <Button
-              variant="outline"
-              onClick={clearFilters}
-              className="h-14 w-14 rounded-2xl bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-100 dark:hover:border-rose-900/30 transition-all shadow-sm active:scale-90 flex items-center justify-center shrink-0"
-            >
-              <X className="h-5 w-5" strokeWidth={2.5} />
-            </Button>
+          <div className="h-12 px-6 rounded-2xl bg-primary/10 flex items-center gap-3 border border-primary/20">
+            <FlaskConical className="h-4 w-4 text-primary" />
+            <span className="text-[10px] font-black text-primary uppercase tracking-widest">{samples.length} TAHLIL</span>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto pr-2 scrollbar-none">
-        <table className="w-full border-separate border-spacing-y-4">
-          <thead>
-            <tr className="bg-transparent">
-              {["Tahlil Ob'yekti", "Nav / Sinf", "Namlik", "Ifloslik", "Mikroneyr", "Pishiqlik", "Sanasi", "Amallar"].map((h, i) => (
-                <th key={i} className={cn(
-                  "px-8 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em]",
-                  i === 0 ? "text-left" : i === 6 ? "text-right" : "text-center"
-                )}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedSamples.map((sample) => {
-              const toy = toys.find(t => t.id === (sample.toyId || sample.sourceId));
-              return (
-                <tr key={sample.id} className="group transition-all duration-300">
-                  <td className="px-8 py-6 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md rounded-l-[2rem] border-y border-l border-white/60 dark:border-white/5 transition-all duration-300 shadow-sm group-hover:bg-white dark:group-hover:bg-white/15 group-hover:shadow-xl group-hover:shadow-primary/5">
-                    <div className="flex items-center gap-5">
-                      <div className="w-12 h-12 bg-white dark:bg-black/40 shadow-md border border-slate-50 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl flex items-center justify-center font-bold font-mono text-lg ring-1 ring-slate-100 dark:ring-white/10 transition-all duration-500 group-hover:bg-primary group-hover:text-white group-hover:scale-110">
-                        #{toy?.orderNo || "???"}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">#{sample.markaLabel || "NOMA'LUM"}</span>
-                          <div className={cn(
-                            "px-3 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest border transition-all shadow-sm",
-                            sample.status === "APPROVED" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30" :
-                              sample.status === "REJECTED" ? "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/30" :
-                                "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30"
-                          )}>
-                            {sample.status}
+      {/* Grouped Content Area */}
+      <div className="space-y-6 overflow-auto max-h-[calc(100vh-350px)] pr-2 scrollbar-none">
+        {groupedData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-slate-400">
+            <Package size={48} strokeWidth={1} className="mb-4 opacity-20" />
+            <p className="text-sm font-bold uppercase tracking-widest">Ma&apos;lumot topilmadi</p>
+          </div>
+        ) : (
+          groupedData.map((group) => {
+            const isExpanded = expandedGroups.has(group.markaId);
+            const allSelected = group.samples.every(s => selectedToyIds.has(s.toyId));
+            const someSelected = group.samples.some(s => selectedToyIds.has(s.toyId)) && !allSelected;
+
+            return (
+              <div key={group.markaId} className="group/marka overflow-hidden rounded-[2rem] border border-slate-100 dark:border-white/5 transition-all">
+                {/* Group Header */}
+                <div
+                  className={cn(
+                    "flex flex-col md:flex-row items-center gap-6 p-6 transition-all cursor-pointer",
+                    isExpanded ? "bg-slate-50 dark:bg-white/5" : "bg-white dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-white/5"
+                  )}
+                  onClick={() => toggleGroup(group.markaId)}
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelectAllInGroup(group.markaId, group.samples);
+                        }}
+                        className="text-primary transition-transform active:scale-90"
+                      >
+                        {allSelected ? <CheckSquare size={22} /> : someSelected ? <Zap size={22} className="fill-primary" /> : <Square size={22} />}
+                      </button>
+                    )}
+                    <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                      <Layers size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none mb-1 flex items-center gap-2">
+                        Marka {group.markaLabel}
+                        {group.stats.pending > 0 && <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[8px]">{group.stats.pending}</span>}
+                      </h3>
+                      <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+                        {group.productType} • {group.stats.count} TOY • O&apos;RT. PISHIQLIK: {group.stats.avgStrength.toFixed(1)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Group Stats Bubble */}
+                  <div className="hidden xl:flex items-center gap-8 px-8 border-x border-slate-200 dark:border-white/10">
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs font-black text-slate-900 dark:text-white font-mono">{group.stats.avgMoisture.toFixed(1)}%</span>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">NAMLIK</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs font-black text-slate-900 dark:text-white font-mono">{group.stats.avgTrash.toFixed(1)}%</span>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">IFLOSLIK</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs font-black text-slate-900 dark:text-white font-mono">{group.stats.avgMic.toFixed(1)}</span>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">MIC</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    {isAdmin && group.stats.pending > 0 && !isExpanded && (
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          bulkApproveSamples(group.samples.filter(s => s.status === "PENDING").map(s => s.toyId));
+                        }}
+                        className="h-10 px-6 rounded-xl bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-emerald-500/20"
+                      >
+                        Barchasini Tasdiqlash
+                      </Button>
+                    )}
+                    <div className={cn("transition-transform duration-300", isExpanded ? "rotate-180" : "")}>
+                      <ChevronDown size={20} className="text-slate-300" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded Item List */}
+                {isExpanded && (
+                  <div className="bg-white dark:bg-black/20 border-t border-slate-100 dark:border-white/5 divide-y divide-slate-50 dark:divide-white/5 animate-in slide-in-from-top-4 duration-300">
+                    <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50/50 dark:bg-white/[0.02] text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                      <div className="col-span-3 flex items-center gap-4">TOY RAQAMI</div>
+                      <div className="col-span-2 text-center">NAV / SINF</div>
+                      <div className="col-span-1 text-center">NAMLIK</div>
+                      <div className="col-span-1 text-center">IFLOSLIK</div>
+                      <div className="col-span-1 text-center">PISHIQLIK</div>
+                      <div className="col-span-1 text-center">MIC</div>
+                      <div className="col-span-3 text-right">AMALLAR</div>
+                    </div>
+                    {group.samples.map(sample => (
+                      <div key={sample.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-50/80 dark:hover:bg-white/[0.03] transition-colors">
+                        <div className="col-span-3 flex items-center gap-4">
+                          {isAdmin && (
+                            <button onClick={() => toggleSelectSample(sample.toyId)} className="text-slate-300 dark:text-slate-700 hover:text-primary transition-colors">
+                              {selectedToyIds.has(sample.toyId) ? <CheckSquare size={18} className="text-primary" /> : <Square size={18} />}
+                            </button>
+                          )}
+                          <div className="w-10 h-10 bg-slate-900 dark:bg-white rounded-xl flex items-center justify-center text-white dark:text-slate-900 font-mono font-black text-sm shadow-sm ring-4 ring-slate-100 dark:ring-white/5">
+                            #{sample.toy?.orderNo || "???"}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className={cn(
+                              "text-[8px] font-black uppercase px-2 py-0.5 rounded-full w-fit",
+                              sample.status === "APPROVED" ? "bg-emerald-100/50 text-emerald-600" :
+                                sample.status === "REJECTED" ? "bg-rose-100/50 text-rose-600" : "bg-amber-100/50 text-amber-600"
+                            )}>
+                              {sample.status === "APPROVED" ? "TASDIQLANGAN" : sample.status === "REJECTED" ? "RAD ETILGAN" : "KUTILMOQDA"}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400 mt-1 uppercase">{sample.toy?.qrUid.slice(-6)}</span>
                           </div>
                         </div>
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">
-                          {Number(toy?.netto || 0).toFixed(1)} KG
-                        </p>
+
+                        <div className="col-span-2 text-center">
+                          <div className="text-[11px] font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">{sample.navi}-NAV</div>
+                          <div className="text-[8px] font-bold text-primary tracking-[0.2em]">{sample.grade}</div>
+                        </div>
+
+                        <div className="col-span-1 text-center font-mono font-bold text-[13px] text-blue-500 tracking-tighter">{sample.moisture}%</div>
+                        <div className="col-span-1 text-center font-mono font-bold text-[13px] text-rose-500 tracking-tighter">{sample.trash}%</div>
+                        <div className="col-span-1 text-center font-mono font-bold text-[13px] text-primary tracking-tighter">{sample.strength}</div>
+                        <div className="col-span-1 text-center font-mono font-bold text-[13px] text-amber-500 tracking-tighter">{sample.micronaire || '-'}</div>
+
+                        <div className="col-span-3 flex items-center justify-end gap-2">
+                          {isAdmin && sample.status === "PENDING" && (
+                            <>
+                              <button
+                                onClick={() => approveSample(sample.toyId)}
+                                className="h-9 w-9 bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-inner"
+                              >
+                                <CheckCircle2 size={16} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const r = prompt("Rad etish sababi:", "Sifat javob bermaydi");
+                                  if (r) rejectSample(sample.toyId, r);
+                                }}
+                                className="h-9 w-9 bg-rose-500/10 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-50 hover:text-white transition-all shadow-inner"
+                              >
+                                <XCircle size={16} />
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => onSampleEdit(sample)}
+                            className="h-9 w-9 bg-primary/10 text-primary rounded-xl flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-inner"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          {sample.status === "APPROVED" && (
+                            <button
+                              onClick={() => exportQualityCertificatePDF(sample.toyId, sample.toy?.orderNo)}
+                              className="h-9 w-9 bg-blue-500/10 text-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all shadow-inner"
+                            >
+                              <FileText size={16} />
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button
+                              onClick={() => { if (confirm("O'chirishni xohlaysizmi?")) deleteSample(sample.toyId); }}
+                              className="h-9 w-9 bg-slate-100 dark:bg-white/5 text-slate-400 hover:bg-rose-600 hover:text-white rounded-xl flex items-center justify-center transition-all shadow-inner"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border-y border-white/60 dark:border-white/5 text-center transition-all duration-300 shadow-sm group-hover:bg-white dark:group-hover:bg-white/15">
-                    <div className="flex flex-col items-center gap-1.5">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">{sample.navi}-NAV</span>
-                      <span className={cn(
-                        "px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest border shadow-sm",
-                        sample.grade === "OLIY" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30" :
-                          sample.grade === "YAXSHI" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30" :
-                            "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30"
-                      )}>
-                        {sample.grade}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border-y border-white/60 dark:border-white/5 text-center transition-all duration-300 shadow-sm group-hover:bg-white dark:group-hover:bg-white/15">
-                    <span className="text-sm font-bold text-blue-500 font-mono tracking-tighter">{sample.moisture}%</span>
-                  </td>
-                  <td className="px-8 py-6 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border-y border-white/60 dark:border-white/5 text-center transition-all duration-300 shadow-sm group-hover:bg-white dark:group-hover:bg-white/15">
-                    <span className="text-sm font-bold text-rose-500 font-mono tracking-tighter">{sample.trash}%</span>
-                  </td>
-                  <td className="px-8 py-6 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border-y border-white/60 dark:border-white/5 text-center transition-all duration-300 shadow-sm group-hover:bg-white dark:group-hover:bg-white/15">
-                    <span className="text-sm font-bold text-amber-500 font-mono tracking-tighter">{sample.micronaire || '-'}</span>
-                  </td>
-                  <td className="px-8 py-6 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border-y border-white/60 dark:border-white/5 text-center transition-all duration-300 shadow-sm group-hover:bg-white dark:group-hover:bg-white/15">
-                    <span className="text-sm font-bold text-primary font-mono tracking-tighter">{sample.strength}</span>
-                  </td>
-                  <td className="px-8 py-6 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border-y border-white/60 dark:border-white/5 text-center transition-all duration-300 shadow-sm group-hover:bg-white dark:group-hover:bg-white/15">
-                    <div className="inline-flex flex-col items-center px-3 py-1.5 bg-slate-50/50 dark:bg-black/40 rounded-xl border border-slate-100 dark:border-white/5 shadow-inner">
-                      <span className="text-[11px] font-bold text-slate-900 dark:text-white font-mono">
-                        {new Date(sample.createdAt).toLocaleDateString("uz-UZ", { day: '2-digit', month: '2-digit' })}
-                      </span>
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 font-mono">
-                        {new Date(sample.createdAt).toLocaleTimeString("uz-UZ", { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md rounded-r-[2rem] border-y border-r border-white/60 dark:border-white/5 transition-all duration-300 shadow-sm group-hover:bg-white dark:group-hover:bg-white/15">
-                    <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0">
-                      {isAdmin && sample.status === "PENDING" && (
-                        <>
-                          <Button
-                            onClick={() => handleQuickApprove(sample)}
-                            className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10 border border-emerald-100 dark:border-emerald-900/30 flex items-center justify-center p-0"
-                          >
-                            <CheckCircle2 size={18} strokeWidth={2.5} />
-                          </Button>
-                          <Button
-                            onClick={() => handleQuickReject(sample)}
-                            className="h-10 w-10 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-500/10 border border-rose-100 dark:border-rose-900/30 flex items-center justify-center p-0"
-                          >
-                            <XCircle size={18} strokeWidth={2.5} />
-                          </Button>
-                        </>
-                      )}
-                      {sample.status === "APPROVED" && (
-                        <Button
-                          onClick={() => exportQualityCertificatePDF(sample.toyId || (sample as any).sourceId || '', toy?.orderNo)}
-                          title="Sifat Sertifikati (PDF)"
-                          className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500 hover:text-white transition-all shadow-lg shadow-blue-500/10 border border-blue-100 dark:border-blue-900/30 flex items-center justify-center p-0"
-                        >
-                          <FileText size={18} strokeWidth={2.5} />
-                        </Button>
-                      )}
-                      <Button
-                        onClick={() => onSampleEdit(sample)}
-                        className="h-10 w-10 rounded-xl bg-primary/10 dark:bg-white/5 text-primary dark:text-emerald-400 hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/10 border border-primary/20 dark:border-white/10 flex items-center justify-center p-0"
-                      >
-                        <Edit size={18} strokeWidth={2.5} />
-                      </Button>
-                      {isAdmin && (
-                        <Button
-                          onClick={() => handleDelete(sample)}
-                          className="h-10 w-10 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-rose-600 dark:hover:bg-rose-500 transition-all shadow-lg shadow-slate-900/10 dark:shadow-white/10 flex items-center justify-center p-0"
-                        >
-                          <Trash2 size={18} strokeWidth={2.5} />
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Footer - Navbahor Soft UI */}
-      <div className="mt-10 p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] border border-white/60 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <TrendingUp size={18} className="text-primary" />
-          </div>
-          <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            MA&apos;LUMOTLAR: <span className="text-slate-900 dark:text-white ml-2 font-mono">{startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredSamples.length)} / {filteredSamples.length} TAHLIL</span>
-          </p>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="h-12 px-6 rounded-xl font-bold text-[10px] uppercase tracking-widest bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/10 transition-all disabled:opacity-20 shadow-sm active:scale-95"
-          >
-            Oldingi
-          </Button>
-          <div className="flex items-center gap-2 font-mono">
-            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={cn(
-                  "w-10 h-10 rounded-xl text-[11px] font-bold transition-all border",
-                  currentPage === i + 1
-                    ? "bg-primary text-white border-primary shadow-xl shadow-primary/20 scale-110 z-10"
-                    : "bg-white dark:bg-white/5 text-slate-400 dark:text-slate-500 border-slate-100 dark:border-white/10 hover:bg-white dark:hover:bg-white/10 hover:text-primary dark:hover:text-emerald-400 hover:border-primary/20"
+                    ))}
+                  </div>
                 )}
-              >
-                {(i + 1).toString().padStart(2, '0')}
-              </button>
-            ))}
-          </div>
-          <Button
-            variant="ghost"
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="h-12 px-6 rounded-xl font-bold text-[10px] uppercase tracking-widest bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/10 transition-all disabled:opacity-20 shadow-sm active:scale-95"
-          >
-            Keyingi
-          </Button>
-        </div>
+              </div>
+            );
+          })
+        )}
       </div>
+
+      {/* Floating Batch Actions Bar */}
+      {selectedToyIds.size > 0 && (
+        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-12 duration-500 w-full max-w-2xl px-6">
+          <div className="h-20 bg-slate-900 dark:bg-white shadow-[0_24px_48px_-12px_rgba(0,0,0,0.5)] dark:shadow-[0_24px_48px_-12px_rgba(255,255,255,0.1)] rounded-[2.5rem] flex items-center justify-between px-8 text-white dark:text-slate-900 border-4 border-white/10 dark:border-black/5">
+            <div className="flex items-center gap-6">
+              <div className="h-10 w-10 bg-primary rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-primary/40">
+                {selectedToyIds.size}
+              </div>
+              <p className="text-[11px] font-black uppercase tracking-widest opacity-80">Tanlangan Namunalar</p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setSelectedToyIds(new Set())}
+                className="h-12 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 dark:hover:bg-black/5 transition-all"
+              >
+                Bekor qilish
+              </button>
+              <div className="w-[1px] h-8 bg-white/20 dark:bg-black/10 mx-2" />
+              <Button
+                disabled={isProcessing}
+                onClick={handleBatchReject}
+                className="h-12 px-6 rounded-2xl bg-rose-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-rose-600 transition-all shadow-xl shadow-rose-500/20"
+              >
+                Rad etish
+              </Button>
+              <Button
+                disabled={isProcessing}
+                onClick={handleBatchApprove}
+                className="h-12 px-6 rounded-2xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20"
+              >
+                Tasdiqlash
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

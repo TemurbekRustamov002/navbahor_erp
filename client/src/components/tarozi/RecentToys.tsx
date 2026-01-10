@@ -140,10 +140,10 @@ export function RecentToys({ limit = 10, className, selectedMarkaId }: RecentToy
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-lg font-bold text-primary font-mono tracking-tighter">
-                      {netto.toFixed(2)} <span className="text-[10px] text-slate-300 uppercase tracking-widest ml-1">kg</span>
+                      {brutto.toFixed(2)} <span className="text-[10px] text-slate-300 uppercase tracking-widest ml-1">kg</span>
                     </div>
                     <div className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
-                      B: {brutto.toFixed(2)} / T: {tara.toFixed(2)}
+                      N: {netto.toFixed(2)} / T: {tara.toFixed(2)}
                     </div>
                   </div>
 

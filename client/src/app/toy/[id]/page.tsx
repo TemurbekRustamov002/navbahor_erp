@@ -17,10 +17,13 @@ import {
     Phone,
     MapPin,
     Building2,
-    QrCode
+    QrCode,
+    FileText,
+    FlaskConical
 } from "lucide-react";
 import { formatWeight } from "@/lib/utils/number";
 import { cn } from "@/lib/utils";
+import { printQualityCertificate } from "@/lib/utils/print";
 
 export default function PublicToyView() {
     const { id } = useParams();
@@ -134,25 +137,51 @@ export default function PublicToyView() {
                         <div className="grid grid-cols-1 gap-6">
                             <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center relative group">
                                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-3 relative z-10 transition-colors group-hover:text-primary/70">Xalis Vazn (Netto)</p>
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-3 relative z-10 transition-colors group-hover:text-primary/70">UMUMIY (BRUTTO)</p>
                                 <div className="flex items-baseline gap-2 relative z-10">
-                                    <span className="text-6xl font-black text-white font-mono tracking-tighter transition-transform duration-500 group-hover:scale-110 block">
-                                        {formatWeight(toy.netto, 'kg', 2)}
+                                    <span className="text-6xl font-black text-white font-mono tracking-tighter tabular-nums drop-shadow-2xl transition-transform duration-500 group-hover:scale-110">
+                                        {formatWeight(toy.brutto)}
                                     </span>
-                                    <span className="text-xl font-bold text-slate-500 uppercase tracking-widest pt-2">kg</span>
+                                    <span className="text-xs font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-md">kg</span>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl flex flex-col items-center">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Umumiy (Brutto)</p>
-                                    <p className="text-xl font-bold text-white font-mono tracking-tight">{formatWeight(toy.brutto, 'kg', 2)}</p>
+                                <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-5 flex flex-col items-center group/item hover:bg-white/[0.04] transition-all">
+                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover/item:text-slate-400">SOF OG'IRLIGI (NETTO)</p>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-xl font-bold text-white font-mono tracking-tight">{formatWeight(toy.netto)}</span>
+                                        <span className="text-[10px] font-bold text-slate-600">kg</span>
+                                    </div>
                                 </div>
-                                <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl flex flex-col items-center">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Idish (Tara)</p>
-                                    <p className="text-xl font-bold text-white font-mono tracking-tight">{formatWeight(toy.tara, 'kg', 2)}</p>
+                                <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-5 flex flex-col items-center group/item hover:bg-white/[0.04] transition-all">
+                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover/item:text-slate-400">TARA</p>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-xl font-bold text-white font-mono tracking-tight">{formatWeight(toy.tara)}</span>
+                                        <span className="text-[10px] font-bold text-slate-600">kg</span>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+                        <div className="pt-2">
+                            <button
+                                disabled={toy.labStatus !== 'APPROVED'}
+                                onClick={() => printQualityCertificate(toy)}
+                                className={cn(
+                                    "w-full py-4 rounded-2xl flex items-center justify-center gap-3 font-black uppercase text-xs tracking-[0.2em] transition-all",
+                                    toy.labStatus === 'APPROVED'
+                                        ? "bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 cursor-pointer"
+                                        : "bg-white/5 text-slate-600 border border-white/5 cursor-not-allowed"
+                                )}
+                            >
+                                <FileText size={18} />
+                                Sifat Sertifikatini Yuklab Olish
+                            </button>
+                            {toy.labStatus !== 'APPROVED' && (
+                                <p className="text-center text-[8px] font-bold text-slate-600 uppercase tracking-widest mt-3">
+                                    * Sertifikat laboratoriya tasdiqlaganidan so'ng shakllanadi
+                                </p>
+                            )}
                         </div>
 
                         {/* Technical Metadata Grid */}
