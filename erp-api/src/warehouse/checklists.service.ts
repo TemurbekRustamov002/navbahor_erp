@@ -8,7 +8,7 @@ export class ChecklistsService {
   async findAllActive() {
     return this.prisma.wHChecklist.findMany({
       where: {
-        status: { in: ['READY', 'SCANNED'] }
+        status: 'READY'
       },
       include: {
         order: {

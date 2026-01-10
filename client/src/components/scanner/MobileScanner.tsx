@@ -178,7 +178,7 @@ export default function MobileScannerPage() {
             <main className="flex-1 overflow-y-auto p-4 relative">
                 {view === "list" ? (
                     <div className="space-y-3">
-                        {checklists.length === 0 ? (
+                        {checklists.filter(cl => cl.status === 'READY').length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 text-slate-600">
                                 <Package className="h-12 w-12 mb-4 opacity-20" />
                                 <p className="text-xs font-bold uppercase tracking-widest">Faol checklistlar yo'q</p>
@@ -191,26 +191,28 @@ export default function MobileScannerPage() {
                                 </Button>
                             </div>
                         ) : (
-                            checklists.map((cl) => (
-                                <div
-                                    key={cl.id}
-                                    onClick={() => handleSelectChecklist(cl.id)}
-                                    className="bg-slate-900/50 border border-white/5 rounded-2xl p-4 active:scale-[0.98] transition-all flex items-center justify-between group"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                            <Scan className="h-5 w-5 text-primary" />
+                            checklists
+                                .filter(cl => cl.status === 'READY')
+                                .map((cl) => (
+                                    <div
+                                        key={cl.id}
+                                        onClick={() => handleSelectChecklist(cl.id)}
+                                        className="bg-slate-900/50 border border-white/5 rounded-2xl p-4 active:scale-[0.98] transition-all flex items-center justify-between group"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                                <Scan className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-white">{cl.order?.customer?.name || "Noma'lum Mijoz"}</p>
+                                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter mt-0.5">
+                                                    #{cl.code?.split("-")[1]} • {cl.items?.length || 0} dona
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-black text-white">{cl.order?.customer?.name || "Noma'lum Mijoz"}</p>
-                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter mt-0.5">
-                                                #{cl.code?.split("-")[1]} • {cl.items?.length || 0} dona
-                                            </p>
-                                        </div>
+                                        <ChevronRight className="h-5 w-5 text-slate-700 group-active:text-primary" />
                                     </div>
-                                    <ChevronRight className="h-5 w-5 text-slate-700 group-active:text-primary" />
-                                </div>
-                            ))
+                                ))
                         )}
                     </div>
                 ) : (
