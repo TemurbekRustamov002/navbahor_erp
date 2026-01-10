@@ -65,51 +65,40 @@ export function ScannerInterface() {
   }, [toast]);
 
   const handleScan = async (scannedCode: string) => {
-    let code = scannedCode.trim();
+    // 1. Tozalash - barcha ko'rinmas belgilarni olib tashlaymiz
+    let code = scannedCode.replace(/[\x00-\x1F\x7F-\x9F]/g, "").trim();
     if (!code) return;
 
-    // Rich QR Code uchun parsing logikasi
-    // Agar QR kod JSON formatida bo'lsa, ichidan ID ni ajratib olamiz
+    console.log('🔍 Raw scan received:', code);
+
+    // 2. JSON parsing logikasi
     try {
       if (code.startsWith('{') || code.startsWith('[')) {
         const parsed = JSON.parse(code);
-        // Turli xil ehtimoliy kalitlarni tekshiramiz
         const extractedId = parsed.id || parsed.toyId || parsed.uid || parsed._id;
-        if (extractedId) {
-          code = extractedId;
-          console.log('📦 Rich QR detected, extracted ID:', code);
-        }
-      }
-    } catch (e) {
-      // JSON emas, oddiy string deb qabul qilamiz
-      // console.log('Simple QR code scanned');
-    }
-
-    // Hybrid format parsing (e.g., ID#URL)
-    if (code.includes('#')) {
-      const parts = code.split('#');
-      // If the first part looks like a UUID or a toy ID, take it
-      if (parts[0].length > 10) {
-        code = parts[0];
-        console.log('🔗 Hybrid QR detected, extracted ID:', code);
-      }
-    }
-
-    // URL parsing logikasi (Agar faqat URL kelsa)
-    if (code.includes('erp.bhr.uz/toy/')) {
-      try {
-        const urlObj = new URL(code.startsWith('http') ? code : `https://${code}`);
-        const pathParts = urlObj.pathname.split('/');
-        const extractedId = pathParts[pathParts.length - 1];
-        if (extractedId) {
-          code = extractedId;
-          console.log('🔗 URL QR detected, extracted ID:', code);
-        }
-      } catch (e) {
-        const extractedId = code.split('/').pop();
         if (extractedId) code = extractedId;
       }
+    } catch (e) { }
+
+    // 3. Hybrid format splitting (ID#URL)
+    if (code.includes('#')) {
+      const parts = code.split('#');
+      if (parts[0].length >= 10) code = parts[0].trim();
     }
+
+    // 4. URL extraction (Agar hali ham ID topilmagan bo'lsa)
+    if (code.includes('/toy/')) {
+      const parts = code.split('/toy/');
+      const possibleId = parts[parts.length - 1].split(/[?#]/)[0];
+      if (possibleId && possibleId.length >= 10) code = possibleId;
+    }
+
+    // 5. Final Fallback - UUID Regex
+    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    const match = code.match(uuidRegex);
+    if (match) code = match[0];
+
+    console.log('🎯 Final parsed ID:', code);
 
     if (!currentChecklist) {
       toast.error("Tizim hatoligi: Checklist topilmadi");

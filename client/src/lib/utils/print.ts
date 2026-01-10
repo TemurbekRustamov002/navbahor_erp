@@ -41,8 +41,11 @@ const formatKg = (v: any) => {
  * Generate a compact JSON for QR code to include rich metadata
  */
 function generateToyQRData(toy: ToyPrintData): string {
-  // Use public URL for QR code, which anyone can scan to see details
-  return `https://erp.bhr.uz/toy/${toy.id}`;
+  // Hybrid format: ID#URL
+  // This allows the industrial scanner to see the ID first, 
+  // while phones can still recognize and open the URL.
+  const url = `https://erp.bhr.uz/toy/${toy.id}`;
+  return `${toy.id}#${url}`;
 }
 
 /**
