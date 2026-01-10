@@ -4,6 +4,7 @@ import { JwtGuard } from '../common/guards/jwt.guard';
 import type { Response } from 'express';
 import { ToysService } from './toys.service';
 import { ProductType } from '@prisma/client';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('toys')
 @ApiBearerAuth('JWT-auth')
@@ -45,6 +46,7 @@ export class ToysController {
     return this.svc.getScaleAvailable();
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Get toy by ID' })
   get(@Param('id') id: string) {

@@ -41,16 +41,8 @@ const formatKg = (v: any) => {
  * Generate a compact JSON for QR code to include rich metadata
  */
 function generateToyQRData(toy: ToyPrintData): string {
-  return JSON.stringify({
-    id: toy.id,
-    no: toy.orderNo,
-    m: toy.markaNumber,
-    t: toy.productType,
-    w: toy.netto,
-    comp: "NAVBAHOR TEKSTIL",
-    tel: "+9989795325293",
-    addr: "NAVOIY VILOYATI, NAVBAHOR TUMANI, \"PAXTAKOR\" MFY \"TURON\" KO'CHASI № 8"
-  });
+  // Use public URL for QR code, which anyone can scan to see details
+  return `https://erp.bhr.uz/toy/${toy.id}`;
 }
 
 /**

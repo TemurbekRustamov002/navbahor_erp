@@ -85,6 +85,23 @@ export function ScannerInterface() {
       // console.log('Simple QR code scanned');
     }
 
+    // URL parsing logikasi (Yangi URL formati uchun)
+    if (code.includes('erp.bhr.uz/toy/')) {
+      try {
+        const urlObj = new URL(code.startsWith('http') ? code : `https://${code}`);
+        const pathParts = urlObj.pathname.split('/');
+        const extractedId = pathParts[pathParts.length - 1];
+        if (extractedId) {
+          code = extractedId;
+          console.log('🔗 URL QR detected, extracted ID:', code);
+        }
+      } catch (e) {
+        // Fallback: agar URL parsing xato bersa, oddiy split ishlatamiz
+        const extractedId = code.split('/').pop();
+        if (extractedId) code = extractedId;
+      }
+    }
+
     if (!currentChecklist) {
       toast.error("Tizim hatoligi: Checklist topilmadi");
       return;
