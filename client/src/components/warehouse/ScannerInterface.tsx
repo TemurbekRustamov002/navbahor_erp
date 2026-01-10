@@ -65,8 +65,25 @@ export function ScannerInterface() {
   }, [toast]);
 
   const handleScan = async (scannedCode: string) => {
-    const code = scannedCode.trim();
+    let code = scannedCode.trim();
     if (!code) return;
+
+    // Rich QR Code uchun parsing logikasi
+    // Agar QR kod JSON formatida bo'lsa, ichidan ID ni ajratib olamiz
+    try {
+      if (code.startsWith('{') || code.startsWith('[')) {
+        const parsed = JSON.parse(code);
+        // Turli xil ehtimoliy kalitlarni tekshiramiz
+        const extractedId = parsed.id || parsed.toyId || parsed.uid || parsed._id;
+        if (extractedId) {
+          code = extractedId;
+          console.log('📦 Rich QR detected, extracted ID:', code);
+        }
+      }
+    } catch (e) {
+      // JSON emas, oddiy string deb qabul qilamiz
+      // console.log('Simple QR code scanned');
+    }
 
     if (!currentChecklist) {
       toast.error("Tizim hatoligi: Checklist topilmadi");

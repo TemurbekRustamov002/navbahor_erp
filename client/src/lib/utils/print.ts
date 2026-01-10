@@ -38,10 +38,27 @@ const formatKg = (v: any) => {
 };
 
 /**
+ * Generate a compact JSON for QR code to include rich metadata
+ */
+function generateToyQRData(toy: ToyPrintData): string {
+  return JSON.stringify({
+    id: toy.id,
+    no: toy.orderNo,
+    m: toy.markaNumber,
+    t: toy.productType,
+    w: toy.netto,
+    comp: "NAVBAHOR TEKSTIL",
+    tel: "+9989795325293",
+    addr: "NAVOIY VILOYATI, NAVBAHOR TUMANI, \"PAXTAKOR\" MFY \"TURON\" KO'CHASI № 8"
+  });
+}
+
+/**
  * Generate TSPL commands for industrial thermal printers (Godex, TSC)
  */
-export function generateTSPLCommands(toy: ToyPrintData, qrCodeData: string): string {
+export function generateTSPLCommands(toy: ToyPrintData, qrCodeData?: string): string {
   const commands: string[] = [];
+  const finalQR = qrCodeData || generateToyQRData(toy);
 
   // size in mm
   commands.push('SIZE 100 mm, 100 mm');
@@ -137,7 +154,8 @@ export async function printToyLabel(toy: ToyPrintData, options?: PrintOptions): 
  */
 async function showPrintPreview(toy: ToyPrintData) {
   try {
-    const qrDataURL = await QRCode.toDataURL(toy.id, { margin: 1, width: 250 });
+    const qrText = generateToyQRData(toy);
+    const qrDataURL = await QRCode.toDataURL(qrText, { margin: 1, width: 250 });
     const dateStr = new Date(toy.createdAt).toLocaleString('uz-UZ', {
       day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
@@ -363,7 +381,8 @@ async function showPrintPreview(toy: ToyPrintData) {
 export async function printChecklistLabels(toys: ToyPrintData[]) {
   try {
     const pages = await Promise.all(toys.map(async (toy) => {
-      const qrDataURL = await QRCode.toDataURL(toy.id, { margin: 1, width: 250 });
+      const qrText = generateToyQRData(toy);
+      const qrDataURL = await QRCode.toDataURL(qrText, { margin: 1, width: 250 });
       const dateStr = new Date(toy.createdAt).toLocaleString('uz-UZ', {
         day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
       });
