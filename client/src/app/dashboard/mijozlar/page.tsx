@@ -20,7 +20,8 @@ import {
   Filter,
   Download,
   LayoutGrid,
-  List as ListIcon
+  List as ListIcon,
+  RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -50,13 +51,10 @@ export default function MijozlarPage() {
     const loadStats = async () => {
       if (customers.length === 0) return
 
-      const ids = customers.map(c => c.id)
-      // Only fetch stats for IDs we haven't loaded yet? Or refresh all? Refetching all is safer for "list" view updates
-      // Optimized: one call
-
+      const ids = customers.map((c: Customer) => c.id)
       try {
         const statsMap = await useBackendCustomerStore.getState().fetchCustomerStatsBatch(ids)
-        setCustomerStats(prev => ({ ...prev, ...statsMap }))
+        setCustomerStats((prev: Record<string, CustomerStats>) => ({ ...prev, ...statsMap }))
       } catch (error) {
         console.error('Failed to load batch stats:', error)
       }
@@ -99,197 +97,194 @@ export default function MijozlarPage() {
   const overallStats = useMemo(() => {
     return {
       total: customers.length,
-      active: customers.filter(c => c.isActive).length,
-      inactive: customers.filter(c => !c.isActive).length
+      active: customers.filter((c: Customer) => c.isActive).length,
+      inactive: customers.filter((c: Customer) => !c.isActive).length
     }
   }, [customers])
 
   if (isLoading && customers.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
           <LoadingSpinner size="lg" />
-          <p className="text-label-compact animate-pulse">Ma'lumotlar yuklanmoqda...</p>
+          <p className="text-sm font-bold text-muted-foreground animate-pulse uppercase tracking-widest">Ma'lumotlar yuklanmoqda...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#f0fdf4] overflow-hidden animate-in fade-in duration-700">
-      {/* Navbahor Premium Header - Glassmorphism */}
-      <div className="flex-shrink-0 border-b border-slate-100 bg-white/85 backdrop-blur-md px-8 py-5 z-20 shadow-sm border border-white/60">
-        <div className="max-w-[1920px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center transition-all hover:scale-105 shadow-sm">
-              <Users className="h-6 w-6" strokeWidth={2.5} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 uppercase tracking-tight leading-none">Mijozlar <span className="text-primary italic">Boshqaruvi</span></h1>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none">Hamkorlar bazasi va operatsion statuslar</p>
+    <div className="space-y-5 animate-in pb-10">
+      {/* Page Header - Navbahor Premium Style */}
+      <div className="relative overflow-hidden rounded-2xl glass-card p-0.5 shadow-2xl shadow-black/5 transition-all hover:shadow-primary/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none" />
+        <div className="absolute -right-24 -top-24 w-64 h-64 bg-primary/10 rounded-full blur-[80px]" />
+
+        <div className="relative p-4 lg:p-5 bg-white/40 dark:bg-slate-900/40 rounded-[0.9rem]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/60 dark:bg-white/5 border border-primary/20 backdrop-blur-md">
+                <div className="w-1 h-1 bg-primary rounded-full animate-pulse" />
+                <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Mijozlar Markazi</span>
               </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex bg-slate-100/50 p-1.5 rounded-xl border border-slate-200 shadow-inner">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className={cn(
-                  "h-9 px-4 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-all",
-                  viewMode === 'grid'
-                    ? "bg-white text-primary shadow-lg border border-slate-200"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-white/50"
-                )}
-              >
-                <LayoutGrid className="h-3.5 w-3.5 mr-2" strokeWidth={2.5} />
-                Grid
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={cn(
-                  "h-9 px-4 rounded-lg font-bold uppercase tracking-widest text-[9px] transition-all",
-                  viewMode === 'list'
-                    ? "bg-white text-primary shadow-lg border border-slate-200"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-white/50"
-                )}
-              >
-                <ListIcon className="h-3.5 w-3.5 mr-2" strokeWidth={2.5} />
-                List
-              </Button>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight leading-none uppercase">
+                Hamkorlar va <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-700">Mijozlar</span>
+              </h1>
             </div>
 
-            <Button
-              onClick={() => setShowAddForm(true)}
-              className="h-12 px-8 rounded-2xl bg-primary hover:bg-[#047857] text-white font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/20 flex items-center gap-3 active:scale-95 transition-all"
-            >
-              <Plus className="h-4 w-4" strokeWidth={3} />
-              Mijoz Qo'shish
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-8 lg:px-12 py-10 scrollbar-none">
-        <div className="max-w-[1700px] mx-auto space-y-10">
-
-          {/* Enhanced Stats Dashboard */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { label: 'Jami Mijozlar', val: overallStats.total, icon: Users, color: 'blue', desc: 'Bazadagi jami hamkorlar' },
-              { label: 'Faol Hamkorlar', val: overallStats.active, icon: CheckCircle2, color: 'emerald', desc: 'Shartnomasi bor mijozlar' },
-              { label: 'Nofaol Status', val: overallStats.inactive, icon: XCircle, color: 'rose', desc: 'Vaqtincha to\'xtatilgan' },
-              { label: 'Oylik Hajm', val: 'Real-Time', icon: TrendingUp, color: 'primary', desc: 'Yuklashlar tahlili' }
-            ].map((s, i) => (
-              <div key={i} className="group relative overflow-hidden rounded-[2rem] bg-white border border-slate-100 p-8 shadow-xl shadow-slate-200/50 transition-all hover:scale-[1.02] hover:shadow-2xl">
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                  <s.icon size={80} strokeWidth={1} />
-                </div>
-
-                <div className="flex flex-col gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "w-11 h-11 rounded-xl flex items-center justify-center border",
-                      s.color === 'emerald' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
-                        s.color === 'rose' ? "bg-rose-500/10 text-rose-500 border-rose-500/20" :
-                          s.color === 'blue' ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
-                            "bg-primary/10 text-primary border-primary/20"
-                    )}>
-                      <s.icon size={20} strokeWidth={2.5} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{s.label}</p>
-                      <p className="text-[9px] font-bold text-slate-300 uppercase leading-none">{s.desc}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-4xl font-bold text-slate-900 font-mono tracking-tighter tabular-nums leading-none">{s.val}</p>
-                  </div>
-                </div>
+            <div className="flex items-center gap-2.5">
+              <div className="flex bg-white/60 dark:bg-white/5 p-1 rounded-xl border border-white/20 backdrop-blur-md shadow-sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className={cn(
+                    "h-8 px-3 rounded-lg font-black uppercase tracking-widest text-[8px] transition-all",
+                    viewMode === 'grid'
+                      ? "bg-white dark:bg-slate-900 text-primary shadow-lg"
+                      : "text-slate-400 hover:text-primary hover:bg-white/50"
+                  )}
+                >
+                  <LayoutGrid className="h-3 w-3 mr-1.5" strokeWidth={2.5} />
+                  Grid
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                    "h-8 px-3 rounded-lg font-black uppercase tracking-widest text-[8px] transition-all",
+                    viewMode === 'list'
+                      ? "bg-white dark:bg-slate-900 text-primary shadow-lg"
+                      : "text-slate-400 hover:text-primary hover:bg-white/50"
+                  )}
+                >
+                  <ListIcon className="h-3 w-3 mr-1.5" strokeWidth={2.5} />
+                  List
+                </Button>
               </div>
-            ))}
-          </div>
 
-          {/* Search & Filter Station */}
-          <div className="flex flex-col xl:flex-row items-center gap-6">
-            <div className="flex-1 w-full relative group">
-              <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" strokeWidth={2.5} />
-              </div>
-              <Input
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="h-16 pl-16 pr-8 rounded-3xl bg-white border-slate-100 text-lg font-bold text-slate-900 placeholder:text-slate-300 placeholder:font-medium focus:ring-8 focus:ring-primary/5 shadow-xl shadow-slate-200/30 transition-all border"
-                placeholder="Mijoz nomi, STIR yoki Raxbar bo'yicha qidirish..."
-              />
-            </div>
-
-            <div className="flex items-center gap-4 w-full xl:w-auto">
-              <Button variant="ghost" className="h-16 px-8 rounded-3xl bg-white border border-slate-100 shadow-lg shadow-slate-200/30 font-bold uppercase tracking-widest text-[10px] text-slate-500 hover:text-primary hover:border-primary/20 flex items-center gap-3">
-                <Filter className="h-4 w-4" strokeWidth={2.5} />
-                Filtrlar
-              </Button>
-              <Button variant="ghost" className="h-16 px-8 rounded-3xl bg-white border border-slate-100 shadow-lg shadow-slate-200/30 font-bold uppercase tracking-widest text-[10px] text-slate-500 hover:text-primary hover:border-primary/20 flex items-center gap-3">
-                <Download className="h-4 w-4" strokeWidth={2.5} />
-                HISOBOT (PDF)
-              </Button>
-            </div>
-          </div>
-
-          {/* Main Grid/List View Engine */}
-          {customers.length > 0 ? (
-            <div className={cn(
-              "grid gap-8 pb-20",
-              viewMode === 'grid'
-                ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-                : "grid-cols-1"
-            )}>
-              {customers.map((customer) => (
-                <div key={customer.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <CustomerCard
-                    customer={customer}
-                    stats={customerStats[customer.id]}
-                    onEdit={setEditingCustomer}
-                    onDelete={handleDeleteCustomer}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-32 flex flex-col items-center justify-center">
-              <div className="w-24 h-24 rounded-[2rem] bg-white border border-slate-100 flex items-center justify-center text-slate-200 mb-8 shadow-xl shadow-slate-200/50">
-                <Users size={48} strokeWidth={1} />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight mb-2">Mijozlar Ma'lumotlar Bazasida yo'q</h3>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-10 max-w-[400px] text-center">
-                Qidiruv natija bermadi yoki bazada mijozlar mavjud emas. Yangi hamkor qo'shish tugmasini bosing.
-              </p>
               <Button
                 onClick={() => setShowAddForm(true)}
-                className="h-14 px-10 rounded-2xl bg-slate-900 text-white font-bold uppercase tracking-[0.25em] text-[10px] shadow-2xl shadow-slate-900/20 active:scale-95 transition-all"
+                className="h-10 px-5 rounded-xl bg-primary hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[9px] shadow-lg shadow-primary/20 flex items-center gap-2 active:scale-95 transition-all"
               >
-                Yangi Mijoz Qo'shish
+                <Plus size={14} strokeWidth={3} />
+                Qo'shish
               </Button>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* Overlays */}
+      {/* Stats Dashboard */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Jami', val: overallStats.total, icon: Users, color: 'blue' },
+          { label: 'Faol', val: overallStats.active, icon: CheckCircle2, color: 'emerald' },
+          { label: 'Nofaol', val: overallStats.inactive, icon: XCircle, color: 'rose' },
+          { label: 'Analitika', val: 'Real-Time', icon: TrendingUp, color: 'primary' }
+        ].map((s, i) => (
+          <Card key={i} className="card-premium group hover:-translate-y-1 transition-all duration-500 overflow-hidden border-none shadow-lg">
+            <CardContent className="p-4 relative">
+              <div className="flex items-center justify-between">
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-700 group-hover:rotate-[15deg] shadow-sm",
+                  s.color === 'emerald' ? "bg-emerald-500/10 text-emerald-500" :
+                    s.color === 'rose' ? "bg-rose-500/10 text-rose-500" :
+                      s.color === 'blue' ? "bg-blue-500/10 text-blue-500" :
+                        "bg-primary/10 text-primary"
+                )}>
+                  <s.icon size={18} strokeWidth={2.5} />
+                </div>
+                <div className="text-right">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{s.label}</p>
+                  <h3 className="text-lg font-black text-foreground tracking-tight tabular-nums mt-0.5">
+                    {s.val}
+                  </h3>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Search & Action Bar */}
+      <div className="flex flex-col md:flex-row items-stretch gap-4">
+        <div className="flex-1 relative group">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-slate-300 group-focus-within:text-primary transition-colors" strokeWidth={2.5} />
+          </div>
+          <Input
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="h-11 pl-11 pr-4 rounded-xl bg-white/60 dark:bg-white/5 backdrop-blur-md border-white/20 text-xs font-bold text-foreground placeholder:text-slate-300 focus:ring-4 focus:ring-primary/5 shadow-lg transition-all border"
+            placeholder="Qidiruv (Nom, STIR, Raxbar)..."
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            className="h-11 px-5 rounded-xl bg-white/60 dark:bg-white/5 backdrop-blur-md border border-white/20 shadow-md font-black uppercase tracking-widest text-[8px] text-slate-500 hover:text-primary hover:border-primary/20 flex items-center gap-2"
+          >
+            <Filter size={12} strokeWidth={2.5} />
+            SARALASH
+          </Button>
+          <Button
+            variant="ghost"
+            className="h-11 px-5 rounded-xl bg-white/60 dark:bg-white/5 backdrop-blur-md border border-white/20 shadow-md font-black uppercase tracking-widest text-[8px] text-slate-500 hover:text-primary hover:border-primary/20 flex items-center gap-2"
+          >
+            <Download size={12} strokeWidth={2.5} />
+            HISOBOT
+          </Button>
+        </div>
+      </div>
+
+      {/* Content Rendering Engine */}
+      {customers.length > 0 ? (
+        <div className={cn(
+          "grid gap-4",
+          viewMode === 'grid'
+            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+            : "grid-cols-1"
+        )}>
+          {customers.map((customer) => (
+            <div key={customer.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CustomerCard
+                customer={customer}
+                stats={customerStats[customer.id]}
+                onEdit={setEditingCustomer}
+                onDelete={handleDeleteCustomer}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-24 glass-card border-none shadow-xl rounded-[2rem]">
+          <div className="w-20 h-20 rounded-[1.5rem] bg-primary/5 flex items-center justify-center mx-auto mb-6">
+            <Users size={32} className="text-primary/20" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground mb-2 uppercase tracking-tight">Ma'lumotlar topilmadi</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-10 font-medium">
+            Qidiruv natijalari bo'yicha yoki bazada mijozlar mavjud emas. Yangi hamkor qo'shish tugmasini bosing.
+          </p>
+          <Button
+            onClick={() => setShowAddForm(true)}
+            className="h-12 px-10 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 font-black uppercase tracking-widest text-[10px]"
+          >
+            Yangi Mijoz Qo'shish
+          </Button>
+        </div>
+      )}
+
+      {/* Overlays / Forms */}
       {(showAddForm || editingCustomer) && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 lg:p-12 overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
           <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-500"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-500"
             onClick={() => { if (!isSubmitting) { setShowAddForm(false); setEditingCustomer(null); } }}
           />
-          <div className="relative w-full max-w-4xl max-h-full overflow-y-auto scrollbar-none animate-in zoom-in-95 duration-500">
+          <div className="relative w-full max-w-4xl max-h-full overflow-y-auto scrollbar-none animate-in zoom-in-95 duration-500 rounded-[2.5rem] shadow-2xl">
             <CustomerForm
               customer={editingCustomer || undefined}
               onSave={editingCustomer ? handleUpdateCustomer : handleCreateCustomer}
@@ -303,13 +298,12 @@ export default function MijozlarPage() {
         </div>
       )}
 
+      {/* Async Loading Toast */}
       {isLoading && customers.length > 0 && (
         <div className="fixed bottom-10 right-10 z-50 animate-in slide-in-from-right-10 duration-500">
-          <div className="bg-white border border-slate-100 shadow-2xl rounded-2xl p-5 flex items-center gap-4 transition-all hover:scale-105">
-            <div className="relative">
-              <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-            </div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Yangilanmoqda...</span>
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-white/20 shadow-2xl rounded-2xl p-4 flex items-center gap-3">
+            <RefreshCw size={14} className="text-primary animate-spin" />
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Ma'lumotlar yangilanmoqda</span>
           </div>
         </div>
       )}

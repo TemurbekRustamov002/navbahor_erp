@@ -13,6 +13,8 @@ interface ToyPrintData {
   ptm?: string;
   selection?: string;
   brigade?: string;
+  pickingType?: string;
+  sex?: string;
 }
 
 interface PrintOptions {
@@ -55,21 +57,32 @@ export function generateTSPLCommands(toy: ToyPrintData, qrCodeData: string): str
   // QRCODE x, y, ECC Level, cell width, mode, rotation, "data"
   commands.push(`QRCODE 550,40,M,8,A,0,"${qrCodeData || toy.id}"`);
 
-  // Data
-  commands.push(`TEXT 40,100,"4",0,1,1,"TOY #${toy.orderNo}"`);
-  commands.push(`TEXT 40,160,"3",0,1,1,"Marka: ${toy.markaNumber}"`);
-  commands.push(`TEXT 40,220,"3",0,1,1,"Netto: ${formatKg(toy.netto)} kg"`);
-  commands.push(`TEXT 40,280,"2",0,1,1,"Brutto: ${formatKg(toy.brutto)} kg"`);
-  commands.push(`TEXT 40,320,"2",0,1,1,"Tur: ${toy.productType}"`);
+  // Data - Organized in 2 columns for professional look and space saving
+  commands.push(`TEXT 40,100,"4",0,1,1,"TOY: #${toy.orderNo}"`);
+
+  // Column 1
+  commands.push(`TEXT 40,170,"2",0,1,1,"Marka: ${toy.markaNumber}"`);
+  commands.push(`TEXT 40,210,"2",0,1,1,"Zavod: ${toy.sex || '-'}"`);
+  commands.push(`TEXT 40,250,"2",0,1,1,"Terim: ${toy.pickingType || '-'}"`);
+
+  // Column 2
+  commands.push(`TEXT 300,170,"2",0,1,1,"Tur: ${toy.productType}"`);
+  if (toy.ptm) commands.push(`TEXT 300,210,"2",0,1,1,"PTM: ${toy.ptm}"`);
+  if (toy.selection) commands.push(`TEXT 300,250,"2",0,1,1,"Nav: ${toy.selection}"`);
+
   if (toy.brigade) {
-    commands.push(`TEXT 40,360,"2",0,1,1,"Brigada: ${toy.brigade}"`);
+    commands.push(`TEXT 40,290,"2",0,1,1,"Brigada: ${toy.brigade}"`);
   }
+
+  // Weight section (pushed down slightly)
+  commands.push(`TEXT 40,340,"3",0,1,1,"Brutto: ${formatKg(toy.brutto)} kg"`);
+  commands.push(`TEXT 40,390,"2",0,1,1,"Netto: ${formatKg(toy.netto)} kg"`);
 
   // Footer Date
   const dateStr = new Date(toy.createdAt).toLocaleDateString('uz-UZ', {
     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
   });
-  commands.push(`TEXT 40,400,"1",0,1,1,"Sana: ${dateStr}"`);
+  commands.push(`TEXT 40,460,"1",0,1,1,"Sana: ${dateStr}"`);
 
   commands.push('PRINT 1,1');
   return commands.join('\n');
@@ -189,10 +202,18 @@ async function showPrintPreview(toy: ToyPrintData) {
             gap: 1mm;
           }
 
+          .right-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 35mm;
+          }
+
           .toy-id {
             font-size: 20pt;
             font-weight: 900;
-            margin: 0 0 1mm 0;
+            margin: -1mm 0 1mm 0;
+            text-align: center;
           }
 
           .sub-data {
@@ -203,16 +224,25 @@ async function showPrintPreview(toy: ToyPrintData) {
           }
 
           .qr-block {
-            width: 34mm;
-            height: 34mm;
+            width: 32mm;
+            height: 32mm;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid #777;
+            border-radius: 2mm;
           }
 
           .qr-block img {
-            width: 32mm;
-            height: 32mm;
+            width: 30mm;
+            height: 30mm;
+          }
+
+          .info-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5mm;
+            margin-top: 1mm;
           }
 
           /* Tizimli ma'lumotlar jadvali */
@@ -252,20 +282,18 @@ async function showPrintPreview(toy: ToyPrintData) {
           .secondary-weights {
             display: flex;
             justify-content: space-around;
-            margin-top: 2mm;
+            margin-top: 1.5mm;
             font-size: 10pt;
             font-weight: 700;
             border-top: 1px solid black;
-            padding-top: 2mm;
+            padding-top: 1.5mm;
           }
 
           .footer {
             margin-top: auto;
             text-align: center;
-            padding-top: 2mm;
             font-size: 10pt;
             font-weight: 800;
-            border-top: 1px dashed black;
           }
         </style>
       </head>
@@ -277,24 +305,30 @@ async function showPrintPreview(toy: ToyPrintData) {
 
           <div class="main-content">
             <div class="info-block">
-              <h2 class="toy-id">TOY: #${toy.orderNo || '---'}</h2>
-              <div class="sub-data">Marka: ${toy.markaNumber || '---'}</div>
-              <div class="sub-data">Tur: ${toy.productType || 'TOLA'}</div>
-              ${toy.ptm ? `<div class="sub-data">PTM: ${toy.ptm}</div>` : ''}
-              ${toy.selection ? `<div class="sub-data">Nav: ${toy.selection}</div>` : ''}
-              ${toy.brigade ? `<div class="sub-data">Brigada: ${toy.brigade}</div>` : ''}
+              <div class="info-grid">
+                <div class="sub-data">Marka raqami: <b>${toy.markaNumber || '---'}</b></div>
+                <div class="sub-data">Mahsulot turi: <b>${toy.productType || 'TOLA'}</b></div>
+                ${toy.selection ? `<div class="sub-data">Seleksiya navi: <b>${toy.selection}</b></div>` : ''}
+                <div class="sub-data">Terim turi: <b>${toy.pickingType || '-'}</b></div>
+                <div class="sub-data">Zavod: <b>${toy.sex || '-'}</b></div>
+                ${toy.ptm ? `<div class="sub-data">PTM: <b>${toy.ptm}</b></div>` : ''}
+                ${toy.brigade ? `<div class="sub-data">Brigada raqami: <b>${toy.brigade}</b></div>` : ''}
+              </div>
             </div>
-            <div class="qr-block">
-              <img src="${qrDataURL}" />
+            <div class="right-column">
+              <h2 class="toy-id">TOY: #${toy.orderNo || '---'}</h2>
+              <div class="qr-block">
+                <img src="${qrDataURL}" />
+              </div>
             </div>
           </div>
 
           <div class="weight-section">
-            <div class="netto-val">${formatKg(toy.netto)} KG</div>
-            <div class="netto-label">SOF VAZN (NETTO)</div>
+            <div class="netto-val">${formatKg(toy.brutto)} KG</div>
+            <div class="netto-label">BRUTTO VAZN</div>
             
             <div class="secondary-weights">
-              <span>Brutto: ${formatKg(toy.brutto)} kg</span>
+              <span>Netto: ${formatKg(toy.netto)} kg</span>
               <span>Tara: ${formatKg(toy.tara)} kg</span>
             </div>
           </div>
@@ -343,24 +377,30 @@ export async function printChecklistLabels(toys: ToyPrintData[]) {
 
             <div class="main-content">
               <div class="info-block">
-                <h2 class="toy-id">TOY: #${toy.orderNo}</h2>
-                <div class="sub-data">Marka: ${toy.markaNumber}</div>
-                <div class="sub-data">Tur: ${toy.productType}</div>
-                ${toy.ptm ? `<div class="sub-data">PTM: ${toy.ptm}</div>` : ''}
-                ${toy.selection ? `<div class="sub-data">Nav: ${toy.selection}</div>` : ''}
-                ${toy.brigade ? `<div class="sub-data">Brigada: ${toy.brigade}</div>` : ''}
+                <div class="info-grid">
+                  <div class="sub-data">Marka: <b>${toy.markaNumber}</b></div>
+                  <div class="sub-data">Tur: <b>${toy.productType}</b></div>
+                  ${toy.selection ? `<div class="sub-data">Nav: <b>${toy.selection}</b></div>` : ''}
+                  <div class="sub-data">Terim: <b>${toy.pickingType || '-'}</b></div>
+                  <div class="sub-data">Zavod: <b>${toy.sex || '-'}</b></div>
+                  ${toy.ptm ? `<div class="sub-data">PTM: <b>${toy.ptm}</b></div>` : ''}
+                  ${toy.brigade ? `<div class="sub-data">Brigada: <b>${toy.brigade}</b></div>` : ''}
+                </div>
               </div>
-              <div class="qr-block">
-                <img src="${qrDataURL}" />
+              <div class="right-column">
+                <h2 class="toy-id">TOY: #${toy.orderNo}</h2>
+                <div class="qr-block">
+                  <img src="${qrDataURL}" />
+                </div>
               </div>
             </div>
 
             <div class="weight-section">
-              <div class="netto-val">${formatKg(toy.netto)} KG</div>
-              <div class="netto-label">SOF VAZN (NETTO)</div>
+              <div class="netto-val">${formatKg(toy.brutto)} KG</div>
+              <div class="netto-label">BRUTTO VAZN</div>
               
               <div class="secondary-weights">
-                <span>Brutto: ${formatKg(toy.brutto)} kg</span>
+                <span>Netto: ${formatKg(toy.netto)} kg</span>
                 <span>Tara: ${formatKg(toy.tara)} kg</span>
               </div>
             </div>
@@ -452,16 +492,25 @@ export async function printChecklistLabels(toys: ToyPrintData[]) {
           }
 
           .qr-block {
-            width: 34mm;
-            height: 34mm;
+            width: 32mm;
+            height: 32mm;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid #777;
+            border-radius: 2mm;
           }
 
           .qr-block img {
-            width: 32mm;
-            height: 32mm;
+            width: 30mm;
+            height: 30mm;
+          }
+
+          .right-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 35mm;
           }
 
           .weight-section {
@@ -488,11 +537,11 @@ export async function printChecklistLabels(toys: ToyPrintData[]) {
           .secondary-weights {
             display: flex;
             justify-content: space-around;
-            margin-top: 2mm;
+            margin-top: 1.5mm;
             font-size: 10pt;
             font-weight: 700;
             border-top: 1px solid black;
-            padding-top: 2mm;
+            padding-top: 1.5mm;
           }
 
           .footer {
@@ -501,7 +550,6 @@ export async function printChecklistLabels(toys: ToyPrintData[]) {
             padding-top: 2mm;
             font-size: 10pt;
             font-weight: 800;
-            border-top: 1px dashed black;
           }
         </style>
       </head>

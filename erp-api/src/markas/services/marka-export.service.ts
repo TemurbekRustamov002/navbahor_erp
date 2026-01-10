@@ -186,7 +186,7 @@ export class MarkaExportService {
 
     if (!marka) throw new Error('Marka topilmadi');
 
-    const qrData = `MARKA:${marka.number}:${marka.id}`;
+    const qrData = `MARKA:${marka.number}:${marka.id}:${marka.pickingType || '-'}:${marka.sex || '-'}`;
     const qrCodeDataURL = await QRCode.toDataURL(qrData);
 
     const printer = new PdfPrinter(fonts);
@@ -281,7 +281,7 @@ export class MarkaExportService {
   async generateMarkaQRCode(markaId: string): Promise<string> {
     const marka = await this.prisma.marka.findUnique({ where: { id: markaId } });
     if (!marka) throw new Error('Marka topilmadi');
-    const qrData = `MARKA:${marka.number}:${marka.id}`;
+    const qrData = `MARKA:${marka.number}:${marka.id}:${marka.pickingType || '-'}:${marka.sex || '-'}`;
     return await QRCode.toDataURL(qrData);
   }
 
@@ -295,7 +295,7 @@ export class MarkaExportService {
     });
     if (!marka) throw new Error('Marka topilmadi');
 
-    const qrData = `MARKA:${marka.number}:${marka.id}`;
+    const qrData = `MARKA:${marka.number}:${marka.id}:${marka.pickingType || '-'}:${marka.sex || '-'}`;
     const date = new Date(marka.createdAt).toLocaleDateString('uz-UZ');
 
     let zpl = `^XA\n`;

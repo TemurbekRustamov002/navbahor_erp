@@ -38,6 +38,12 @@ export interface MarkasListResponse {
   pages: number;
 }
 
+export interface MarkaOptionsResponse {
+  ptm: string[];
+  pickingType: string[];
+  selection: string[];
+}
+
 export interface MarkaStats {
   totalMarkas: number;
   activeMarkas: number;
@@ -132,6 +138,24 @@ class MarkasService {
       return response;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to update marka status');
+    }
+  }
+
+  async getMarkaOptions(): Promise<MarkaOptionsResponse> {
+    try {
+      let response;
+      try {
+        response = await apiClient.get<MarkaOptionsResponse>('/markas/options');
+      } catch (authError: any) {
+        if (authError.response?.status === 401 || authError.response?.status === 403) {
+          response = await simpleApiClient.get<MarkaOptionsResponse>('/markas/options');
+        } else {
+          throw authError;
+        }
+      }
+      return response;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch marka options');
     }
   }
 

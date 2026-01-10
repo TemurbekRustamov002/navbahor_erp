@@ -107,223 +107,187 @@ export default function LabPage() {
     .slice(0, 8);
 
   return (
-    <div className="h-full space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700 min-h-screen bg-transparent dark:bg-[#0a120b] p-6 lg:p-10 overflow-y-auto scrollbar-none">
-      {/* Navbahor Premium Header - Enhanced Glassmorphism */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 border-b border-white/20 dark:border-white/10 pb-8">
-        <div className="flex items-center gap-6">
-          <div className="w-16 h-16 bg-primary/10 text-primary rounded-[1.8rem] flex items-center justify-center border border-primary/20 shadow-xl shadow-primary/5 transition-all hover:scale-105">
-            <FlaskConical className="h-8 w-8" strokeWidth={2} />
+    <div className="h-full min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col animate-in fade-in duration-500">
+      {/* Sticky Premium Header */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center border border-primary/20 shadow-sm">
+            <FlaskConical className="h-5 w-5" strokeWidth={2} />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
-              Laboratoriya <span className="text-primary italic">Nazorati</span>
+            <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white leading-none uppercase">
+              Laboratoriya
             </h1>
-            <div className="flex items-center gap-3 mt-2">
-              <div className="flex items-center gap-2 px-2.5 py-1 bg-primary/10 rounded-lg">
-                <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">NAVBAHOR TEKSTIL</span>
-              </div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Sifat tahlili va Texnologik Monitoring</span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Sifat Nazorati</p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Button
             onClick={handleExportAll}
             disabled={isLoading || isExporting || stats_data.total === 0}
-            className="h-12 px-6 bg-white/50 dark:bg-white/5 border-white/60 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest shadow-sm active:scale-95"
+            variant="ghost"
+            className="h-9 px-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg text-[9px] font-bold uppercase tracking-widest"
           >
-            <Download className={cn("h-4 w-4 mr-2 text-primary", isExporting && "animate-bounce")} strokeWidth={2.5} />
-            Excel Export
+            <Download className={cn("h-3.5 w-3.5 mr-2", isExporting && "animate-bounce")} strokeWidth={2.5} />
+            Export
           </Button>
 
           <Button
             disabled={isLoading}
             variant="outline"
             onClick={handleRefresh}
-            className="w-12 h-12 rounded-xl bg-white/50 dark:bg-white/5 border-white/60 dark:border-white/10 hover:bg-white dark:hover:bg-white/10 transition-all shadow-sm active:scale-90"
+            className="w-9 h-9 rounded-lg border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 p-0"
           >
             <RefreshCw
               className={cn(
-                "h-4 w-4",
-                isLoading ? "animate-spin text-primary" : "text-slate-400"
+                "h-3.5 w-3.5 text-slate-500",
+                isLoading && "animate-spin text-primary"
               )}
-              strokeWidth={3}
+              strokeWidth={2.5}
             />
           </Button>
 
           <Button
             onClick={() => router.push("/dashboard/labaratoriya/natijalar")}
-            className="h-12 px-8 bg-primary text-white hover:bg-[#047857] rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95"
+            className="h-9 px-5 bg-primary text-white hover:bg-green-700 rounded-lg text-[9px] font-bold uppercase tracking-widest shadow-md shadow-primary/20"
           >
-            <Table className="h-4 w-4 mr-2" strokeWidth={2.5} />
+            <Table className="h-3.5 w-3.5 mr-2" strokeWidth={2.5} />
             Monitor
           </Button>
         </div>
-      </div>
+      </header>
 
-      {/* Navbahor Polish Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: "Jami Analizlar", value: stats_data.total, unit: "Tahlil", icon: FileText, color: "primary", progress: 100 },
-          { label: "Kutilayotgan", value: stats_data.pending, unit: "Navbat", icon: Clock, color: "amber", progress: (stats_data.pending / (stats_data.total || 1)) * 100 },
-          { label: "Tasdiqlangan", value: stats_data.approved, unit: "Yaroqli", icon: CheckCircle2, color: "emerald", progress: stats_data.approvalRate },
-          { label: "Sifat KPI", value: stats_data.approvalRate, unit: "% Index", icon: BarChart3, color: "indigo", progress: stats_data.approvalRate }
-        ].map((stat, i) => (
-          <Card key={i} className="relative overflow-hidden group hover:scale-[1.02] transition-all duration-500 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border-white/80 dark:border-white/10 rounded-[2.25rem] shadow-xl shadow-primary/5 border">
-            <CardContent className="p-7">
-              <div className="flex items-center justify-between mb-6">
-                <div className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:rotate-6 shadow-sm border",
-                  stat.color === "primary" ? "bg-primary/5 dark:bg-primary/20 text-primary border-primary/10 dark:border-primary/20" :
-                    stat.color === "amber" ? "bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/20" :
-                      stat.color === "emerald" ? "bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/20" :
-                        "bg-indigo-50 dark:bg-indigo-900/10 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/20"
-                )}>
-                  <stat.icon size={22} strokeWidth={2.5} />
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1.5">{stat.label}</p>
-                  <div className="flex items-baseline justify-end gap-1.5">
-                    <span className="text-3xl font-bold text-slate-900 dark:text-white font-mono tracking-tighter">
-                      {stat.value.toString().padStart(2, '0')}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-300 dark:text-slate-700 uppercase tracking-widest">{stat.unit}</span>
+      <div className="flex-1 overflow-y-auto scrollbar-none p-5 space-y-5">
+        {/* KPI Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Jami Analizlar", value: stats_data.total, unit: "ta", icon: FileText, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", progress: 100 },
+            { label: "Navbatda", value: stats_data.pending, unit: "ta", icon: Clock, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20", progress: (stats_data.pending / (stats_data.total || 1)) * 100 },
+            { label: "Tasdiqlandi", value: stats_data.approved, unit: "ta", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20", progress: stats_data.approvalRate },
+            { label: "Sifat Indeksi", value: stats_data.approvalRate, unit: "%", icon: BarChart3, color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-900/20", progress: stats_data.approvalRate }
+          ].map((stat, i) => (
+            <Card key={i} className="border border-slate-200 dark:border-white/5 shadow-sm bg-white dark:bg-gray-900 rounded-2xl hover:shadow-md transition-all">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{stat.value}</span>
+                    <span className="text-[10px] font-bold text-slate-400">{stat.unit}</span>
                   </div>
                 </div>
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", stat.bg, stat.color)}>
+                  <stat.icon size={20} strokeWidth={2.5} />
+                </div>
+              </CardContent>
+              <div className="h-1 w-full bg-slate-50 dark:bg-white/5 mt-0 overflow-hidden rounded-b-2xl">
+                <div className={cn("h-full transition-all duration-1000", stat.color.replace('text', 'bg'))} style={{ width: `${stat.progress}%` }} />
               </div>
-              <div className="relative h-2 w-full bg-slate-100/50 dark:bg-black/40 rounded-full overflow-hidden shadow-inner border border-white dark:border-white/5">
-                <div
-                  className={cn(
-                    "absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out",
-                    stat.color === "primary" ? "bg-primary" :
-                      stat.color === "amber" ? "bg-amber-500" :
-                        stat.color === "emerald" ? "bg-emerald-500" :
-                          "bg-indigo-500"
-                  )}
-                  style={{ width: `${stat.progress}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Main Content Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
-        {/* Creation Form Area */}
-        <div className="xl:col-span-8">
-          <SmartLabForm />
+            </Card>
+          ))}
         </div>
 
-        {/* Recent Analyses Monitor - Navbahor Polish */}
-        <div className="xl:col-span-4 space-y-8 h-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-[3rem] border border-white/60 dark:border-white/10 p-8 shadow-2xl relative overflow-hidden group">
-          <div className="flex items-center justify-between relative z-10 px-2">
-            <h3 className="text-[12px] font-bold text-slate-900 dark:text-white uppercase tracking-[0.2em] flex items-center gap-3">
-              <Clock className="h-5 w-5 text-primary" strokeWidth={2.5} />
-              So&apos;nggi Tahlillar
-            </h3>
-            <button
-              onClick={() => router.push("/dashboard/labaratoriya/natijalar")}
-              className="px-4 py-1.5 rounded-xl bg-primary/5 dark:bg-primary/10 text-[10px] font-bold text-primary uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm"
-            >
-              Hamma <span className="text-xs ml-1">→</span>
-            </button>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+          {/* Creation Form Area */}
+          <div className="xl:col-span-8">
+            <SmartLabForm />
           </div>
 
-          <div className="space-y-4 max-h-[850px] overflow-y-auto pr-2 scrollbar-none relative z-10">
-            {recentSamples.length > 0 ? (
-              recentSamples.map((sample, idx) => {
-                const toy = toys.find(t => t.id === (sample.toyId || sample.sourceId));
-                return (
-                  <Card
-                    key={sample.id}
-                    className="group relative overflow-hidden bg-white/60 dark:bg-white/5 backdrop-blur-md border-white/80 dark:border-white/10 rounded-[2rem] shadow-sm cursor-pointer hover:bg-white dark:hover:bg-white/10 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 transform hover:-translate-x-2 border animate-in slide-in-from-right-8"
-                    style={{ animationDelay: `${idx * 100}ms` }}
-                    onClick={() => handleSampleEdit(sample)}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-white dark:bg-white/10 shadow-md border border-slate-50 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl flex items-center justify-center font-bold font-mono text-lg ring-1 ring-slate-100 dark:ring-white/10 transition-all duration-500 group-hover:bg-primary group-hover:text-white group-hover:scale-110">
-                            #{toy?.orderNo || "—"}
+          {/* Recent Analyses Monitor - Professional List */}
+          <div className="xl:col-span-4 flex flex-col gap-4 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-white/5 p-5 shadow-sm h-full">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-[11px] font-bold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                <Clock className="h-4 w-4 text-slate-400" />
+                So'nggi Tahlillar
+              </h3>
+              <button
+                onClick={() => router.push("/dashboard/labaratoriya/natijalar")}
+                className="text-[10px] font-bold text-primary hover:underline uppercase tracking-wide"
+              >
+                Ko'rish
+              </button>
+            </div>
+
+            <div className="space-y-3 overflow-y-auto max-h-[800px] scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-white/10 pr-1">
+              {recentSamples.length > 0 ? (
+                recentSamples.map((sample, idx) => {
+                  const toy = toys.find(t => t.id === (sample.toyId || sample.sourceId));
+                  return (
+                    <div
+                      key={sample.id}
+                      onClick={() => handleSampleEdit(sample)}
+                      className="group relative bg-slate-50 dark:bg-gray-950/50 hover:bg-slate-100 dark:hover:bg-gray-800 border border-slate-200 dark:border-white/5 rounded-xl p-3 cursor-pointer transition-all"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-white dark:bg-gray-900 border border-slate-200 dark:border-white/10 rounded-lg flex items-center justify-center text-xs font-black text-slate-900 dark:text-white font-mono">
+                            #{toy?.orderNo || "?"}
                           </div>
                           <div>
-                            <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-1">Marka</p>
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">
-                                {sample.markaLabel || "Noma'lum"}
-                              </p>
-                            </div>
+                            <p className="text-[10px] font-bold text-slate-900 dark:text-white leading-none">{sample.markaLabel}</p>
+                            <p className="text-[9px] font-medium text-slate-400 mt-0.5">{new Date(sample.createdAt).toLocaleTimeString("uz-UZ", { hour: '2-digit', minute: '2-digit' })}</p>
                           </div>
                         </div>
                         <div className={cn(
-                          "px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border transition-all shadow-sm",
-                          sample.status === "APPROVED" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20" :
-                            sample.status === "REJECTED" ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-500/20" :
-                              "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-500/20"
+                          "px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border",
+                          sample.status === "APPROVED" ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
+                            sample.status === "REJECTED" ? "bg-rose-50 text-rose-600 border-rose-200" :
+                              "bg-amber-50 text-amber-600 border-amber-200"
                         )}>
                           {sample.status}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2.5 mb-6">
-                        {[
-                          { l: "NAM", v: (sample.moisture || 0) + "%", c: "text-blue-500" },
-                          { l: "IFL", v: (sample.trash || 0) + "%", c: "text-rose-500" },
-                          { l: "NAV", v: (sample.navi || 1) + "-NAV", c: "text-slate-900" },
-                          { l: "PISH", v: sample.strength || "—", c: "text-primary" },
-                          { l: "UZUN", v: (sample.lengthMm || 0) + "mm", c: "text-slate-600" },
-                          { l: "SINF", v: sample.grade || "OLIY", c: "text-primary" }
-                        ].map((m, i) => (
-                          <div key={i} className="bg-slate-50/50 dark:bg-white/5 p-2.5 rounded-[1.2rem] border border-white/60 dark:border-white/5 text-center transition-all group-hover:border-primary/20 dark:group-hover:border-primary/40">
-                            <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{m.l}</p>
-                            <p className={cn("text-[11px] font-mono font-bold truncate tracking-tighter", m.c)}>{m.v}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-slate-50 dark:border-white/5 pt-5">
-                        <div className="flex items-center gap-3 px-3 py-1.5 bg-slate-50/80 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 shadow-inner">
-                          <Clock className="w-3.5 h-3.5 text-primary/60" strokeWidth={2.5} />
-                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase font-mono">
-                            {new Date(sample.createdAt).toLocaleTimeString("uz-UZ", { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                      <div className="grid grid-cols-4 gap-1">
+                        <div className="bg-white dark:bg-gray-900 p-1.5 rounded border border-slate-100 dark:border-white/5 text-center">
+                          <span className="block text-[7px] text-slate-400 font-bold">NAM</span>
+                          <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{sample.moisture}%</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-primary font-bold text-[10px] uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
-                          Tahrirlash <span className="text-xs">→</span>
+                        <div className="bg-white dark:bg-gray-900 p-1.5 rounded border border-slate-100 dark:border-white/5 text-center">
+                          <span className="block text-[7px] text-slate-400 font-bold">IFL</span>
+                          <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{sample.trash}%</span>
+                        </div>
+                        <div className="bg-white dark:bg-gray-900 p-1.5 rounded border border-slate-100 dark:border-white/5 text-center">
+                          <span className="block text-[7px] text-slate-400 font-bold">NAV</span>
+                          <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{sample.navi}-N</span>
+                        </div>
+                        <div className="bg-white dark:bg-gray-900 p-1.5 rounded border border-slate-100 dark:border-white/5 text-center">
+                          <span className="block text-[7px] text-slate-400 font-bold">SINF</span>
+                          <span className="text-[10px] font-bold text-primary">{sample.grade}</span>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            ) : (
-              <div className="text-center py-20 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-white/10 bg-white/40 dark:bg-white/5 backdrop-blur-sm">
-                <FlaskConical className="h-16 w-16 text-slate-200 dark:text-white/10 mx-auto mb-6 animate-pulse" strokeWidth={1.5} />
-                <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-relaxed">Hozircha laboratoriya<br />tahlillari aniqlanmadi</p>
-              </div>
-            )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-10 opacity-50">
+                  <FlaskConical className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Tahlillar yo'q</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Polish Modals */}
-      {isAdmin && (
-        <>
-          <LabEditModal
-            sample={editingSample}
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-          />
-          <SimpleApprovalModal
-            sample={sampleForApproval}
-            isOpen={isApprovalModalOpen}
-            onClose={() => setIsApprovalModalOpen(false)}
-          />
-        </>
-      )}
+        {/* Polish Modals */}
+        {isAdmin && (
+          <>
+            <LabEditModal
+              sample={editingSample}
+              isOpen={isEditModalOpen}
+              onClose={() => setIsEditModalOpen(false)}
+            />
+            <SimpleApprovalModal
+              sample={sampleForApproval}
+              isOpen={isApprovalModalOpen}
+              onClose={() => setIsApprovalModalOpen(false)}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }

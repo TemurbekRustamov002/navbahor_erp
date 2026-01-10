@@ -165,7 +165,7 @@ export function SidebarContent({ isExpanded = true, isCollapsed = false, isHover
           </div>
 
           <div className={cn("flex gap-1", !isExpanded && "flex-col items-center mt-2")}>
-            <button
+            {/* <button
               className="relative p-2 text-muted-foreground hover:text-primary transition-all rounded-xl hover:bg-background"
               title="Bildirishnomalar"
             >
@@ -174,7 +174,7 @@ export function SidebarContent({ isExpanded = true, isCollapsed = false, isHover
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
               </span>
-            </button>
+            </button> */}
 
             <button
               onClick={() => logout()}

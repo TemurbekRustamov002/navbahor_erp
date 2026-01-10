@@ -153,6 +153,8 @@ export function ToyForm({
         createdAt: toy.createdAt || (toy as any).created_at || new Date().toISOString(),
         ptm: selectedMarka?.ptm,
         selection: selectedMarka?.selection,
+        pickingType: selectedMarka?.pickingType,
+        sex: selectedMarka?.sex,
         brigade: selectedBrigade
       }, { method: 'browser' });
     } catch (err: any) {

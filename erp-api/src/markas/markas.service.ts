@@ -241,6 +241,29 @@ export class MarkasService {
         },
       });
 
+      // Boshqa variantlarni lookup tablitsalarga qo'shish
+      if (dto.ptm) {
+        await this.prisma.ptm.upsert({
+          where: { name: dto.ptm },
+          update: { isActive: true },
+          create: { name: dto.ptm }
+        }).catch(err => console.error("PTM upsert error:", err));
+      }
+      if (dto.selection) {
+        await this.prisma.selectionVariety.upsert({
+          where: { name: dto.selection },
+          update: { isActive: true },
+          create: { name: dto.selection }
+        }).catch(err => console.error("Selection upsert error:", err));
+      }
+      if (dto.pickingType) {
+        await this.prisma.pickingType.upsert({
+          where: { name: dto.pickingType },
+          update: { isActive: true },
+          create: { name: dto.pickingType }
+        }).catch(err => console.error("PickingType upsert error:", err));
+      }
+
       // Log activity
       await this.prisma.activityLog.create({
         data: {
@@ -335,6 +358,52 @@ export class MarkasService {
       success: true,
       message: `${result.count} ta ACTIVE marka tarozida ko'rinadigan qilindi`,
       updatedCount: result.count
+    };
+  }
+
+  async getOptions() {
+    let [ptms, pickingTypes, selections] = await Promise.all([
+      this.prisma.ptm.findMany({ where: { isActive: true }, select: { name: true }, orderBy: { name: 'asc' } }),
+      this.prisma.pickingType.findMany({ where: { isActive: true }, select: { name: true }, orderBy: { name: 'asc' } }),
+      this.prisma.selectionVariety.findMany({ where: { isActive: true }, select: { name: true }, orderBy: { name: 'asc' } }),
+    ]);
+
+    // Agar lookup tablitsalar bo'sh bo'lsa, mavjud markalardan ma'lumotlarni ko'chirib o'tamiz
+    if (ptms.length === 0 && selections.length === 0) {
+      const [distinctPtms, distinctPickingTypes, distinctSelections] = await Promise.all([
+        this.prisma.marka.findMany({ select: { ptm: true }, distinct: ['ptm'], where: { ptm: { not: null } } }),
+        this.prisma.marka.findMany({ select: { pickingType: true }, distinct: ['pickingType'], where: { pickingType: { not: null } } }),
+        this.prisma.marka.findMany({ select: { selection: true }, distinct: ['selection'], where: { selection: { not: null } } }),
+      ]);
+
+      if (distinctPtms.length > 0) {
+        await Promise.all(distinctPtms.map(p =>
+          this.prisma.ptm.upsert({ where: { name: p.ptm! }, update: {}, create: { name: p.ptm! } }).catch(() => null)
+        ));
+      }
+      if (distinctPickingTypes.length > 0) {
+        await Promise.all(distinctPickingTypes.map(p =>
+          this.prisma.pickingType.upsert({ where: { name: p.pickingType! }, update: {}, create: { name: p.pickingType! } }).catch(() => null)
+        ));
+      }
+      if (distinctSelections.length > 0) {
+        await Promise.all(distinctSelections.map(s =>
+          this.prisma.selectionVariety.upsert({ where: { name: s.selection! }, update: {}, create: { name: s.selection! } }).catch(() => null)
+        ));
+      }
+
+      // Qayta yuklash
+      [ptms, pickingTypes, selections] = await Promise.all([
+        this.prisma.ptm.findMany({ where: { isActive: true }, select: { name: true }, orderBy: { name: 'asc' } }),
+        this.prisma.pickingType.findMany({ where: { isActive: true }, select: { name: true }, orderBy: { name: 'asc' } }),
+        this.prisma.selectionVariety.findMany({ where: { isActive: true }, select: { name: true }, orderBy: { name: 'asc' } }),
+      ]);
+    }
+
+    return {
+      ptm: ptms.map(p => p.name),
+      pickingType: pickingTypes.map(p => p.name),
+      selection: selections.map(s => s.name),
     };
   }
 

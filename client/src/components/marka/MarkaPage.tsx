@@ -52,10 +52,17 @@ export default function MarkaPage() {
     ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [markas, searchQuery, statusFilter]);
 
+  const counts = useMemo(() => ({
+    ALL: markas.length,
+    ACTIVE: markas.filter(m => m.status === 'ACTIVE').length,
+    PAUSED: markas.filter(m => m.status === 'PAUSED').length,
+    CLOSED: markas.filter(m => m.status === 'CLOSED').length,
+  }), [markas]);
+
   return (
-    <div className="min-h-screen bg-[#dcfce7] dark:bg-[#0a120b] flex flex-col animate-in fade-in duration-500">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col animate-in fade-in duration-500">
       {/* Ultra-Slim Premium Header */}
-      <header className="bg-white/90 dark:bg-[#0a120b]/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 sticky top-0 z-50">
+      <header className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto px-6 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-5">
             <div className="flex items-center gap-3">
@@ -122,7 +129,7 @@ export default function MarkaPage() {
       </header>
 
       {/* Main Content Dashboard Layout */}
-      <main className="max-w-[1600px] mx-auto w-full px-8 py-6 space-y-6">
+      <main className="max-w-[1600px] mx-auto w-full px-5 py-5 space-y-6">
 
         {/* Parametric Input Section */}
         {showForm && (
@@ -149,13 +156,14 @@ export default function MarkaPage() {
             <button
               onClick={() => setStatusFilter('ALL')}
               className={cn(
-                "px-4 h-9 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
+                "px-4 h-9 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all flex items-center gap-2",
                 statusFilter === 'ALL'
                   ? "bg-slate-900 dark:bg-white dark:text-black text-white shadow-md shadow-black/10"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/80 dark:hover:bg-white/10"
               )}
             >
-              Barchasi
+              <span>Barchasi</span>
+              <span className={cn("px-1.5 py-0.5 rounded-md text-[8px]", statusFilter === 'ALL' ? "bg-white/20 dark:bg-black/10" : "bg-slate-200 dark:bg-white/10")}>{counts.ALL}</span>
             </button>
             <div className="w-[1px] h-3 bg-slate-200 dark:bg-white/10 mx-1" />
             <div className="flex items-center gap-0.5">
@@ -179,14 +187,20 @@ export default function MarkaPage() {
                     "text-[9px] font-bold uppercase tracking-widest",
                     statusFilter === status.id ? "text-slate-900 dark:text-white" : "text-slate-500"
                   )}>{status.label}</span>
+                  <span className={cn(
+                    "px-1.5 py-0.5 rounded-md text-[8px] font-bold",
+                    statusFilter === status.id ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "bg-slate-200/50 dark:bg-white/5 text-slate-400"
+                  )}>
+                    {counts[status.id as keyof typeof counts]}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Data Grid Matrix */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
+        {/* Data Grid Matrix - Optimized for 4-5 columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
           {filteredMarkas.length > 0 ? (
             filteredMarkas.map((marka) => (
               <MarkaCard key={marka.id} marka={marka} />

@@ -24,7 +24,7 @@ type MarkaState = {
     sex?: SexType;
     ptm: string;
     selection: string;
-    pickingType: 'qol' | 'mashina';
+    pickingType: string;
     capacity?: number;
     showOnScale?: boolean;
     notes?: string;

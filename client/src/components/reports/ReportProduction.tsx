@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useReportStore } from "@/stores/reportStore";
+"use client";
+import React, { useState, useEffect, ChangeEvent } from "react";
+import { useReportStore, ProductionItem } from "@/stores/reportStore";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -12,7 +13,9 @@ import {
     FileText,
     Calendar,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    ArrowRight,
+    Layers
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,129 +31,154 @@ export function ReportProduction() {
         fetchProductionReport(filters);
     }, [fetchProductionReport, filters]);
 
+    const handleDateChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFilters((prev: typeof filters) => ({ ...prev, [name]: value }));
+    };
+
+    const handleProductTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
+        setFilters((prev: typeof filters) => ({ ...prev, productType: e.target.value }));
+    };
+
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Search & Filters HUD */}
-            <div className="bg-white/80 backdrop-blur-lg border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-black/5">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="space-y-2">
-                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Boshlanish Sanasi</Label>
-                        <div className="relative group">
-                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
-                            <Input
-                                type="date"
-                                className="h-12 pl-12 bg-slate-50/50 border-slate-200 rounded-xl text-[13px] font-bold text-slate-900 focus:ring-4 focus:ring-indigo-500/5 transition-all"
-                                value={filters.startDate}
-                                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-                            />
+        <div className="space-y-8 animate-in pb-10">
+            {/* Filter Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div className="lg:col-span-3 card-premium p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <Label className="text-label-premium ml-1">Boshlanish Sanasi</Label>
+                            <div className="relative group">
+                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                                <Input
+                                    type="date"
+                                    name="startDate"
+                                    className="h-12 pl-12 bg-white/50 dark:bg-slate-900/50 border-border rounded-xl text-sm font-bold focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                                    value={filters.startDate}
+                                    onChange={handleDateChange}
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-label-premium ml-1">Tugash Sanasi</Label>
+                            <div className="relative group">
+                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                                <Input
+                                    type="date"
+                                    name="endDate"
+                                    className="h-12 pl-12 bg-white/50 dark:bg-slate-900/50 border-border rounded-xl text-sm font-bold focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                                    value={filters.endDate}
+                                    onChange={handleDateChange}
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-label-premium ml-1">Mahsulot Turi</Label>
+                            <select
+                                className="w-full h-12 px-4 bg-white/50 dark:bg-slate-900/50 border border-border rounded-xl text-sm font-bold focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                                value={filters.productType}
+                                onChange={handleProductTypeChange}
+                            >
+                                <option value="">Barchasi</option>
+                                <option value="TOLA">Tola</option>
+                                <option value="LINT">Lint</option>
+                                <option value="SIKLON">Siklon</option>
+                                <option value="ULUK">Uluk</option>
+                            </select>
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tugash Sanasi</Label>
-                        <div className="relative group">
-                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
-                            <Input
-                                type="date"
-                                className="h-12 pl-12 bg-slate-50/50 border-slate-200 rounded-xl text-[13px] font-bold text-slate-900 focus:ring-4 focus:ring-indigo-500/5 transition-all"
-                                value={filters.endDate}
-                                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mahsulot Turi</Label>
-                        <select
-                            className="w-full h-12 px-4 bg-slate-50/50 border border-slate-200 rounded-xl text-[13px] font-bold text-slate-900 focus:ring-4 focus:ring-indigo-500/5 transition-all focus:outline-none"
-                            value={filters.productType}
-                            onChange={(e) => setFilters({ ...filters, productType: e.target.value })}
-                        >
-                            <option value="">Barchasi</option>
-                            <option value="TOLA">Tola</option>
-                            <option value="LINT">Lint</option>
-                            <option value="SIKLON">Siklon</option>
-                            <option value="ULUK">Uluk</option>
-                        </select>
-                    </div>
-                    <div className="flex items-end gap-3">
-                        <Button
-                            onClick={() => exportReport('pdf', filters)}
-                            className="flex-1 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20"
-                        >
-                            <FileText size={16} className="mr-2" />
-                            PDF
-                        </Button>
-                        <Button
-                            onClick={() => exportReport('excel', filters)}
-                            variant="outline"
-                            className="flex-1 h-12 border-slate-200 bg-white text-emerald-600 hover:text-emerald-700 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-sm"
-                        >
-                            <FileSpreadsheet size={16} className="mr-2" />
-                            Excel
-                        </Button>
-                    </div>
+                </div>
+
+                <div className="card-premium p-6 flex flex-col justify-center gap-3">
+                    <Button
+                        onClick={() => exportReport('pdf', filters)}
+                        className="h-12 bg-primary text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                    >
+                        <FileText size={16} />
+                        PDF Hisobot
+                    </Button>
+                    <Button
+                        onClick={() => exportReport('excel', filters)}
+                        variant="outline"
+                        className="h-12 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+                    >
+                        <FileSpreadsheet size={16} />
+                        Excel (Data)
+                    </Button>
                 </div>
             </div>
 
-            {/* Main Table Matrix */}
-            <Card className="border-none shadow-xl shadow-black/5 rounded-[2.5rem] bg-white overflow-hidden">
+            {/* Production Matrix */}
+            <Card className="card-premium overflow-hidden border-none shadow-xl">
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left">
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-100">
-                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sana</th>
-                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Brigada</th>
-                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Marka №</th>
-                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Turi</th>
-                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tartib №</th>
-                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Vazn (Netto)</th>
-                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sinf (Grade)</th>
-                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Holat</th>
+                                <tr className="bg-primary/5 border-b border-primary/10">
+                                    <th className="px-8 py-6 text-label-premium">Sana</th>
+                                    <th className="px-8 py-6 text-label-premium">Brigada</th>
+                                    <th className="px-8 py-6 text-label-premium">Marka №</th>
+                                    <th className="px-8 py-6 text-label-premium">Turi</th>
+                                    <th className="px-8 py-6 text-label-premium">Tartib №</th>
+                                    <th className="px-8 py-6 text-label-premium">Vazn</th>
+                                    <th className="px-8 py-6 text-label-premium">Sinf</th>
+                                    <th className="px-8 py-6 text-label-premium text-right">Holat</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {productionData.map((item, i) => (
-                                    <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-8 py-5 text-sm font-bold text-slate-600">{new Date(item.createdAt).toLocaleDateString()}</td>
-                                        <td className="px-8 py-5 text-sm font-black text-indigo-500 font-mono italic">{item.brigade || '-'}</td>
-                                        <td className="px-8 py-5 text-sm font-black text-slate-900">M-{item.markaNumber}</td>
+                            <tbody className="divide-y divide-white/5">
+                                {productionData.map((item: ProductionItem, i: number) => (
+                                    <tr key={i} className="hover:bg-primary/[0.02] transition-colors group">
+                                        <td className="px-8 py-5 text-sm font-bold text-foreground">{new Date(item.date || '').toLocaleDateString()}</td>
                                         <td className="px-8 py-5">
-                                            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                                                {item.productType}
+                                            <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-xs font-black font-mono">
+                                                {item.brigade || '-'}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-5 text-sm font-mono font-bold text-slate-500">#{item.orderNo}</td>
-                                        <td className="px-8 py-5 text-sm font-black text-slate-900 font-mono">{item.netto.toFixed(1)} kg</td>
+                                        <td className="px-8 py-5 text-sm font-black text-foreground">M-{item.marka}</td>
+                                        <td className="px-8 py-5 text-sm font-medium text-muted-foreground">{item.productType}</td>
+                                        <td className="px-8 py-5 text-sm font-mono-premium text-muted-foreground">#{item.toyNo}</td>
+                                        <td className="px-8 py-5 text-sm font-black text-foreground font-mono">{item.netto.toFixed(1)} kg</td>
                                         <td className="px-8 py-5">
                                             <span className={cn(
                                                 "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
-                                                item.grade === 'OLIY' ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
+                                                item.grade === 'OLIY' ? "bg-emerald-500/10 text-emerald-600" : "bg-slate-100 dark:bg-white/5 text-muted-foreground"
                                             )}>
                                                 {item.grade || 'NA'}
                                             </span>
                                         </td>
                                         <td className="px-8 py-5 text-right">
-                                            <span className={cn(
-                                                "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                item.status === 'SHIPPED' ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"
+                                            <div className={cn(
+                                                "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest gap-2",
+                                                item.status === 'SHIPPED' ? "bg-amber-500/10 text-amber-600" : "bg-primary/10 text-primary"
                                             )}>
+                                                <div className={cn("w-1.5 h-1.5 rounded-full", item.status === 'SHIPPED' ? "bg-amber-500" : "bg-primary")} />
                                                 {item.status}
-                                            </span>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
+                                {productionData.length === 0 && (
+                                    <tr>
+                                        <td colSpan={8} className="px-8 py-24 text-center">
+                                            <div className="flex flex-col items-center justify-center text-muted-foreground/30">
+                                                <Layers size={64} strokeWidth={1} className="mb-4" />
+                                                <p className="text-[11px] font-black uppercase tracking-[0.3em]">Ma'lumotlar mavjud emas</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
 
-                    {/* Pagination HUD */}
-                    <div className="p-8 border-t border-slate-50 flex items-center justify-between">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            Koʻrsatilmoqda: <span className="text-slate-900">{productionData.length}</span> / {productionData.length} natija
+                    {/* Pagination */}
+                    <div className="p-8 border-t border-white/5 flex items-center justify-between bg-primary/[0.01]">
+                        <p className="text-label-premium">
+                            Jami: <span className="text-foreground">{productionData.length}</span> natija
                         </p>
                         <div className="flex gap-2">
-                            <Button variant="outline" size="sm" disabled className="h-10 px-4 rounded-xl border-slate-200 text-slate-400"><ChevronLeft size={16} /></Button>
-                            <Button variant="outline" size="sm" className="h-10 px-4 rounded-xl border-slate-200 text-slate-900"><ChevronRight size={16} /></Button>
+                            <Button variant="outline" size="sm" disabled className="h-10 px-4 rounded-xl border-border text-muted-foreground"><ChevronLeft size={16} /></Button>
+                            <Button variant="outline" size="sm" className="h-10 px-4 rounded-xl border-border text-foreground hover:bg-primary/5 hover:text-primary transition-all"><ChevronRight size={16} /></Button>
                         </div>
                     </div>
                 </CardContent>

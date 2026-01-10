@@ -10,12 +10,15 @@ import { Label } from "@/components/ui/Label";
 import { cn } from "@/lib/utils";
 import { Plus, ChevronDown, CheckCircle, AlertCircle, Loader2, Tag, FlaskConical, Target, Zap, Settings, ArrowRight } from "lucide-react";
 
-const PTM_OPTIONS = ["Asosiy PTM", "Qo'shimcha PTM", "PTM-3", "Boshqa"];
-const COTTON_SELECTIONS = [
+const COTTON_SELECTIONS_DEFAULT = [
   "S-6524", "Bukhara-102", "Namangan-77", "Andijan-36", "C-4727",
   "Surxon-14", "Namangan-34", "Bukhara-6", "Samarkand-86",
   "Tashkent-1", "Fergana-15", "Kashkadarya-4", "Navoi-2020"
 ];
+const PTM_OPTIONS_DEFAULT = ["Asosiy PTM", "Qo'shimcha PTM", "PTM-3"];
+const PICKING_TYPES_DEFAULT = ["Mashina terim", "Qo'l terim"];
+import { useEffect } from "react";
+import { markasService } from "@/lib/services/markas.service";
 
 export function MarkaForm({ onSuccess }: { onSuccess?: () => void }) {
   const { createMarka } = useBackendMarkaStore();
@@ -26,16 +29,42 @@ export function MarkaForm({ onSuccess }: { onSuccess?: () => void }) {
   const [ptm, setPtm] = useState("");
   const [ptmOther, setPtmOther] = useState("");
   const [selection, setSelection] = useState("");
+  const [selectionOther, setSelectionOther] = useState("");
+  const [pickingType, setPickingType] = useState("");
+  const [pickingTypeOther, setPickingTypeOther] = useState("");
   const [number, setNumber] = useState<number | "">("");
   const [loading, setLoading] = useState(false);
+  const [dynamicOptions, setDynamicOptions] = useState<{ ptm: string[], pickingType: string[], selection: string[] }>({
+    ptm: PTM_OPTIONS_DEFAULT,
+    pickingType: PICKING_TYPES_DEFAULT,
+    selection: COTTON_SELECTIONS_DEFAULT
+  });
+
+  useEffect(() => {
+    async function loadOptions() {
+      try {
+        const opts = await markasService.getMarkaOptions();
+        setDynamicOptions(prev => ({
+          ptm: Array.from(new Set([...prev.ptm, ...opts.ptm])),
+          pickingType: Array.from(new Set([...prev.pickingType, ...opts.pickingType])),
+          selection: Array.from(new Set([...prev.selection, ...opts.selection]))
+        }));
+      } catch (err) {
+        console.error("Failed to load options", err);
+      }
+    }
+    loadOptions();
+  }, []);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const finalPTM = ptm === "Boshqa" ? ptmOther : ptm;
+    const finalSelection = selection === "Boshqa" ? selectionOther : selection;
+    const finalPickingType = pickingType === "Boshqa" ? pickingTypeOther : pickingType;
     setError(""); setSuccess("");
-    if (!number || !finalPTM.trim() || !selection.trim()) return setError("Barcha maydonlarni to'ldiring");
+    if (!number || !finalPTM.trim() || !finalSelection.trim() || !finalPickingType.trim()) return setError("Barcha maydonlarni to'ldiring");
 
     setLoading(true);
     try {
@@ -43,12 +72,13 @@ export function MarkaForm({ onSuccess }: { onSuccess?: () => void }) {
         number: Number(number),
         productType,
         sex: productType === "TOLA" ? sex : undefined,
-        selection,
+        selection: finalSelection,
         ptm: finalPTM,
-        pickingType: "mashina",
+        pickingType: finalPickingType,
       });
       setSuccess(`${number}-marka tizimga kiritildi`);
-      setNumber(""); setPtm(""); setSelection("");
+      setNumber(""); setPtm(""); setSelection(""); setPickingType("");
+      setPtmOther(""); setSelectionOther(""); setPickingTypeOther("");
       onSuccess?.();
     } catch (err: any) {
       setError(err.message || "Xatolik yuz berdi");
@@ -148,7 +178,7 @@ export function MarkaForm({ onSuccess }: { onSuccess?: () => void }) {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">PTM Konfiguratsiyasi</Label>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">PTM nomi</Label>
               <div className="relative group">
                 <FlaskConical className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0bae4a] transition-colors" size={18} />
                 <select
@@ -157,7 +187,8 @@ export function MarkaForm({ onSuccess }: { onSuccess?: () => void }) {
                   className="w-full h-12 pl-10 pr-10 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-bold rounded-xl appearance-none focus:bg-white dark:focus:bg-black/60 focus:border-[#0bae4a] focus:ring-1 focus:ring-[#0bae4a] outline-none transition-all cursor-pointer"
                 >
                   <option value="" className="dark:bg-[#111912]">Tanlanmagan</option>
-                  {PTM_OPTIONS.map(opt => <option key={opt} value={opt} className="dark:bg-[#111912]">{opt}</option>)}
+                  {dynamicOptions.ptm.map(opt => <option key={opt} value={opt} className="dark:bg-[#111912]">{opt}</option>)}
+                  <option value="Boshqa" className="dark:bg-[#111912]">+ Yangi kiritish...</option>
                 </select>
                 <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
               </div>
@@ -181,10 +212,44 @@ export function MarkaForm({ onSuccess }: { onSuccess?: () => void }) {
                   className="w-full h-12 pl-10 pr-10 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-bold rounded-xl appearance-none focus:bg-white dark:focus:bg-black/60 focus:border-[#0bae4a] focus:ring-1 focus:ring-[#0bae4a] outline-none transition-all cursor-pointer"
                 >
                   <option value="" className="dark:bg-[#111912]">Tanlanmagan</option>
-                  {COTTON_SELECTIONS.map(opt => <option key={opt} value={opt} className="dark:bg-[#111912]">{opt}</option>)}
+                  {dynamicOptions.selection.map(opt => <option key={opt} value={opt} className="dark:bg-[#111912]">{opt}</option>)}
+                  <option value="Boshqa" className="dark:bg-[#111912]">+ Yangi kiritish...</option>
                 </select>
                 <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
               </div>
+              {selection === "Boshqa" && (
+                <Input
+                  placeholder="Navni kiriting..."
+                  value={selectionOther}
+                  onChange={(e) => setSelectionOther(e.target.value)}
+                  className="mt-2 h-10 bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white animate-in slide-in-from-top-1"
+                />
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">Terim Turi</Label>
+              <div className="relative group">
+                <Target className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0bae4a] transition-colors" size={18} />
+                <select
+                  value={pickingType}
+                  onChange={(e) => setPickingType(e.target.value)}
+                  className="w-full h-12 pl-10 pr-10 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs font-bold rounded-xl appearance-none focus:bg-white dark:focus:bg-black/60 focus:border-[#0bae4a] focus:ring-1 focus:ring-[#0bae4a] outline-none transition-all cursor-pointer"
+                >
+                  <option value="" className="dark:bg-[#111912]">Tanlanmagan</option>
+                  {dynamicOptions.pickingType.map(opt => <option key={opt} value={opt} className="dark:bg-[#111912]">{opt}</option>)}
+                  <option value="Boshqa" className="dark:bg-[#111912]">+ Yangi kiritish...</option>
+                </select>
+                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              </div>
+              {pickingType === "Boshqa" && (
+                <Input
+                  placeholder="Terim turini kiriting..."
+                  value={pickingTypeOther}
+                  onChange={(e) => setPickingTypeOther(e.target.value)}
+                  className="mt-2 h-10 bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white animate-in slide-in-from-top-1"
+                />
+              )}
             </div>
           </div>
 

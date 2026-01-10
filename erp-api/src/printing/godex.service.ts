@@ -21,6 +21,9 @@ export interface ToyPrintData {
   createdAt: string;
   ptm?: string;
   selection?: string;
+  pickingType?: string;
+  sex?: string;
+  brigade?: string;
 }
 
 export interface PrintOptions {
@@ -47,6 +50,8 @@ export class GodexService {
     });
 
     // 100mm x 100mm Kvadrat dizayni (812x812 dots at 203 DPI)
+    // Layout: Header Top, Split Middle (Left: Details, Right: TOY# + QR), Bottom: Weight
+
     return [
       '^Q100,3',          // Balandlik 100mm
       '^W100',            // Kenglik 100mm
@@ -57,29 +62,36 @@ export class GodexService {
       '^L',
 
       // 1. Header Section
-      'AH,60,40,1,1,0,0,NAVBAHOR TEKSTIL',
-      'LO,60,105,680,10',                   // Qalin chiziq
+      'AH,60,30,1,1,0,0,NAVBAHOR TEKSTIL',
+      'LO,60,90,680,8',                     // Header Divider Line
 
-      // 2. Toy Info (Chap tomonda)
-      `AH,60,180,2,2,0,0,TOY: #${toy.orderNo}`,
-      `AD,60,300,1,1,0,0,MARKA: ${toy.markaNumber}`,
-      `AD,60,360,1,1,0,0,MAHSULOT: ${toy.productType}`,
+      // 2. Left Column: Details List
+      // Start Y = 120, Spacing ~40 dots per item
+      `AD,60,120,1,1,0,0,MARKA: ${toy.markaNumber}`,
+      `AD,60,160,1,1,0,0,MAHSULOT: ${toy.productType}`,
+      `AD,60,200,1,1,0,0,NAV: ${toy.selection || '-'}`,
+      `AD,60,240,1,1,0,0,TERIM: ${toy.pickingType || '-'}`,
+      `AD,60,280,1,1,0,0,ZAVOD: ${toy.sex || '-'}`,
+      `AD,60,320,1,1,0,0,PTM: ${toy.ptm || '-'}`,
+      `AD,60,360,1,1,0,0,BRIGADA: ${toy.brigade || '-'}`,
 
-      // 3. QR Code (O'ng tomonda, tahlilga ko'ra eng barqaror 'W' buyrug'i)
-      // Koordinatalar: x=420, y=160. Magnituda: 12.
-      `W420,160,QR,M,12,0,M2,0,${toy.id}`,
+      // 3. Right Column: TOY ID + QR Code
+      // "TOY: #..." aligned with QR column
+      `AH,460,120,1,1,0,0,TOY: #${toy.orderNo}`,
+      // QR Code positioned below TOY#
+      `W460,170,QR,M,12,0,M2,0,${toy.id}`,
 
-      // 4. Weight Section (Markaziy Urg'u)
-      'LO,60,460,680,5',                   // Markaziy chiziq
-      `AH,60,500,2,4,0,0,${formatKg(toy.netto)} KG`,
-      'AD,60,630,1,1,0,0,NETTO VAZNI (SOF VAZN)',
+      // 4. Weight Section
+      'LO,60,440,680,5',                   // Middle Divider Line
+      `AH,60,470,2,4,0,0,${formatKg(toy.netto)} KG`,
+      'AD,60,600,1,1,0,0,NETTO VAZNI (SOF VAZN)',
 
-      `AD,60,690,1,1,0,0,Brutto: ${formatKg(toy.brutto)} KG`,
+      `AD,60,660,1,1,0,0,Brutto: ${formatKg(toy.brutto)} KG`,
 
       // 5. Footer Section
-      'LO,60,750,680,3',                   // Pastki chiziq
-      `AC,60,780,1,1,0,0,ID: ${toy.id}`,
-      `AC,60,830,1,1,0,0,SANA: ${dateStr}`,
+      'LO,60,730,680,3',                   // Footer Divider Line
+      `AC,60,760,1,1,0,0,ID: ${toy.id}`,
+      `AC,60,800,1,1,0,0,SANA: ${dateStr}`,
 
       'E'
     ].join('\r\n') + '\r\n';

@@ -1,6 +1,7 @@
 "use client";
+
 import { useState, useEffect } from "react";
-import { useReportStore } from "@/stores/reportStore";
+import { useReportStore, DashboardStats } from "@/stores/reportStore";
 import { ReportStats } from "@/components/reports/ReportStats";
 import { ReportCharts } from "@/components/reports/ReportCharts";
 import { ReportProduction } from "@/components/reports/ReportProduction";
@@ -20,13 +21,16 @@ import {
   Download,
   FileSpreadsheet,
   Truck,
-  Layers
+  Layers,
+  ArrowRight
 } from "lucide-react";
+
+type TabId = 'dashboard' | 'production' | 'inventory' | 'shipments' | 'markas';
 
 export default function ReportsPage() {
   const { stats, fetchDashboardStats, exportReport, isLoading } = useReportStore();
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'production' | 'inventory' | 'shipments' | 'markas'>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabId>('dashboard');
 
   useEffect(() => {
     fetchDashboardStats();
@@ -38,204 +42,199 @@ export default function ReportsPage() {
 
   if (!isAuthorized) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mx-auto">
             <BarChart3 size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Kirish taqiqlangan</h1>
-          <p className="text-slate-500">Sizda hisobotlarni ko'rish uchun yetarli huquqlar mavjud emas.</p>
+          <h1 className="text-2xl font-bold text-foreground">Kirish taqiqlangan</h1>
+          <p className="text-muted-foreground">Sizda hisobotlarni ko'rish uchun yetarli huquqlar mavjud emas.</p>
         </div>
       </div>
     );
   }
 
+  const tabs: { id: TabId; label: string; icon: any }[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'production', label: 'Ishlab Chiqarish', icon: FileText },
+    { id: 'inventory', label: 'Inventar', icon: Package },
+    { id: 'shipments', label: 'Yukxatilar', icon: Truck },
+    { id: 'markas', label: 'Markalar', icon: Layers },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col animate-in fade-in duration-500">
-      {/* Premium Header */}
-      <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-[1600px] mx-auto px-8 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-10">
-            <div className="flex items-center gap-5">
-              <div className="w-12 h-12 rounded-[1.2rem] bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                <BarChart3 size={24} strokeWidth={2} />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 uppercase tracking-tight leading-none">Hisobotlar Markazi</h1>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1.5 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" />
-                  Analitika va Monitoring
-                </p>
-              </div>
-            </div>
-          </div>
+    <div className="space-y-8 animate-in pb-10">
+      {/* Page Header */}
+      <div className="relative overflow-hidden rounded-[2rem] glass-card p-1 shadow-2xl shadow-black/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none" />
 
-          <div className="flex items-center gap-4">
-            <div className="h-12 bg-slate-100 rounded-xl p-1 flex items-center gap-1">
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={cn(
-                  "px-4 h-10 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-                  activeTab === 'dashboard' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
-                )}
-              >
-                <LayoutDashboard size={14} />
-                Dashboard
-              </button>
-              <button
-                onClick={() => setActiveTab('production')}
-                className={cn(
-                  "px-4 h-10 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-                  activeTab === 'production' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
-                )}
-              >
-                <FileText size={14} />
-                Ishlab Chiqarish
-              </button>
-              <button
-                onClick={() => setActiveTab('inventory')}
-                className={cn(
-                  "px-4 h-10 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-                  activeTab === 'inventory' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
-                )}
-              >
-                <Package size={14} />
-                Inventar
-              </button>
-              <button
-                onClick={() => setActiveTab('shipments')}
-                className={cn(
-                  "px-4 h-10 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-                  activeTab === 'shipments' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
-                )}
-              >
-                <Truck size={14} />
-                Yukxatilar
-              </button>
-              <button
-                onClick={() => setActiveTab('markas')}
-                className={cn(
-                  "px-4 h-10 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-                  activeTab === 'markas' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
-                )}
-              >
-                <Layers size={14} />
-                Markalar
-              </button>
+        <div className="relative p-6 lg:p-8 bg-white/40 dark:bg-slate-900/40 rounded-[1.8rem]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 dark:bg-white/5 border border-primary/20 backdrop-blur-md">
+                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Hisobotlar Markazi</span>
+              </div>
+              <h1 className="text-3xl font-bold text-foreground tracking-tight">
+                Analitika va <span className="text-primary">Monitoring</span>
+              </h1>
+              <p className="text-muted-foreground text-sm font-medium">
+                Tizimning umumiy faoliyati va ishlab chiqarish ko'rsatkichlari tahlili.
+              </p>
             </div>
 
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (activeTab === 'dashboard') fetchDashboardStats();
-              }}
-              disabled={isLoading}
-              className="h-12 w-12 rounded-xl border-slate-200 bg-white text-slate-600 hover:text-indigo-600 active:scale-95 shadow-sm p-0 flex items-center justify-center"
-            >
-              <RefreshCw size={20} className={cn(isLoading && "animate-spin")} />
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => fetchDashboardStats()}
+                disabled={isLoading}
+                className="h-12 w-12 rounded-xl bg-white/60 dark:bg-white/5 border-white/20 hover:bg-white transition-all shadow-sm p-0"
+              >
+                <RefreshCw size={20} className={cn("text-primary", isLoading && "animate-spin")} />
+              </Button>
+
+              <div className="h-12 bg-white/60 dark:bg-white/5 border border-white/20 backdrop-blur-md rounded-xl p-1 flex items-center gap-1">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={cn(
+                      "px-4 h-10 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                      activeTab === tab.id
+                        ? "bg-primary text-white shadow-lg shadow-primary/20"
+                        : "text-slate-500 hover:text-primary hover:bg-primary/5"
+                    )}
+                  >
+                    <tab.icon size={14} />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-[1600px] mx-auto w-full px-8 py-10 space-y-10">
-        {activeTab === 'dashboard' && (
-          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <ReportStats stats={stats} />
-            <ReportCharts stats={stats} />
+      {activeTab === 'dashboard' && stats && (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <ReportStats stats={stats} />
+          <ReportCharts stats={stats} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="lg:col-span-2 border-none shadow-xl shadow-black/5 rounded-[2.5rem] bg-white overflow-hidden">
-                <CardHeader className="p-8 border-b border-slate-50 flex flex-row items-center justify-between">
-                  <CardTitle className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em]">Sifat Ko'rsatkichlari Taqsimoti</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-slate-50/50">
-                          <th className="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Sinf (Grade)</th>
-                          <th className="px-8 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Soni</th>
-                          <th className="px-8 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Foiz</th>
-                          <th className="px-8 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Holat</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {stats?.quality?.map((q: any, i: number) => {
-                          const total = stats.quality.reduce((a: any, b: any) => a + b.count, 0);
-                          const percentage = Math.round((q.count / total) * 100);
-                          return (
-                            <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-8 py-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                                  <span className="text-sm font-bold text-slate-700">{q.grade}</span>
-                                </div>
-                              </td>
-                              <td className="px-8 py-4 text-center">
-                                <span className="text-sm font-mono font-bold text-slate-600">{q.count} ta</span>
-                              </td>
-                              <td className="px-8 py-4 text-center">
-                                <div className="flex items-center justify-center gap-3">
-                                  <div className="flex-1 max-w-[100px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-indigo-500 rounded-full"
-                                      style={{ width: `${percentage}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-[10px] font-bold text-slate-500">{percentage}%</span>
-                                </div>
-                              </td>
-                              <td className="px-8 py-4 text-right">
-                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest">Yuqori</span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-none shadow-xl shadow-black/5 rounded-[2.5rem] bg-indigo-600 text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                  <BarChart3 size={120} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Card className="lg:col-span-2 card-premium overflow-hidden border-none shadow-xl">
+              <CardHeader className="p-8 border-b border-white/10 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-label-premium">Sifat Ko'rsatkichlari Taqsimoti</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">Mahsulot sinflari bo'yicha ulush</p>
                 </div>
-                <CardHeader className="p-8">
-                  <CardTitle className="text-[12px] font-black text-indigo-200 uppercase tracking-[0.2em]">Tezkor Eksport</CardTitle>
-                </CardHeader>
-                <CardContent className="p-8 space-y-6 relative z-10">
-                  <p className="text-sm font-medium text-indigo-100 leading-relaxed">
-                    Barcha boʻlimlar boʻyicha oylik konsolidatsiyalashgan hisobotni bir marta bosish orqali yuklab oling.
-                  </p>
-                  <div className="space-y-3 pt-4">
-                    <Button
-                      onClick={() => exportReport('pdf')}
-                      className="w-full h-14 bg-white text-indigo-600 hover:bg-slate-50 rounded-2xl font-black uppercase tracking-widest text-[11px] flex items-center gap-3"
-                    >
-                      <Download size={18} />
-                      PDF Hisobot Yuklash
-                    </Button>
-                    <Button
-                      onClick={() => exportReport('excel')}
-                      className="w-full h-14 bg-indigo-500 text-white hover:bg-indigo-400 border-none rounded-2xl font-black uppercase tracking-widest text-[11px] flex items-center gap-3"
-                    >
-                      <FileSpreadsheet size={18} />
-                      Excel (Data dump)
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-primary/5">
+                        <th className="px-8 py-4 text-left text-label-premium">Sinf (Grade)</th>
+                        <th className="px-8 py-4 text-center text-label-premium">Soni</th>
+                        <th className="px-8 py-4 text-center text-label-premium">Ulush (Foiz)</th>
+                        <th className="px-8 py-4 text-right text-label-premium">Holat</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {stats.quality.map((q, i) => {
+                        const total = stats.quality.reduce((a, b) => a + b.count, 0);
+                        const percentage = total > 0 ? Math.round((q.count / total) * 100) : 0;
+                        return (
+                          <tr key={i} className="hover:bg-primary/[0.02] transition-colors">
+                            <td className="px-8 py-5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                                  {q.grade}
+                                </div>
+                                <span className="text-sm font-bold text-foreground">Sinf {q.grade}</span>
+                              </div>
+                            </td>
+                            <td className="px-8 py-5 text-center">
+                              <span className="text-sm font-mono-premium text-foreground">{q.count.toLocaleString()} ta</span>
+                            </td>
+                            <td className="px-8 py-5 text-center">
+                              <div className="flex items-center justify-center gap-3">
+                                <div className="flex-1 max-w-[120px] h-2 bg-secondary rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-primary rounded-full transition-all duration-1000"
+                                    style={{ width: `${percentage}%` }}
+                                  />
+                                </div>
+                                <span className="text-[11px] font-black text-primary tabular-nums">{percentage}%</span>
+                              </div>
+                            </td>
+                            <td className="px-8 py-5 text-right">
+                              <span className={cn(
+                                "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
+                                percentage > 50 ? "bg-emerald-500/10 text-emerald-600" : percentage > 20 ? "bg-blue-500/10 text-blue-600" : "bg-amber-500/10 text-amber-600"
+                              )}>
+                                {percentage > 50 ? 'Yuqori' : percentage > 20 ? 'Normal' : 'Past'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {stats.quality.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-8 py-10 text-center text-muted-foreground italic text-sm">
+                            Sifat ma'lumotlari mavjud emas
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
 
-        {activeTab === 'production' && <ReportProduction />}
-        {activeTab === 'inventory' && <ReportInventory />}
-        {activeTab === 'shipments' && <ReportShipments />}
-        {activeTab === 'markas' && <ReportMarkaSummary />}
-      </main>
+            <Card className="card-premium bg-primary text-white overflow-hidden relative border-none shadow-2xl shadow-primary/20">
+              <div className="absolute top-0 right-0 p-8 opacity-10">
+                <BarChart3 size={160} />
+              </div>
+              <CardHeader className="p-8 relative z-10">
+                <CardTitle className="text-[11px] font-black text-white/70 uppercase tracking-[0.2em]">Ma'lumotlarni Eksport qilish</CardTitle>
+                <h2 className="text-2xl font-bold mt-2">Hisobot Yuklash</h2>
+              </CardHeader>
+              <CardContent className="p-8 pt-0 space-y-6 relative z-10">
+                <p className="text-sm font-medium text-white/80 leading-relaxed">
+                  Barcha boʻlimlar boʻyicha oylik konsolidatsiyalashgan hisobotni bir marta bosish orqali yuklab oling.
+                </p>
+
+                <div className="space-y-4 pt-4">
+                  <Button
+                    onClick={() => exportReport('pdf')}
+                    className="w-full h-14 bg-white text-primary hover:bg-slate-50 border-none rounded-2xl font-black uppercase tracking-widest text-[11px] flex items-center gap-3 shadow-xl transition-transform hover:scale-[1.02] active:scale-95"
+                  >
+                    <Download size={18} />
+                    PDF Formatsida Yuklash
+                  </Button>
+                  <Button
+                    onClick={() => exportReport('excel')}
+                    className="w-full h-14 bg-primary-foreground/20 text-white hover:bg-primary-foreground/30 border border-white/20 rounded-2xl font-black uppercase tracking-widest text-[11px] flex items-center gap-3 backdrop-blur-sm transition-transform hover:scale-[1.02] active:scale-95"
+                  >
+                    <FileSpreadsheet size={18} />
+                    Excel (XLSX) Formatda
+                  </Button>
+                </div>
+
+                <div className="pt-6 border-t border-white/10 flex items-center justify-between text-[10px] font-bold text-white/60 uppercase tracking-widest">
+                  <span>Oxirgi yangilanish:</span>
+                  <span className="tabular-nums">{new Date().toLocaleDateString('uz-UZ')}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'production' && <ReportProduction />}
+      {activeTab === 'inventory' && <ReportInventory />}
+      {activeTab === 'shipments' && <ReportShipments />}
+      {activeTab === 'markas' && <ReportMarkaSummary />}
     </div>
   );
 }

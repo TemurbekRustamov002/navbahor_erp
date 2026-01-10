@@ -90,6 +90,8 @@ export function EnhancedRecentToys({ selectedMarkaId }: EnhancedRecentToysProps)
         createdAt: toy.createdAt,
         ptm: (marka as any)?.ptm,
         selection: (marka as any)?.selection,
+        pickingType: (marka as any)?.pickingType,
+        sex: (marka as any)?.sex,
         brigade: toy.brigade
       }, { method: 'browser' });
 

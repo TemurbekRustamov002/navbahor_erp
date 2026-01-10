@@ -30,7 +30,18 @@ export class MarkasController {
     return this.svc.findAll(query);
   }
 
-  @Roles('ADMIN', 'SCALE', 'LAB', 'WAREHOUSE')
+  @Roles('ADMIN', 'SCALE', 'LAB', 'WAREHOUSE', 'PRODUCTION_MANAGER', 'SUPERVISOR', 'OPERATOR')
+  @Get('options')
+  @ApiOperation({ summary: 'Get unique marka options' })
+  async getOptions() {
+    const opts = await this.svc.getOptions();
+    return {
+      ptm: opts.ptm.sort(),
+      pickingType: opts.pickingType.sort(),
+      selection: opts.selection.sort()
+    };
+  }
+
   @Get('stats')
   @ApiOperation({ summary: 'Get marka statistics' })
   getStats() {
